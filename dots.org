@@ -1,0 +1,763 @@
+* Emacs
+** General settings
+*** path to my packages
+   #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+   (add-to-list 'load-path "~/.emacs.d/lisp/")
+   #+END_SRC
+*** Package liabraries
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      ;; Set up package
+      (require 'package)
+      (add-to-list 'package-archives
+                   '("marmalade" . "http://marmalade-repo.org/packages/"))
+      (add-to-list 'package-archives
+                   '("melpa-stable" . "http://stable.melpa.org/packages/"))
+      (add-to-list 'package-archives
+                   '("org" . "http://orgmode.org/elpa/"))
+      (add-to-list 'package-archives
+                   '("melpa" . "http://melpa.org/packages/") t)
+      (setq package-archive-priorities '(("org" . 3)
+                                         ("melpa-stable" . 1)
+                                         ("melpa" . 2)
+                                         ("gnu" . 4)))
+      (package-initialize)
+    #+end_src
+*** use-package
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+       ;; Bootstrap use-package
+       ;; Install use-package if it's not already installed.
+       ;; use-package is used to configure the rest of the packages.
+       (unless (package-installed-p 'use-package)
+         (package-refresh-contents)
+         (package-install 'use-package))
+
+       ;; From use-package README
+       (eval-when-compile
+         (require 'use-package))
+
+       (require 'bind-key)
+       (server-start)
+    #+end_src
+*** custom.el
+   Set up auto-generated variables to its own file, instead of saving
+   customize settings in [[file:init.el][init.el]].
+   #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+        (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
+        (load custom-file)
+   #+end_src
+*** backup
+   Keep all backup and auto-save files in one directory
+   #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+        ;; Keep all backup and auto-save files in one directory
+        (setq backup-directory-alist '(("." . "~/.emacs.d/backups")))
+        (setq auto-save-file-name-transforms '((".*" "~/.emacs.d/auto-save-list/" t)))
+   #+end_src
+*** Set default browser
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+         (setq browse-url-browser-function 'browse-url-generic
+               browse-url-generic-program "google-chrome")
+    #+end_src
+*** symlinks
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+         (setq vc-follow-symlinks t)
+
+         ;; Resolve symlinks:
+         (setq-default find-file-visit-truename t)
+    #+end_src
+*** Does anyone type yes anymore?
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+         (fset 'yes-or-no-p 'y-or-n-p)
+    #+end_src
+*** Fix the scrolling
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+         (setq scroll-conservatively 10000
+            scroll-preserve-screen-position t)
+    #+end_src
+** GUI
+*** Hiding elements
+    This hide several elements like menu, too bar, etc.
+    in GUI mode
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+        (when window-system
+          (menu-bar-mode -1)
+          (tool-bar-mode -1)
+          (scroll-bar-mode -1)
+          (tooltip-mode -1))
+    #+end_src
+*** Start in a blank page
+    This allow to start emacs in a blank page
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+        (setq inhibit-startup-message t)
+        (setq initial-scratch-message "")
+    #+end_src
+*** Stop blinking cursor
+    Turn off the blinking cursor
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+          (blink-cursor-mode -1)
+    #+end_src
+*** Prettify symbols
+    Convert certain words into symbols. Prime example: lambda becomes λ
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+          (global-prettify-symbols-mode)
+    #+end_src
+*** Show-paren-mode
+    Highlight the the matching (){}[]
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+          (show-paren-mode t)
+    #+end_src
+*** UTF-8 encoding
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+          (set-locale-environment "pl_PL.UTF-8")
+          (set-language-environment 'utf-8)
+          (setq locale-coding-system 'utf-8)
+          (set-default-coding-systems 'utf-8)
+          (set-terminal-coding-system 'utf-8)
+          (unless (eq system-type 'windows-nt)
+            (progn
+              (set-selection-coding-system 'utf-8)
+              (set-keyboard-coding-system 'utf-8-mac)))
+          (prefer-coding-system 'utf-8)
+    #+end_src
+*** Highlight current line
+    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+          (global-hl-line-mode t)
+    #+END_SRC
+*** Default Font
+    when "font" is available
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+(when (member "Knack Nerd Font" (font-family-list))
+  (set-face-attribute 'default nil :font "Knack Nerd Font"))
+        ;;(when (member "FantasqueSansMono Nerd Font" (font-family-list))
+        ;;(add-to-list 'default-frame-alist '(font . "FantasqueSansMono Nerd Font-11" ))
+        ;;(set-face-attribute 'default t :font "FantasqueSansMono Nerd Font-11"))
+    #+end_src
+*** White spaces
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+       ;; Here are the things that whitespace-mode should highlight
+
+       (setq whitespace-style '(tabs newline space-mark
+                                tab-mark newline-mark
+                                face lines-tail))
+       ;; Display pretty things for newlines and tabs (nothing for spaces)
+
+       (setq whitespace-display-mappings
+             ;; all numbers are Unicode codepoint in decimal. e.g. (insert-char 182 1)
+             ;; 32 SPACE, 183 MIDDLE DOT
+             '((space-mark nil)
+               ;; 10 LINE FEED
+               ;;(newline-mark 10 [172 10])
+               (newline-mark nil)
+               ;; 9 TAB, MIDDLE DOT
+               (tab-mark 9 [183 9] [92 9])))
+
+       ;; Indicate trailing empty lines in the GUI:
+       (setq-default show-trailing-whitespace t)
+    #+end_src
+*** USE SCROLL MARGINS TO GIVE CONTEXT TO YOUR CURSOR
+    I add the following line to my emacs config file so the when I move the cursor near
+    to the top or bottom of the window, the window will scroll when I am 3 lines away
+    from edge. The effect is that (however it is moved) the cursor is always given 3 lines
+    of context before the top or bottom of the window, which I find very useful.
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+        (setq scroll-margin 3)
+    #+end_src
+*** Make cursor the width of the character it is under
+   i.e. full width of a TAB
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+   (setq x-stretch-cursor t)
+    #+end_src
+** Org Mode
+*** See down arrow instead of "..." when we have subtrees (noticeable ellipsis)
+   When headers are collapsed, org-mode uses ellipses to represent the hidden text,
+   but I think that’s too subtle, so this makes them stand out more.
+   #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+     (setq org-ellipsis "⤵")
+   #+end_src
+*** Make sure we see syntax highlighting
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (setq org-src-fontify-natively t)
+    #+end_src
+*** Editing source code
+   I don't want to get distracted by the same code in the other window, so I want org src to use the current window.
+   #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+      (setq org-src-window-setup 'current-window)
+   #+END_SRC
+*** HighlightI latex text in org-mode
+   Then inline latex like $y=mx+c$ will appear in a different colour in an org-mode file to help it stand out.
+   #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+   (setq org-highlight-latex-and-related '(latex))
+   #+END_SRC
+** Evil Mode
+*** Evil configuration
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package evil
+        :ensure t
+        :custom
+        ;; change the color of the cursor
+        (evil-normal-state-cursor '("gray" box))
+        (evil-visual-state-cursor '("orange" box))
+        (evil-insert-state-cursor '("dodger blue" bar))
+        (evil-replace-state-cursor '("red" bar))
+        :config
+        (evil-mode 1)
+        (add-hook 'eshell-mode-hook
+                  '(lambda ()
+                     (define-key evil-normal-state-local-map (kbd "q") (lambda () (interactive) (kill-buffer-and-window))))))
+    #+end_src
+*** Evil leader
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package evil-leader
+        :ensure t
+        :after (evil)
+        :config
+        (global-evil-leader-mode)
+        (evil-leader/set-leader ",")
+        (evil-leader/set-key "w" 'evil-write)
+        (evil-leader/set-key "ee" '(lambda() (interactive)(find-file "~/Projects/dots/emacs.org")))
+        (evil-leader/set-key "ev" '(lambda() (interactive)(find-file "~/Projects/dots/nvim.org")))
+        (evil-leader/set-key "en" '(lambda() (interactive)(find-file "~/Documents/notes/notes.org")))
+        (evil-leader/set-key "ez" '(lambda() (interactive)(find-file "~/Projects/dots/zsh.org")))
+        (evil-leader/set-key "q" 'mode-line-other-buffer))
+    #+end_src
+*** Evil-escape
+   #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+  (use-package evil-escape
+    :ensure t
+    :after (evil)
+    :custom (evil-escape-key-sequence "jk")
+    :config (evil-escape-mode))
+   #+END_SRC
+** Hydra
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    (use-package hydra
+    :ensure t)
+    #+end_src
+* Fish
+** Paths
+*** .Env
+  #+begin_src sh :tangle ~/.config/fish/config.fish
+  set -x PATH $HOME/bin /snap/bin /usr/bin /bin /usr/sbin /sbin /usr/local/bin
+  #+end_src
+*** Android-SDK
+  #+begin_src sh :tangle ~/.config/fish/config.fish
+   set -x ANDROID_HOME $HOME/bin/Android/Sdk
+  #+end_src
+*** Clang
+  #+begin_src sh :tangle ~/.config/fish/config.fish
+  set -x PATH $HOME/bin/clang/bin $PATH
+  #+end_src
+*** Dart
+  #+begin_src sh :tangle ~/.config/fish/config.fish
+  set -x PATH $HOME/.pub-cache/bin $PATH
+  set -x PATH $HOME/bin/dart-sdk/bin $PATH
+  #+end_src
+*** Flutter
+  #+begin_src sh :tangle ~/.config/fish/config.fish
+   set -x PATH $HOME/bin/flutter/bin $PATH
+  #+end_src
+*** Go
+  #+begin_src sh :tangle ~/.config/fish/config.fish
+  set -x PATH /usr/local/go/bin $PATH
+  set -x GOPATH $HOME/bin/go
+  set -x PATH $HOME/bin/go/bin $PATH
+  #+end_src
+*** Java
+  #+begin_src sh :tangle ~/.config/fish/config.fish
+  set -x PATH $HOME/bin/jdk-12.0.1/bin $PATH
+  #+end_src
+*** Node
+  #+begin_src sh :tangle ~/.config/fish/config.fish
+   set -x PATH PATH $HOME/bin/node/bin $PATH
+  #+end_src
+*** Python
+  #+begin_src sh :tangle ~/.config/fish/config.fish
+   set -x PATH $HOME/bin/anaconda3/bin $PATH
+  #+end_src
+*** VSCode
+  #+begin_src sh :tangle ~/.config/fish/config.fish
+  set -x PATH $HOME/bin/VSCode $PATH
+  #+end_src
+** Alias
+  #+begin_src sh :tangle ~/.config/fish/config.fish
+  alias jd '~/bin/jd2/JDownloader2 &'
+  #+end_src
+* Neovim
+** General
+*** Useful
+  #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+  if has("nvim")
+  filetype plugin indent on
+  syntax on
+  set linebreak                      " break line without break the word
+  set wrap
+  set hidden                         " allow buffer swetching without saving
+
+  set wildmenu                       " visual autocomplete for command menu
+  set wildmode=list:longest,full     " Command <Tab> completion, list matches, then longest common part, then all
+  set wildignorecase
+  set wildchar=<Tab>
+  #+end_src
+*** Restore cursor position when opening file
+  #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+    augroup open
+        autocmd!
+        autocmd BufReadPost *
+                    \ if line("'\"") > 1 && line("'\"") <= line("$") |
+                    \   exe "normal! g`\"" |
+                    \ endif
+    augroup END
+  #+end_src
+*** Delete whiete spaces at save and transform tab into one space
+  #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+    augroup white
+        autocmd!
+        autocmd BufWritePre * :%s/\s\+$//e
+        autocmd BufWritePre * silent! :%s/\t/ /g
+    augroup END
+  #+end_src
+*** No backups and swapfile
+  #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+  set nobackup
+  set noswapfile
+  #+end_src
+*** Horizontal windows always split below
+  #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+  set splitbelow                     "
+  #+end_src
+*** Vertical windows always split righ
+  #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+  set splitright
+  #+end_src
+*** Turn tabs into spaces
+  #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+  set expandtab
+  set smarttab
+  set smartindent
+  #+end_src
+*** show problematic spaces
+  #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+  set list
+  set listchars=
+  " set listchars+=tab:→\
+  set listchars+=tab:▸→
+  " set listchars+=tab:¤›
+  set listchars+=trail:•
+  set listchars+=extends:»
+  set listchars+=precedes:«
+  " set listchars+=eol:¬
+  " set listchars+=nbsp:⣿
+  " set fillchars=vert:│,fold:─
+  #+end_src
+*** Change working directory automatically
+  #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+    autocmd BufEnter,BufRead * silent! :cd%:p:h
+  #+end_src
+*** Scrolling
+  #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+  set scrolloff=8         "Start scrolling when we're 8 lines away from margins
+  set sidescrolloff=15
+  set sidescroll=1
+  #+end_src
+*** Search
+  #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+  set ignorecase        "case insensitive search
+  set hlsearch          "highlight search
+  set smartcase         "case sensitive if we type an uppercase
+  set incsearch         "show match as search proceeds
+  #+end_src
+*** Autosave buffers before leaving them
+   #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+   autocmd BufLeave * silent! :wa
+   #+end_src
+*** Spell for md
+  #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+    autocmd! BufRead,BufNewFile *.md setlocal spell spelllang=en_us
+  #+end_src
+*** Desabling neovim providers
+   Nvim delegates some features to dynamic "providers".
+  #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+  " To disable Ruby support:
+  let g:loaded_ruby_provider = 1
+  " To disable Python 2 support:
+  let g:loaded_python_provider = 1
+  #+end_src
+** GUI
+*** No intro message
+  #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+  set shortmess=I
+  #+end_src
+*** Sign Column
+*** Change sign column color
+  #+begin_src vimrc
+   highlight clear SignColumn
+  #+end_src
+*** Keep the sign colum always visible
+  #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+   set signcolumn=yes
+   autocmd! TermOpen * setlocal signcolumn=no
+  #+end_src
+*** Hide sigh column when in terminal
+  #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+   autocmd! TermOpen * setlocal signcolumn=no
+  #+end_src
+*** Status Line
+   #+begin_src vimrc
+    set laststatus=0
+   #+end_src
+** Mapping
+*** Leader
+    #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+    let mapleader = ","
+    #+end_src
+*** jk back to normal mode
+    #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+    inoremap jk <esc>
+    tnoremap jk <C-\><C-n>
+    #+end_src
+*** Save file
+    #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+    nnoremap <leader>w :write<CR>
+    #+end_src
+*** Maximizied buffer to entire window
+    #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+    nnoremap <leader>m <C-W>o
+    #+end_src
+*** Remap ; -> :
+    #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+    nnoremap ; :
+    tnoremap ; :
+    #+end_src
+*** Cicle between windows
+    #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+    nnoremap <space> <c-w>w
+    #+end_src
+*** File Navegation
+    #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+    " nnoremap <leader>a :argadd <c-r>=fnameescape(expand('%:p:h'))<cr>/*<C-d>
+    " nnoremap <leader>b :b <C-d>
+    " nnoremap <leader>d :e <c-r>=fnameescape(expand('%:p:h'))<cr>/<C-d>
+    nnoremap <leader>q :b#<cr>
+    #+end_src
+*** Remap * -> *N
+    #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+    nnoremap * *N
+    #+end_src
+*** copy and paste from the clipboard system
+    #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+    set clipboard+=unnamedplus
+    nnoremap <leader>p "+p
+    nnoremap  <leader>y "+y
+    #+end_src
+*** Tangle Org Files
+    #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+    function! Tangle()
+    write
+    silent! !emacs % --batch -f org-babel-tangle --kill
+    redraw!
+    redraws! | echohl Error | echon "Tangle: Done"| echohl None
+    endfunc
+
+    augroup org
+        autocmd!
+        autocmd BufRead,BufNewFile *.org set filetype=org
+        autocmd FileType org nnoremap <f8> :call Tangle()<cr>
+    augroup END
+    #+end_src
+*** Resizing
+    #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+      nnoremap <Left> :vertical resize +2<CR>
+      nnoremap <Right> :vertical resize -2<CR>
+      nnoremap <Up> :resize -2<CR>
+      nnoremap <Down> :resize +2<CR>
+    #+end_src
+*** Show next math string at the center of the screen
+    #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+    nnoremap n nzz
+    nnoremap N Nzz
+    #+end_src
+** Programming Languages
+*** Type Script
+  #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+  autocmd! BufRead,BufNewFile *.ts set tabstop=2|set shiftwidth=2|set softtabstop=2|set expandtab|set smarttab|set smartindent
+  #+end_src
+*** Cpp
+**** Run cpp source code
+    #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+    augroup cpp
+        autocmd!
+        autocmd FileType cpp nnoremap <F5> :call MonkeyTerminalExec('clang++ -std=c++1z ' . expand('%') . ' -o ' . expand('%<') . ' && ' . './' . expand('%<'))<cr>
+        autocmd FileType cpp nnoremap <F6> :call CppTest()<cr>
+    augroup END
+    #+end_src
+**** Indent
+  #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+  autocmd! FileType cpp set tabstop=4|set shiftwidth=4|set softtabstop=4|set expandtab|set smarttab|set smartindent
+  #+end_src
+*** javascript
+**** Run javascript source code
+    #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+    augroup js
+        autocmd!
+        autocmd BufRead,BufNewFile *.js set filetype=javascript
+        autocmd FileType javascript nnoremap <F5> :call MonkeyTerminalExec('node ' . expand('%'))<cr>
+    augroup END
+    #+end_src
+**** Indent
+  #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+  autocmd! FileType javascript set tabstop=4|set shiftwidth=4|set softtabstop=4|set expandtab|set smarttab|set smartindent
+  #+end_src
+*** python
+**** Python3 provider path
+   Nvim delegates some features to dynamic "providers".
+    #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+    let g:python3_host_prog = '/home/last/bin/anaconda3/bin/python3'
+    #+end_src
+**** Run python source code
+    #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+    augroup python
+        autocmd!
+        autocmd FileType python nnoremap <F5> :call MonkeyTerminalExec('python ' . expand('%'))<cr>
+    augroup END
+    #+end_src
+**** Indent
+  #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+  autocmd! FileType python set tabstop=4|set shiftwidth=4|set softtabstop=4|set expandtab|set smarttab|set smartindent
+  #+end_src
+*** go
+**** Run go code
+    #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+    augroup go
+        autocmd!
+        autocmd BufRead,BufNewFile *.go set filetype=go
+        autocmd FileType go nnoremap <F5> :call MonkeyTerminalExec('go run ' . expand('%'))<cr>
+    augroup END
+    #+end_src
+*** dart
+**** Run Dart code
+    #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+    augroup dart
+        autocmd!
+        autocmd BufRead,BufNewFile *.dart set filetype=dart
+        autocmd FileType dart nnoremap <F5> :call MonkeyTerminalExec('dart ' . expand('%'))<cr>
+    augroup END
+    #+end_src
+**** Format dart file at saving
+  #+begin_src vimrc
+    augroup formatDart
+        autocmd!
+        autocmd BufWritePre *.dart :DartFmt
+    augroup END
+  #+end_src
+**** Indent
+  #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+  autocmd! FileType dart set tabstop=2|set shiftwidth=2|set softtabstop=2|set expandtab|set smarttab|set smartindent
+  #+end_src
+*** rust
+**** Run Rust code
+    #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+    augroup rust
+        autocmd!
+        autocmd BufRead,BufNewFile *.rs set filetype=rust
+        autocmd FileType rust nnoremap <F5> :call MonkeyTerminalExec('rustc ' . expand('%') . ' && ' . './' . expand('%<'))<cr>
+    augroup END
+    #+end_src
+*** java
+**** Run Java code
+    #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+        augroup java
+        autocmd!
+        autocmd BufRead,BufNewFile *.java set filetype=java
+        autocmd FileType java nnoremap <F5> :call MonkeyTerminalExec('javac ' . expand('%') . ' && ' . 'java ' . expand('%<'))<cr>
+    augroup END
+    #+end_src
+*** kotlin
+**** Run Kotlin code
+    #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+        augroup kotlin
+        autocmd!
+        autocmd BufRead,BufNewFile *.kt set filetype=kotlin
+        autocmd FileType kotlin nnoremap <F5> :call MonkeyTerminalExec('kotlinc ' . expand('%') . ' -include-runtime -d ' . expand('%<') . '.jar' . ' && ' . 'java -jar ' . expand('%<') . '.jar')<cr>
+    augroup END
+    #+end_src
+*** html
+**** Indent
+  #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+  autocmd! FileType html set tabstop=4|set shiftwidth=4|set softtabstop=4|set expandtab|set smarttab|set smartindent
+  #+end_src
+** Functions
+*** Monkey Terminal
+  #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+    " The default value when a window is not found is -1
+    let s:monkey_terminal_window = -1
+    let s:monkey_terminal_buffer = -1
+    let s:monkey_terminal_job_id = -1
+    function! MonkeyTerminalOpen()
+      " Check if buffer exists, if not create a window and a buffer
+      if !bufexists(s:monkey_terminal_buffer)
+        " Creates a window call monkey_terminal
+        new monkey_terminal
+        " Moves to the window below the current one
+        wincmd L
+        " resize the high of the window
+        " exec 'resize 7'
+
+         let s:monkey_terminal_job_id = termopen($SHELL, { 'detach': 1 })
+
+         " Change the name of the buffer to "Terminal 1"
+         silent file Terminal\ 1
+         " Gets the id of the terminal window
+         let s:monkey_terminal_window = win_getid()
+         let s:monkey_terminal_buffer = bufnr('%')
+
+        " The buffer of the terminal won't appear in the list of the buffers
+        " when calling :buffers command
+        set nobuflisted
+      else
+        if !win_gotoid(s:monkey_terminal_window)
+        sp
+        " Moves to the window below the current one
+        wincmd L
+        " resize the high of the window
+        " exec 'resize 7'
+        buffer Terminal\ 1
+         " Gets the id of the terminal window
+         let s:monkey_terminal_window = win_getid()
+        endif
+      endif
+    endfunction
+
+    function! MonkeyTerminalToggle()
+      if win_gotoid(s:monkey_terminal_window)
+        call MonkeyTerminalClose()
+      else
+        call MonkeyTerminalOpen()
+      endif
+    endfunction
+
+    function! MonkeyTerminalClose()
+      if win_gotoid(s:monkey_terminal_window)
+        " close the current window
+        hide
+      endif
+    endfunction
+
+    function! MonkeyTerminalExec(cmd)
+      if !win_gotoid(s:monkey_terminal_window)
+        call MonkeyTerminalOpen()
+      endif
+
+      " clear current input
+      call jobsend(s:monkey_terminal_job_id, "clear\n")
+
+      " run cmd
+      call jobsend(s:monkey_terminal_job_id, a:cmd . "\n")
+      normal! G
+      wincmd p
+    endfunction
+
+    nnoremap <F7> :call MonkeyTerminalToggle()<cr>
+    tnoremap <F7> <C-\><C-n>:call MonkeyTerminalToggle()<cr>
+    endif
+  #+end_src
+*** Open and close Terminal with F9
+  #+begin_src vimrc
+  let g:term_buf = 0
+  let g:term_win = 0
+    function! Term_toggle(height)
+        if win_gotoid(g:term_win)
+            hide
+        else
+            botright new
+            exec "resize " . a:height
+            try
+                exec "buffer " . g:term_buf
+            catch
+                call termopen("$SHELL", {"detach": 0})
+                let g:term_buf = bufnr("")
+            endtry
+            startinsert!
+            let g:term_win = win_getid()
+        endif
+    endfunction
+
+    nnoremap <F9> :call Term_toggle(10)<cr>
+    tnoremap <F9> <C-\><C-n>:call Term_toggle(10)<cr>
+  #+end_src
+* Zsh
+** Theme
+   #+BEGIN_SRC sh :tangle ~/.zshrc
+   ZSH_THEME="robbyrussell"
+   #+END_SRC
+** Paths
+*** Zsh
+   #+BEGIN_SRC sh :tangle ~/.zshrc
+   export ZSH=$HOME/.oh-my-zsh
+   source $ZSH/oh-my-zsh.sh
+   #+END_SRC
+
+*** Env
+   #+BEGIN_SRC sh :tangle ~/.zshrc
+   export PATH="$HOME/bin:/snap/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin"
+   #+END_SRC
+   
+*** VSCode
+   #+BEGIN_SRC sh :tangle ~/.zshrc
+     PATH=$HOME/bin/VSCode:$PATH
+   #+END_SRC
+   
+*** Java
+   #+BEGIN_SRC sh :tangle ~/.zshrc
+   PATH=$HOME/bin/jdk-12.0.1/bin:$PATH
+   #+END_SRC
+
+*** Dart
+   #+BEGIN_SRC sh :tangle ~/.zshrc
+   export PATH=$HOME/.pub-cache/bin:$PATH
+   export PATH=$HOME/bin/dart-sdk/bin:$PATH
+   #+END_SRC
+
+*** Go
+   #+BEGIN_SRC sh :tangle ~/.zshrc
+   PATH=$PATH:/usr/local/go/bin
+   export GOPATH=$HOME/bin/go
+   PATH=$PATH:$HOME/bin/go/bin
+   #+END_SRC
+
+*** Clang
+   #+BEGIN_SRC sh :tangle ~/.zshrc
+   PATH=$HOME/bin/clang/bin:$PATH
+   #+END_SRC
+
+*** Node
+   #+BEGIN_SRC sh :tangle ~/.zshrc
+   PATH=$HOME/bin/node/bin:$PATH
+   #+END_SRC
+
+*** Python
+   #+BEGIN_SRC sh :tangle ~/.zshrc
+   PATH=$HOME/bin/anaconda3/bin:$PATH
+   #+END_SRC
+
+*** Flutter
+   #+BEGIN_SRC sh :tangle ~/.zshrc
+   PATH=$HOME/bin/flutter/bin:$PATH
+   #+END_SRC
+   
+*** Android-SDK
+   #+BEGIN_SRC sh :tangle ~/.zshrc
+   export ANDROID_HOME=$HOME/bin/Android/Sdk
+   #+END_SRC
+
+** Plugins
+   #+BEGIN_SRC sh :tangle ~/.zshrc
+   plugins=(git)
+   #+END_SRC
+
+** Alias
+   #+BEGIN_SRC sh :tangle ~/.zshrc
+   alias jd="~/bin/jd2/JDownloader2 &"
+   #+END_SRC
+
+
+
+
