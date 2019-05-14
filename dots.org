@@ -314,9 +314,266 @@
   #+end_src
 ** Alias
   #+begin_src sh :tangle ~/.config/fish/config.fish
-  alias jd '~/bin/jd2/JDownloader2 &'
-  alias vf vifm
+    alias jd '~/bin/jd2/JDownloader2 &'
+    alias vf vifm
   #+end_src
+* I3wm
+** Config
+*** mod
+   #+BEGIN_SRC sh :tangle ~/.config/i3/config
+   set $mod Mod4
+   #+END_SRC
+*** font
+   #+BEGIN_SRC sh :tangle ~/.config/i3/config
+       font pango:Knack Nerd Font Regular 10
+   #+END_SRC
+*** windows
+**** kill focused window
+   #+BEGIN_SRC sh :tangle ~/.config/i3/config
+   bindsym $mod+q kill
+   #+END_SRC
+**** drag floating windows
+    Use Mouse+$mod
+   #+BEGIN_SRC sh :tangle ~/.config/i3/config
+   floating_modifier $mod
+   #+END_SRC
+**** change focus
+   #+BEGIN_SRC sh :tangle ~/.config/i3/config
+    bindsym $mod+h focus left
+    bindsym $mod+j focus down
+    bindsym $mod+k focus up
+    bindsym $mod+Tab focus right
+
+    # alternatively, you can use the cursor keys:
+    bindsym $mod+Left focus left
+    bindsym $mod+Down focus down
+    bindsym $mod+Up focus up
+    bindsym $mod+Right focus right
+   #+END_SRC
+**** move focused window
+   #+BEGIN_SRC sh :tangle ~/.config/i3/config
+   bindsym $mod+Shift+Left move left
+   bindsym $mod+Shift+Down move down
+   bindsym $mod+Shift+Up move up
+   bindsym $mod+Shift+Right move right
+   #+END_SRC
+**** uncategorized
+   #+BEGIN_SRC sh :tangle ~/.config/i3/config
+
+# split in horizontal orientation
+bindsym $mod+Shift+h split h
+
+# split in vertical orientation
+bindsym $mod+v split v
+
+# enter fullscreen mode for the focused container
+bindsym $mod+f fullscreen toggle
+
+# change container layout (stacked, tabbed, toggle split)
+bindsym $mod+s layout stacking
+bindsym $mod+w layout tabbed
+bindsym $mod+e layout toggle split
+
+# toggle tiling / floating
+bindsym $mod+Shift+space floating toggle
+
+# change focus between tiling / floating windows
+bindsym $mod+space focus mode_toggle
+
+# focus the parent container
+bindsym $mod+a focus parent
+
+# focus the child container
+#bindsym $mod+d focus child
+   #+END_SRC
+*** Launching Programs
+**** Tilix
+   #+BEGIN_SRC sh :tangle ~/.config/i3/config
+   bindsym $mod+Return exec tilix -p Solarized dark
+   #+END_SRC
+**** rofi (a program launcher)
+   #+BEGIN_SRC sh :tangle ~/.config/i3/config
+   bindsym $mod+d exec rofi -show run -lines 3 -eh 2 -width 100 -padding 300 -opacity "85" -bw 0 -bc "$bg-color" -bg "$bg-color" -fg "$text-color" -hlbg "$bg-color" -hlfg "#9575cd" -font "System San Francisco Display 18"
+   #+END_SRC
+*** workingspaces
+   #+BEGIN_SRC sh :tangle ~/.config/i3/config
+     set $workspace1 "1"
+     set $workspace2 "2"
+     set $workspace3 "3"
+     set $workspace4 "4"
+     set $workspace5 "5"
+     set $workspace6 "6"
+     set $workspace7 "7"
+     set $workspace8 "8"
+     set $workspace9 "9"
+     set $workspace0 "10"
+
+     # move focused container to workspace
+     bindsym $mod+Shift+1 move container to workspace $workspace1
+     bindsym $mod+Shift+2 move container to workspace $workspace2
+     bindsym $mod+Shift+3 move container to workspace $workspace3
+     bindsym $mod+Shift+4 move container to workspace $workspace4
+     bindsym $mod+Shift+5 move container to workspace $workspace5
+     bindsym $mod+Shift+6 move container to workspace $workspace6
+     bindsym $mod+Shift+7 move container to workspace $workspace7
+     bindsym $mod+Shift+8 move container to workspace $workspace8
+     bindsym $mod+Shift+9 move container to workspace $workspace9
+     bindsym $mod+Shift+0 move container to workspace $workspace0
+
+     # switch to workspace
+     bindsym $mod+1 workspace $workspace1
+     bindsym $mod+2 workspace $workspace2
+     bindsym $mod+3 workspace $workspace3
+     bindsym $mod+4 workspace $workspace4
+     bindsym $mod+5 workspace $workspace5
+     bindsym $mod+6 workspace $workspace6
+     bindsym $mod+7 workspace $workspace7
+     bindsym $mod+8 workspace $workspace8
+     bindsym $mod+9 workspace $workspace9
+     bindsym $mod+0 workspace $workspace0
+   #+END_SRC
+
+*** GUI
+   #+BEGIN_SRC sh :tangle ~/.config/i3/config
+   # thin borders
+   hide_edge_borders both
+
+   set $bg-color 	         #2f343f
+   set $inactive-bg-color   #2f343f
+   set $text-color          #f3f4f5
+   set $inactive-text-color #676E7D
+   set $urgent-bg-color     #E53935
+
+   # window colors
+   #                       border              background         text                 indicator
+   client.focused          $bg-color           $bg-color          $text-color          #00ff00
+   client.unfocused        $inactive-bg-color $inactive-bg-color $inactive-text-color #00ff00
+   client.focused_inactive $inactive-bg-color $inactive-bg-color $inactive-text-color #00ff00
+   client.urgent           $urgent-bg-color    $urgent-bg-color   $text-color          #00ff00
+
+   # Start i3bar to display a workspace bar (plus the system information i3status
+   # finds out, if available)
+   bar {
+   # status_command i3status
+   status_command i3blocks -c ~/.config/i3/i3blocks.conf
+   mode hide
+   hidden_state hide
+   modifier Mod4
+   colors {
+   background $bg-color
+   separator #757575
+   #                  border             background         text
+   focused_workspace  $bg-color          $bg-color          $text-color
+   inactive_workspace $inactive-bg-color $inactive-bg-color $inactive-text-color
+   urgent_workspace   $urgent-bg-color   $urgent-bg-color   $text-color
+   }
+   }
+
+   for_window [class=".*"] border pixel 0
+   #+END_SRC
+*** Lock screen
+   #+BEGIN_SRC sh :tangle ~/.config/i3/config
+   bindsym $mod+shift+x exec i3lock
+   #+END_SRC
+*** Restart i3 inplace (preserves your layout/session, can be used to upgrade i3)
+   #+BEGIN_SRC sh :tangle ~/.config/i3/config
+        bindsym $mod+Shift+r restart
+   #+END_SRC
+*** Exit i3 (logs you out of your X session)
+   #+BEGIN_SRC sh :tangle ~/.config/i3/config
+        bindsym $mod+Shift+e exec "i3-nagbar -t warning -m 'You pressed the exit shortcut. Do you really want to exit i3? This will end your X session.' -b 'Yes, exit i3' 'i3-msg exit'"
+   #+END_SRC
+*** Print image
+   #+BEGIN_SRC sh :tangle ~/.config/i3/config
+        # bindsym Print exec --no-startup-id scrot
+        # bindsym Print exec screenshot
+        # bindsym Shift+Print exec --no-startup-id scrot -u
+        bindsym Print exec --no-startup-id scrot -u -e 'mv $f ~/Pictures/'
+   #+END_SRC
+*** Change keyboard language
+   #+BEGIN_SRC sh :tangle ~/.config/i3/config
+   #change keyboard layout
+   set $keyboardMode "keyboard d=de, e=us"
+   bindsym $mod+Shift+i mode $keyboardMode
+   mode $keyboardMode {
+   bindsym d exec "setxkbmap de", mode "default"
+   bindsym e exec "setxkbmap us", mode "default"
+   # back to normal: Enter or Escape
+   bindsym Return mode "default"
+   bindsym Escape mode "default"
+   }
+   #+END_SRC
+*** Music player mode
+   #+BEGIN_SRC sh :tangle ~/.config/i3/config
+   set $mode_music Music Player Mode
+   bindsym $mod+m mode "$mode_music"
+
+   mode "$mode_music" {
+    bindsym a exec cmus-remote --prev
+    bindsym c exec cmus-remote --pause
+    bindsym s exec cmus-remote --next
+    bindsym l exec cmus-remote --seek +5
+    bindsym h exec cmus-remote --seek -5
+    bindsym Up exec cmus-remote --vol +10%
+    bindsym Down exec cmus-remote --vol -10%
+
+    bindsym Escape mode "default"
+   }
+
+    bindsym $mod+Pause exec cmus-remote --pause
+    bindsym $mod+Prior exec cmus-remote --seek -5
+    bindsym $mod+Next exec cmus-remote --seek +5
+   #+END_SRC
+*** Audio control mode
+   #+BEGIN_SRC sh :tangle ~/.config/i3/config
+   set $mode_audio Audio Mode
+   bindsym $mod+Shift+v mode "$mode_audio"
+
+   mode "$mode_audio" {
+    bindsym Up exec --no-startup-id pactl set-sink-volume 0 +5% #increase sound volume
+    bindsym Down exec --no-startup-id pactl set-sink-volume 0 -5% #decrease sound volume
+    bindsym Pause exec --no-startup-id pactl set-sink-mute 0 toggle # mute sound
+
+    bindsym Escape mode "default"
+   }
+   #+END_SRC
+** i3blocks
+   #+BEGIN_SRC sh :tangle ~/.config/i3/i3blocks.conf
+   # The top properties below are applied to every block, but can be overridden.
+   # Each block command defaults to the script name to avoid boilerplate.
+   command=/usr/share/i3blocks/$BLOCK_NAME
+   separator_block_width=15
+   markup=none
+   #+END_SRC
+*** Volume indicator
+   #+BEGIN_SRC sh :tangle ~/.config/i3/i3blocks.conf
+   [volume]
+   label=
+   instance=Master
+   interval=1
+   signal=10
+   command=/usr/share/i3blocks/volume 5 pulse
+   #+END_SRC
+*** Disk usage
+   #+BEGIN_SRC sh :tangle ~/.config/i3/i3blocks.conf
+   [disk]
+   label=
+   interval=30
+   #+END_SRC
+*** CPU usage
+   #+BEGIN_SRC sh :tangle ~/.config/i3/i3blocks.conf
+   [cpu_usage]
+   label=
+   interval=1
+   min_width=CPU: 100.00%
+   #+END_SRC
+*** Date Time
+   #+BEGIN_SRC sh :tangle ~/.config/i3/i3blocks.conf
+   [time]
+   command=date '+%b %d %H:%M'
+   interval=5
+   label=
+   #+END_SRC
 * Neovim
 ** General
 *** Useful
@@ -421,6 +678,14 @@
 *** Start Plug
   #+begin_src vimrc :tangle ~/.config/nvim/init.vim
     call plug#begin('~/.local/share/nvim/plugged')
+  #+end_src
+*** Coc
+  #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+  Plug 'neoclide/coc.nvim', {'tag': '*', 'do': './install.sh'}
+  #+end_src
+*** End Plug
+  #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+  call plug#end()
   #+end_src
 ** NeoSolarized
   #+begin_src vimrc :tangle ~/.config/nvim/init.vim
