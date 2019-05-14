@@ -166,7 +166,35 @@
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
    (setq x-stretch-cursor t)
     #+end_src
+*** Solarized theme
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+         (use-package solarized-theme
+           :if (window-system)
+           :ensure t
+           :init
+           (load-theme 'solarized-dark))
+    #+end_src
+
 ** Org Mode
+*** org
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package org
+        :defer t
+        :ensure org-plus-contrib
+        :config
+          ;; To be able to see the images after bable is execute
+          (add-hook 'org-babel-after-execute-hook 'org-display-inline-images)
+          (setq org-startup-with-inline-images t)
+          (org-babel-do-load-languages
+           'org-babel-load-languages
+           '((dot . t)
+             (js . t)
+             (latex . t)
+             (C . t)
+             (python . t)
+             (emacs-lisp . t))))
+    #+end_src
+
 *** See down arrow instead of "..." when we have subtrees (noticeable ellipsis)
    When headers are collapsed, org-mode uses ellipses to represent the hidden text,
    but I think that’s too subtle, so this makes them stand out more.
@@ -187,6 +215,15 @@
    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
    (setq org-highlight-latex-and-related '(latex))
    #+END_SRC
+** Bullets
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+       (use-package org-bullets
+         :ensure t
+         :after org
+         :commands (org-bullets-mode)
+         :init (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
+    #+end_src
+
 ** Evil Mode
 *** Evil configuration
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
@@ -213,10 +250,8 @@
         (global-evil-leader-mode)
         (evil-leader/set-leader ",")
         (evil-leader/set-key "w" 'evil-write)
-        (evil-leader/set-key "ee" '(lambda() (interactive)(find-file "~/Projects/dots/emacs.org")))
-        (evil-leader/set-key "ev" '(lambda() (interactive)(find-file "~/Projects/dots/nvim.org")))
+        (evil-leader/set-key "ed" '(lambda() (interactive)(find-file "~/Projects/dots/dots.org")))
         (evil-leader/set-key "en" '(lambda() (interactive)(find-file "~/Documents/notes/notes.org")))
-        (evil-leader/set-key "ez" '(lambda() (interactive)(find-file "~/Projects/dots/zsh.org")))
         (evil-leader/set-key "q" 'mode-line-other-buffer))
     #+end_src
 *** Evil-escape
@@ -280,6 +315,7 @@
 ** Alias
   #+begin_src sh :tangle ~/.config/fish/config.fish
   alias jd '~/bin/jd2/JDownloader2 &'
+  alias vf vifm
   #+end_src
 * Neovim
 ** General
@@ -380,6 +416,19 @@
   let g:loaded_ruby_provider = 1
   " To disable Python 2 support:
   let g:loaded_python_provider = 1
+  #+end_src
+** Plugins
+*** Start Plug
+  #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+    call plug#begin('~/.local/share/nvim/plugged')
+  #+end_src
+** NeoSolarized
+  #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+  Plug 'iCyMind/NeoSolarized'
+  #+end_src
+*** End Plug
+  #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+  call plug#end()
   #+end_src
 ** GUI
 *** No intro message
