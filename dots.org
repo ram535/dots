@@ -926,6 +926,7 @@ bindsym $mod+a focus parent
     nnoremap * *N
     #+end_src
 *** copy and paste from the clipboard system
+    sudo apt install xclip
     #+begin_src vimrc :tangle ~/.config/nvim/init.vim
     set clipboard+=unnamedplus
     nnoremap <leader>p "+p
