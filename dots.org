@@ -1,43 +1,5 @@
 * Emacs
 ** General settings
-*** path to my packages
-   #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-   (add-to-list 'load-path "~/.emacs.d/lisp/")
-   #+END_SRC
-*** Package liabraries
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      ;; Set up package
-      (require 'package)
-      (add-to-list 'package-archives
-                   '("marmalade" . "http://marmalade-repo.org/packages/"))
-      (add-to-list 'package-archives
-                   '("melpa-stable" . "http://stable.melpa.org/packages/"))
-      (add-to-list 'package-archives
-                   '("org" . "http://orgmode.org/elpa/"))
-      (add-to-list 'package-archives
-                   '("melpa" . "http://melpa.org/packages/") t)
-      (setq package-archive-priorities '(("org" . 3)
-                                         ("melpa-stable" . 1)
-                                         ("melpa" . 2)
-                                         ("gnu" . 4)))
-      (package-initialize)
-    #+end_src
-*** use-package
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-       ;; Bootstrap use-package
-       ;; Install use-package if it's not already installed.
-       ;; use-package is used to configure the rest of the packages.
-       (unless (package-installed-p 'use-package)
-         (package-refresh-contents)
-         (package-install 'use-package))
-
-       ;; From use-package README
-       (eval-when-compile
-         (require 'use-package))
-
-       (require 'bind-key)
-       (server-start)
-    #+end_src
 *** custom.el
    Set up auto-generated variables to its own file, instead of saving
    customize settings in [[file:init.el][init.el]].
@@ -72,6 +34,12 @@
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
          (setq scroll-conservatively 10000
             scroll-preserve-screen-position t)
+    #+end_src
+*** Paths
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+     (setenv "PATH"
+      (concat
+       (getenv "PATH")))       
     #+end_src
 ** GUI
 *** Hiding elements
@@ -166,69 +134,31 @@
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
    (setq x-stretch-cursor t)
     #+end_src
-*** Solarized theme
+** Packages
+*** Straight.el
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-         (use-package solarized-theme
-           :if (window-system)
-           :ensure t
-           :init
-           (load-theme 'solarized-dark))
+      (defvar bootstrap-version)
+      (let ((bootstrap-file
+	     (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+	    (bootstrap-version 5))
+	(unless (file-exists-p bootstrap-file)
+	  (with-current-buffer
+	      (url-retrieve-synchronously
+	       "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
+	       'silent 'inhibit-cookies)
+	    (goto-char (point-max))
+	    (eval-print-last-sexp)))
+	(load bootstrap-file nil 'nomessage))
+	
+	(setq straight-use-package-by-default t)
     #+end_src
-
-** Org Mode
-*** org
+*** Use-package
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package org
-        :defer t
-        :ensure org-plus-contrib
-        :config
-          ;; To be able to see the images after bable is execute
-          (add-hook 'org-babel-after-execute-hook 'org-display-inline-images)
-          (setq org-startup-with-inline-images t)
-          (org-babel-do-load-languages
-           'org-babel-load-languages
-           '((dot . t)
-             (js . t)
-             (latex . t)
-             (C . t)
-             (python . t)
-             (emacs-lisp . t))))
+      (straight-use-package 'use-package)
     #+end_src
-
-*** See down arrow instead of "..." when we have subtrees (noticeable ellipsis)
-   When headers are collapsed, org-mode uses ellipses to represent the hidden text,
-   but I think that’s too subtle, so this makes them stand out more.
-   #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-     (setq org-ellipsis "⤵")
-   #+end_src
-*** Make sure we see syntax highlighting
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (setq org-src-fontify-natively t)
-    #+end_src
-*** Editing source code
-   I don't want to get distracted by the same code in the other window, so I want org src to use the current window.
-   #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-      (setq org-src-window-setup 'current-window)
-   #+END_SRC
-*** HighlightI latex text in org-mode
-   Then inline latex like $y=mx+c$ will appear in a different colour in an org-mode file to help it stand out.
-   #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-   (setq org-highlight-latex-and-related '(latex))
-   #+END_SRC
-** Bullets
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-       (use-package org-bullets
-         :ensure t
-         :after org
-         :commands (org-bullets-mode)
-         :init (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
-    #+end_src
-
-** Evil Mode
-*** Evil configuration
+*** Evil
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package evil
-        :ensure t
         :custom
         ;; change the color of the cursor
         (evil-normal-state-cursor '("gray" box))
@@ -244,7 +174,6 @@
 *** Evil leader
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package evil-leader
-        :ensure t
         :after (evil)
         :config
         (global-evil-leader-mode)
@@ -252,22 +181,128 @@
         (evil-leader/set-key "w" 'evil-write)
         (evil-leader/set-key "ed" '(lambda() (interactive)(find-file "~/Projects/dots/dots.org")))
         (evil-leader/set-key "en" '(lambda() (interactive)(find-file "~/Documents/notes/notes.org")))
+        (evil-leader/set-key "f" '(lambda() (interactive)(counsel-find-file)))
+        (evil-leader/set-key "b" 'ivy-switch-buffer)
         (evil-leader/set-key "q" 'mode-line-other-buffer))
     #+end_src
 *** Evil-escape
    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-  (use-package evil-escape
-    :ensure t
-    :after (evil)
-    :custom (evil-escape-key-sequence "jk")
-    :config (evil-escape-mode))
+     (use-package evil-escape
+       :after (evil)
+       :custom (evil-escape-key-sequence "jk")
+       :config (evil-escape-mode))
    #+END_SRC
-** Hydra
+*** Solarized theme
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-    (use-package hydra
-    :ensure t)
+      (use-package solarized-theme
+	:if (window-system)
+	:init
+	(load-theme 'solarized-dark))
     #+end_src
+*** Org Mode
+**** org-plus-contrib
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package org
+        :straight org-plus-contrib
+        :config
+          ;; To be able to see the images after bable is execute
+          (add-hook 'org-babel-after-execute-hook 'org-display-inline-images)
+          (setq org-startup-with-inline-images t)
+          (org-babel-do-load-languages
+           'org-babel-load-languages
+           '((dot . t)
+             (js . t)
+             (latex . t)
+             (C . t)
+             (python . t)
+             (emacs-lisp . t))))
+    #+end_src
+
+**** See down arrow instead of "..." when we have subtrees (noticeable ellipsis)
+   When headers are collapsed, org-mode uses ellipses to represent the hidden text,
+   but I think that’s too subtle, so this makes them stand out more.
+   #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+     (setq org-ellipsis "⤵")
+   #+end_src
+**** Make sure we see syntax highlighting
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (setq org-src-fontify-natively t)
+    #+end_src
+**** Editing source code
+   I don't want to get distracted by the same code in the other window, so I want org src to use the current window.
+   #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+      (setq org-src-window-setup 'current-window)
+   #+END_SRC
+**** HighlightI latex text in org-mode
+   Then inline latex like $y=mx+c$ will appear in a different colour in an org-mode file to help it stand out.
+   #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+   (setq org-highlight-latex-and-related '(latex))
+   #+END_SRC
+*** Org-bullets
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+       (use-package org-bullets
+         :after org
+         :commands (org-bullets-mode)
+         :init (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
+    #+end_src
+
+*** Hydra
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package hydra)
+    #+end_src
+*** Counsel, ivy and swiper
+   Ivy is installed as part of swiper package.
+   #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+     (use-package counsel
+       :diminish ""
+       :commands (counsel-find-file councel-bookmark)
+       :config
+         (define-key evil-normal-state-map (kbd "\C-n") 'counsel-up-directory))
+
+     (use-package swiper
+       :diminish ""
+       :config
+       (progn
+         (ivy-mode 1)
+         (setq ivy-use-virtual-buffers t)
+         (define-key evil-normal-state-map (kbd "\C-s") 'swiper)
+         (define-key evil-motion-state-map (kbd "\C-s") 'swiper)
+         (define-key evil-emacs-state-map (kbd "\C-s") 'swiper)
+         ))
+
+     (use-package ivy
+       :diminish ""
+       :bind (:map ivy-minibuffer-map
+                   ("C-j" . ivy-next-line)
+                   ("C-k" . ivy-previous-line))
+       :config
+       (ivy-mode 1)
+       (setq ivy-use-virtual-buffers t)
+       (setq ivy-count-format "(%d/%d) "))
+   #+end_src
+*** Projectile
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package projectile
+      :diminish ""
+      :init
+      (projectile-mode +1))
+    #+end_src
+*** Dart-mode
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    (use-package dart-mode
+    :config
+      (setq dart-format-on-save t)
+      (setq exec-path (append exec-path '("~/bin/dart-sdk/bin")))
+      (with-eval-after-load "projectile"
+        (add-to-list 'projectile-project-root-files-bottom-up "pubspec.yaml")
+        (add-to-list 'projectile-project-root-files-bottom-up "BUILD")))
+    #+end_src
+
 * Fish
+** Vi mode
+  #+begin_src sh :tangle ~/.config/fish/config.fish
+    fish_vi_key_bindings
+  #+end_src
 ** Paths
 *** .Env
   #+begin_src sh :tangle ~/.config/fish/config.fish
@@ -316,6 +351,20 @@
   #+begin_src sh :tangle ~/.config/fish/config.fish
     alias jd '~/bin/jd2/JDownloader2 &'
     alias vf vifm
+    alias emulator '~/bin/Android/Sdk/emulator/emulator'
+  #+end_src
+** Abbreviations
+  #+begin_src sh :tangle ~/.config/fish/config.fish
+  abbr -a gco git checkout
+  abbr -a gcm git commit -m
+  abbr -a ga git add
+  abbr -a gp git push
+  abbr -a gpo git push origin
+  abbr -a sh stagehand
+  #+end_src
+** Remap Crt-l as right arrow key
+  #+begin_src sh :tangle ~/.config/fish/config.fish
+  bind -M insert \cl forward-char
   #+end_src
 * I3wm
 ** Config
@@ -676,33 +725,153 @@ bindsym $mod+a focus parent
   #+end_src
 ** Plugins
 *** Start Plug
-  #+begin_src vimrc :tangle ~/.config/nvim/init.vim
-    call plug#begin('~/.local/share/nvim/plugged')
-  #+end_src
+    #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+	call plug#begin('~/.local/share/nvim/plugged')
+    #+end_src
 *** Coc
-  #+begin_src vimrc :tangle ~/.config/nvim/init.vim
-  Plug 'neoclide/coc.nvim', {'tag': '*', 'do': './install.sh'}
-  #+end_src
-*** End Plug
-  #+begin_src vimrc :tangle ~/.config/nvim/init.vim
-  call plug#end()
-  #+end_src
-** NeoSolarized
+    #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+	Plug 'neoclide/coc.nvim', {'tag': '*', 'do': './install.sh'}
+    #+end_src
+*** Dart-vim-plugin
+    #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+	Plug 'dart-lang/dart-vim-plugin'
+    #+end_src
+*** NeoSolarized
   #+begin_src vimrc :tangle ~/.config/nvim/init.vim
   Plug 'iCyMind/NeoSolarized'
   #+end_src
-*** End Plug
+*** Vim-go
   #+begin_src vimrc :tangle ~/.config/nvim/init.vim
-  call plug#end()
+  Plug 'fatih/vim-go', { 'do': ':GoUpdateBinaries' }
   #+end_src
+*** End Plug
+    #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+	call plug#end()
+    #+end_src
+** Plugin Configuration
+*** Coc
+**** coc-setting.json
+    #+begin_src vimrc :tangle ~/.config/nvim/coc-settings.json
+      {
+        "languageserver": {
+          "dart": {
+            "command": "dart_language_server",
+            "args": [],
+            "filetypes": ["dart"],
+            "initializationOptions": {},
+            "settings": {
+              "dart": {
+                "validation": {},
+                "completion": {}
+              }
+            }
+          }
+        }
+      }
+    #+end_src
+**** Get correct comment highligh in json files
+    #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+    autocmd FileType json syntax match Comment +\/\/.\+$+
+    #+end_src
+**** General configuration
+    #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+      " Better display for messages
+      set cmdheight=2
+      
+      " Smaller updatetime for CursorHold & CursorHoldI
+      set updatetime=300
+      
+      " don't give |ins-completion-menu| messages.
+      set shortmess+=c
+
+      " Use tab for trigger completion with characters ahead and navigate.
+      " Use command ':verbose imap <tab>' to make sure tab is not mapped by other plugin.
+      inoremap <silent><expr> <TAB>
+            \ pumvisible() ? "\<C-n>" :
+            \ <SID>check_back_space() ? "\<TAB>" :
+            \ coc#refresh()
+      inoremap <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
+      
+      function! s:check_back_space() abort
+        let col = col('.') - 1
+        return !col || getline('.')[col - 1]  =~# '\s'
+      endfunction
+      
+      " Use <c-space> to trigger completion.
+      inoremap <silent><expr> <c-space> coc#refresh()
+      
+      " Use <cr> to confirm completion, `<C-g>u` means break undo chain at current position.
+      " Coc only does snippet and additional edit on confirm.
+      inoremap <expr> <cr> pumvisible() ? "\<C-y>" : "\<C-g>u\<CR>"
+      
+      " Use `[c` and `]c` to navigate diagnostics
+      nmap <silent> [c <Plug>(coc-diagnostic-prev)
+      nmap <silent> ]c <Plug>(coc-diagnostic-next)
+      
+      " Remap keys for gotos
+      nmap <silent> gd <Plug>(coc-definition)
+      nmap <silent> gy <Plug>(coc-type-definition)
+      nmap <silent> gi <Plug>(coc-implementation)
+      nmap <silent> gr <Plug>(coc-references)
+      
+      " Use K to show documentation in preview window
+      nnoremap <silent> K :call <SID>show_documentation()<CR>
+      
+      function! s:show_documentation()
+        if (index(['vim','help'], &filetype) >= 0)
+          execute 'h '.expand('<cword>')
+        else
+          call CocAction('doHover')
+        endif
+      endfunction
+      
+      " Highlight symbol under cursor on CursorHold
+      " autocmd CursorHold * silent call CocActionAsync('highlight')
+      
+      " Remap for rename current word
+      nmap <leader>rn <Plug>(coc-rename)
+      
+      " Remap for format selected region
+      xmap <leader>f  <Plug>(coc-format-selected)
+      nmap <leader>f  <Plug>(coc-format-selected)
+      
+      augroup mygroup
+        autocmd!
+        " Setup formatexpr specified filetype(s).
+        autocmd FileType typescript,json setl formatexpr=CocAction('formatSelected')
+        " Update signature help on jump placeholder
+        autocmd User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
+      augroup end
+      
+      " Remap for do codeAction of selected region, ex: `<leader>aap` for current paragraph
+      xmap <leader>a  <Plug>(coc-codeaction-selected)
+      nmap <leader>a  <Plug>(coc-codeaction-selected)
+      
+      " Remap for do codeAction of current line
+      nmap <leader>ac  <Plug>(coc-codeaction)
+      " Fix autofix problem of current line
+      nmap <leader>qf  <Plug>(coc-fix-current)
+      
+      " Use `:Format` to format current buffer
+      command! -nargs=0 Format :call CocAction('format')
+      
+      " Use `:Fold` to fold current buffer
+      command! -nargs=? Fold :call     CocAction('fold', <f-args>)
+    #+end_src
 ** GUI
+*** Theme
+  #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+    set termguicolors
+    set background=dark
+    colorscheme NeoSolarized
+  #+end_src
 *** No intro message
   #+begin_src vimrc :tangle ~/.config/nvim/init.vim
   set shortmess=I
   #+end_src
 *** Sign Column
 *** Change sign column color
-  #+begin_src vimrc
+  #+begin_src vimrc :tangle ~/.config/nvim/init.vim
    highlight clear SignColumn
   #+end_src
 *** Keep the sign colum always visible
