@@ -7,6 +7,10 @@
         (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
         (load custom-file)
    #+end_src
+*** Start server
+   #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+       (server-start)
+   #+end_src
 *** backup
    Keep all backup and auto-save files in one directory
    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
@@ -40,6 +44,7 @@
      (setenv "PATH"
       (concat
        (getenv "PATH")))       
+       (add-to-list 'exec-path (concat (getenv "GOPATH") "bin") t)
     #+end_src
 ** GUI
 *** Hiding elements
@@ -92,12 +97,16 @@
     #+END_SRC
 *** Default Font
     when "font" is available
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-(when (member "Knack Nerd Font" (font-family-list))
-  (set-face-attribute 'default nil :font "Knack Nerd Font"))
-        ;;(when (member "FantasqueSansMono Nerd Font" (font-family-list))
-        ;;(add-to-list 'default-frame-alist '(font . "FantasqueSansMono Nerd Font-11" ))
-        ;;(set-face-attribute 'default t :font "FantasqueSansMono Nerd Font-11"))
+    #+begin_src emacs-lisp
+       (when (member "Hack NF" (font-family-list))
+       (set-face-attribute 'default t :font "Hack NF"))
+    ;;(set-fontset-font "fontset-default" 'unicode "Knack Nerd Font")
+    ;;t(set-face-font 'default "Knack Nerd Fontt-11")
+    ;;   (when (member "Knack Nerd Font" (font-family-list))
+    ;;   (set-face-attribute 'default t :font "Knack Nerd Font"))
+      ;; (when (member "FantasqueSansMono Nerd Font" (font-family-list))
+      ;;(add-to-list 'default-frame-alist '(font . "FantasqueSansMono Nerd Font-11" ))
+      ;; (set-face-attribute 'default t :font "FantasqueSansMono Nerd Font-11"))
     #+end_src
 *** White spaces
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
@@ -156,6 +165,22 @@
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (straight-use-package 'use-package)
     #+end_src
+*** Exec-path-from-shell
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package exec-path-from-shell
+        :config
+	(when (memq window-system '(mac ns x))
+	(exec-path-from-shell-initialize)))
+    #+end_src
+*** Dependencies
+    The following package dependencies are used throughout the rest of the configuration. 
+    They provide contemporary APIs for working with various elisp data structures.
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package dash)      ;; lists
+      (use-package ht)        ;; hash-tables
+      (use-package s)         ;; strings
+      (use-package a)         ;; association lists
+    #+end_src
 *** Evil
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package evil
@@ -181,6 +206,7 @@
         (evil-leader/set-key "w" 'evil-write)
         (evil-leader/set-key "ed" '(lambda() (interactive)(find-file "~/Projects/dots/dots.org")))
         (evil-leader/set-key "en" '(lambda() (interactive)(find-file "~/Documents/notes/notes.org")))
+        (evil-leader/set-key "eb" '(lambda() (interactive)(find-file "~/Documents/bookmarks/bookmarks.org")))
         (evil-leader/set-key "f" '(lambda() (interactive)(counsel-find-file)))
         (evil-leader/set-key "b" 'ivy-switch-buffer)
         (evil-leader/set-key "q" 'mode-line-other-buffer))
@@ -250,17 +276,28 @@
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package hydra)
     #+end_src
+*** Major-mode-hydra
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package major-mode-hydra
+	:bind
+	("C-M-m" . major-mode-hydra))
+    #+end_src
+*** Hera
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package hera
+	:straight (hera :type git :host github :repo "dustinlacewell/hera")
+	:config
+	(require 'hera))
+    #+end_src
 *** Counsel, ivy and swiper
    Ivy is installed as part of swiper package.
    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
      (use-package counsel
-       :diminish ""
        :commands (counsel-find-file councel-bookmark)
        :config
          (define-key evil-normal-state-map (kbd "\C-n") 'counsel-up-directory))
 
      (use-package swiper
-       :diminish ""
        :config
        (progn
          (ivy-mode 1)
@@ -271,7 +308,6 @@
          ))
 
      (use-package ivy
-       :diminish ""
        :bind (:map ivy-minibuffer-map
                    ("C-j" . ivy-next-line)
                    ("C-k" . ivy-previous-line))
@@ -283,9 +319,36 @@
 *** Projectile
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package projectile
-      :diminish ""
       :init
       (projectile-mode +1))
+    #+end_src
+*** Helm
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package helm)
+    #+end_src
+*** Helm-projectile
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package helm-projectile
+	:after projectile)
+    #+end_src
+*** Yasnippet
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package yasnippet
+	:config
+	(yas-global-mode)
+	(setq yas-snippet-dirs
+	      (append yas-snippet-dirs '("~/Projects/dotfiles/snips/yasnippet")))
+	(yas-reload-all))
+    #+end_src
+*** Company
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package company)
+    #+end_src
+*** Flycheck
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package flycheck
+	:hook (go-mode . flycheck-mode)
+        :hook (dart-mode . flycheck-mode))
     #+end_src
 *** Dart-mode
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
@@ -297,74 +360,186 @@
         (add-to-list 'projectile-project-root-files-bottom-up "pubspec.yaml")
         (add-to-list 'projectile-project-root-files-bottom-up "BUILD")))
     #+end_src
+*** Go-mode
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package go-mode
+      :config
+      (setq gofmt-command "goimports")
+      (add-hook 'before-save-hook 'gofmt-before-save))
+    #+end_src
+*** Lsp-mode
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package lsp-mode
+        :straight (lsp-mode :type git :host github :repo "emacs-lsp/lsp-mode")
+	:hook (go-mode . lsp)
+	:hook (dart-mode . lsp)
+	:commands lsp
+	:config
+	(remhash 'gopls lsp-clients))
+    #+end_src
+*** Lsp-ui
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    (use-package lsp-ui 
+       :hook (lsp-mode-hook . lsp-ui-mode)
+       :commands lsp-ui-mode
+       :custom
+       (lsp-ui-sideline-enable nil)
+       (lsp-ui-sideline-show-code-actions nil)
+       (lsp-ui-sideline-show-symbol t)
+       (lsp-ui-sideline-show-hover t)
+       (lsp-ui-sideline-show-diagnostics nil)
+       (lsp-ui-doc-enable nil))
+    #+end_src
+*** Company-lsp
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    (use-package company-lsp 
+      :config
+      (push 'company-lsp company-backends))
+    #+end_src
+*** Helm-lsp-workspace-symbol
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    (use-package helm-lsp :commands helm-lsp-workspace-symbol)
+    #+end_src
+*** Lsp-treemacs
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    (use-package lsp-treemacs :commands lsp-treemacs-errors-list)
+    #+end_src
+*** Dap-mode
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    (use-package dap-mode)
+    #+end_src
+*** Rich-minority
+    #+begin_src emacs-lisp 
+      (use-package rich-minority
+	:config
+	(rich-minority-mode 1)
+
+	(setq rm-whitelist
+	(format "^ \\(%s\\)$"
+        (mapconcat #'identity
+        '("")
+        "\\|"))))
+    #+end_src
+*** All-the-icons
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    (use-package all-the-icons)
+    #+end_src
+*** Magit
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package magit
+	:bind ("C-c m" . magit-status))
+    #+end_src
+*** Evil-magit
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package evil-magit
+        :after (magit))
+    #+end_src
+*** Fish-mode
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package fish-mode
+	:mode "\\.fish\\'")
+    #+end_src
+*** Vimrc-mode
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package vimrc-mode
+	:mode "\\.vim\\'")
+    #+end_src
+*** Json-mode
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package json-mode)
+    #+end_src
+*** Doom-modeline
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package doom-modeline
+	    :hook (after-init . doom-modeline-mode)
+	    :config
+	    ;; Whether display buffer encoding.
+	    (setq doom-modeline-buffer-encoding nil)
+	    (setq doom-modeline-icon nil))
+    #+end_src
 
 * Fish
 ** Vi mode
-  #+begin_src sh :tangle ~/.config/fish/config.fish
+  #+begin_src fish :tangle ~/.config/fish/config.fish
     fish_vi_key_bindings
   #+end_src
 ** Paths
 *** .Env
-  #+begin_src sh :tangle ~/.config/fish/config.fish
+  #+begin_src fish :tangle ~/.config/fish/config.fish
   set -x PATH $HOME/bin /snap/bin /usr/bin /bin /usr/sbin /sbin /usr/local/bin
   #+end_src
 *** Android-SDK
-  #+begin_src sh :tangle ~/.config/fish/config.fish
+  #+begin_src fish :tangle ~/.config/fish/config.fish
    set -x ANDROID_HOME $HOME/bin/Android/Sdk
   #+end_src
 *** Clang
-  #+begin_src sh :tangle ~/.config/fish/config.fish
+  #+begin_src fish :tangle ~/.config/fish/config.fish
   set -x PATH $HOME/bin/clang/bin $PATH
   #+end_src
 *** Dart
-  #+begin_src sh :tangle ~/.config/fish/config.fish
+  #+begin_src fish :tangle ~/.config/fish/config.fish
   set -x PATH $HOME/.pub-cache/bin $PATH
   set -x PATH $HOME/bin/dart-sdk/bin $PATH
   #+end_src
 *** Flutter
-  #+begin_src sh :tangle ~/.config/fish/config.fish
+  #+begin_src fish :tangle ~/.config/fish/config.fish
    set -x PATH $HOME/bin/flutter/bin $PATH
   #+end_src
 *** Go
-  #+begin_src sh :tangle ~/.config/fish/config.fish
+  #+begin_src fish :tangle ~/.config/fish/config.fish
   set -x PATH /usr/local/go/bin $PATH
   set -x GOPATH $HOME/bin/go
   set -x PATH $HOME/bin/go/bin $PATH
   #+end_src
 *** Java
-  #+begin_src sh :tangle ~/.config/fish/config.fish
+  #+begin_src fish :tangle ~/.config/fish/config.fish
   set -x PATH $HOME/bin/jdk-12.0.1/bin $PATH
   #+end_src
 *** Node
-  #+begin_src sh :tangle ~/.config/fish/config.fish
+  #+begin_src fish :tangle ~/.config/fish/config.fish
    set -x PATH PATH $HOME/bin/node/bin $PATH
   #+end_src
 *** Python
-  #+begin_src sh :tangle ~/.config/fish/config.fish
+  #+begin_src fish :tangle ~/.config/fish/config.fish
    set -x PATH $HOME/bin/anaconda3/bin $PATH
   #+end_src
 *** VSCode
-  #+begin_src sh :tangle ~/.config/fish/config.fish
+  #+begin_src fish :tangle ~/.config/fish/config.fish
   set -x PATH $HOME/bin/VSCode $PATH
   #+end_src
 ** Alias
-  #+begin_src sh :tangle ~/.config/fish/config.fish
-    alias jd '~/bin/jd2/JDownloader2 &'
-    alias vf vifm
+  #+begin_src fish :tangle ~/.config/fish/config.fish
+    alias jd '~/bin/jd2/JDownloader2 &; clear'
+    alias e '~/bin/emacs/bin/emacs &; clear'
+    alias n '~/bin/nvim; clear'
+    alias vf 'vifm .'
     alias emulator '~/bin/Android/Sdk/emulator/emulator'
   #+end_src
 ** Abbreviations
-  #+begin_src sh :tangle ~/.config/fish/config.fish
+  #+begin_src fish :tangle ~/.config/fish/config.fish
   abbr -a gco git checkout
-  abbr -a gcm git commit -m
+  abbr -a gc git commit -m \'\'
   abbr -a ga git add
   abbr -a gp git push
   abbr -a gpo git push origin
+  abbr -a gl git log
+  abbr -a gd git diff
   abbr -a sh stagehand
   #+end_src
-** Remap Crt-l as right arrow key
-  #+begin_src sh :tangle ~/.config/fish/config.fish
-  bind -M insert \cl forward-char
+** Remap ll for autocomplete suggestion
+  #+begin_src fish :tangle ~/.config/fish/config.fish
+  bind -M insert ll forward-char
+  #+end_src
+** Map jk as Esc
+  #+begin_src fish :tangle ~/.config/fish/functions/fish_user_key_bindings.fish
+    function fish_user_key_bindings
+      fish_vi_key_bindings
+      bind -M insert -m default jk backward-char force-repaint
+    end
+  #+end_src
+
+  #+begin_src fish :tangle ~/.config/fish/config.fish
+  set fish_key_bindings fish_user_key_bindings
   #+end_src
 * I3wm
 ** Config
@@ -751,7 +926,7 @@ bindsym $mod+a focus parent
 ** Plugin Configuration
 *** Coc
 **** coc-setting.json
-    #+begin_src vimrc :tangle ~/.config/nvim/coc-settings.json
+    #+begin_src json :tangle ~/.config/nvim/coc-settings.json
       {
         "languageserver": {
           "dart": {
@@ -857,6 +1032,28 @@ bindsym $mod+a focus parent
       
       " Use `:Fold` to fold current buffer
       command! -nargs=? Fold :call     CocAction('fold', <f-args>)
+    #+end_src
+*** Vim-go
+    #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+    let g:go_fmt_command = "goimports"
+
+    " turn highlighting on
+    let g:go_highlight_types = 1
+    let g:go_highlight_fields = 1
+    let g:go_highlight_functions = 1
+    let g:go_highlight_methods = 1
+    let g:go_highlight_structs = 1
+    let g:go_highlight_operators = 1
+    let g:go_highlight_build_constraints = 1
+
+    " enabled highlighting of variables that are the same
+    " let g:go_auto_sameids = 1
+
+    " Show type information and function signature
+    let g:go_auto_type_info = 1
+
+    " Hide tabs
+    autocmd BufNewFile,BufRead *.go setlocal invlist noexpandtab tabstop=4 shiftwidth=4
     #+end_src
 ** GUI
 *** Theme
