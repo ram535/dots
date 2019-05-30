@@ -454,55 +454,55 @@
 
 * Fish
 ** Vi mode
-  #+begin_src fish :tangle ~/.config/fish/config.fish
+  #+begin_src fish :mkdirp yes :tangle ~/.config/fish/config.fish
     fish_vi_key_bindings
   #+end_src
 ** Paths
 *** .Env
-  #+begin_src fish :tangle ~/.config/fish/config.fish
+  #+begin_src fish :mkdirp yes :tangle ~/.config/fish/config.fish
   set -x PATH $HOME/bin /snap/bin /usr/bin /bin /usr/sbin /sbin /usr/local/bin
   #+end_src
 *** Android-SDK
-  #+begin_src fish :tangle ~/.config/fish/config.fish
+  #+begin_src fish :mkdirp yes :tangle ~/.config/fish/config.fish
    set -x ANDROID_HOME $HOME/bin/Android/Sdk
   #+end_src
 *** Clang
-  #+begin_src fish :tangle ~/.config/fish/config.fish
+  #+begin_src fish :mkdirp yes :tangle ~/.config/fish/config.fish
   set -x PATH $HOME/bin/clang/bin $PATH
   #+end_src
 *** Dart
-  #+begin_src fish :tangle ~/.config/fish/config.fish
+  #+begin_src fish :mkdirp yes :tangle ~/.config/fish/config.fish
   set -x PATH $HOME/.pub-cache/bin $PATH
   set -x PATH $HOME/bin/dart-sdk/bin $PATH
   #+end_src
 *** Flutter
-  #+begin_src fish :tangle ~/.config/fish/config.fish
+  #+begin_src fish :mkdirp yes :tangle ~/.config/fish/config.fish
    set -x PATH $HOME/bin/flutter/bin $PATH
   #+end_src
 *** Go
-  #+begin_src fish :tangle ~/.config/fish/config.fish
+  #+begin_src fish :mkdirp yes :tangle ~/.config/fish/config.fish
   set -x PATH /usr/local/go/bin $PATH
   set -x GOPATH $HOME/bin/go
   set -x PATH $HOME/bin/go/bin $PATH
   #+end_src
 *** Java
-  #+begin_src fish :tangle ~/.config/fish/config.fish
+  #+begin_src fish :mkdirp yes :tangle ~/.config/fish/config.fish
   set -x PATH $HOME/bin/jdk-12.0.1/bin $PATH
   #+end_src
 *** Node
-  #+begin_src fish :tangle ~/.config/fish/config.fish
+  #+begin_src fish :mkdirp yes :tangle ~/.config/fish/config.fish
    set -x PATH PATH $HOME/bin/node/bin $PATH
   #+end_src
 *** Python
-  #+begin_src fish :tangle ~/.config/fish/config.fish
+  #+begin_src fish :mkdirp yes :tangle ~/.config/fish/config.fish
    set -x PATH $HOME/bin/anaconda3/bin $PATH
   #+end_src
 *** VSCode
-  #+begin_src fish :tangle ~/.config/fish/config.fish
+  #+begin_src fish :mkdirp yes :tangle ~/.config/fish/config.fish
   set -x PATH $HOME/bin/VSCode $PATH
   #+end_src
 ** Alias
-  #+begin_src fish :tangle ~/.config/fish/config.fish
+  #+begin_src fish :mkdirp yes :tangle ~/.config/fish/config.fish
     alias jd '~/bin/jd2/JDownloader2 &; clear'
     alias e '~/bin/emacs/bin/emacs &; clear'
     alias n '~/bin/nvim; clear'
@@ -510,7 +510,7 @@
     alias emulator '~/bin/Android/Sdk/emulator/emulator'
   #+end_src
 ** Abbreviations
-  #+begin_src fish :tangle ~/.config/fish/config.fish
+  #+begin_src fish :mkdirp yes :tangle ~/.config/fish/config.fish
   abbr -a gco git checkout
   abbr -a gc git commit -m \'\'
   abbr -a ga git add
@@ -521,18 +521,18 @@
   abbr -a sh stagehand
   #+end_src
 ** Remap ll for autocomplete suggestion
-  #+begin_src fish :tangle ~/.config/fish/config.fish
+  #+begin_src fish :mkdirp yes :tangle ~/.config/fish/config.fish
   bind -M insert ll forward-char
   #+end_src
 ** Map jk as Esc
-  #+begin_src fish :tangle ~/.config/fish/functions/fish_user_key_bindings.fish
+  #+begin_src fish :mkdirp yes :tangle ~/.config/fish/config.fish
     function fish_user_key_bindings
       fish_vi_key_bindings
       bind -M insert -m default jk backward-char force-repaint
     end
   #+end_src
 
-  #+begin_src fish :tangle ~/.config/fish/config.fish
+  #+begin_src fish :mkdirp yes :tangle ~/.config/fish/config.fish
   set fish_key_bindings fish_user_key_bindings
   #+end_src
 * I3wm
@@ -1885,7 +1885,19 @@ bindsym $mod+a focus parent
 * Zsh
 ** Theme
    #+BEGIN_SRC sh :tangle ~/.zshrc
-   ZSH_THEME="robbyrussell"
+     POWERLEVEL9K_MODE='nerdfont-complete'
+     POWERLEVEL9K_PROMPT_ON_NEWLINE=true
+     POWERLEVEL9K_DIR_OMIT_FIRST_CHARACTER=true
+     POWERLEVEL9K_SHORTEN_DIR_LENGTH=1
+     POWERLEVEL9K_LEFT_SEGMENT_SEPARATOR="\uE0B4"
+     POWERLEVEL9K_RIGHT_SEGMENT_SEPARATOR="\uE0B6"
+     POWERLEVEL9K_MULTILINE_FIRST_PROMPT_PREFIX=""
+     POWERLEVEL9K_MULTILINE_LAST_PROMPT_PREFIX="\ue0b4 "
+     POWERLEVEL9K_ROOT_ICON=$'\uF198'  # 
+     POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(root_indicator dir vcs)
+     POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(status)
+     ZSH_THEME="powerlevel9k/powerlevel9k"
+     # ZSH_THEME="robbyrussell"
    #+END_SRC
 ** Paths
 *** Zsh
