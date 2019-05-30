@@ -1955,4 +1955,5 @@ bindsym $mod+a focus parent
    #+BEGIN_SRC sh :tangle ~/.zshrc
    alias jd="~/bin/jd2/JDownloader2 &"
    alias vf="vifm ."
+   alias n="nvim"
    #+END_SRC
