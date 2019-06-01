@@ -1,0 +1,43 @@
+snippet pr "print()" b
+print($0);
+endsnippet
+
+snippet m "main{}" b
+main() {
+ $0
+}
+endsnippet
+
+snippet v "var" b
+var ${1:_} = ${0:_};
+endsnippet
+
+snippet s "String" b
+String ${1:_} = "${0:_}";
+endsnippet
+
+snippet in "interpolation ${}" i
+${$1}$0
+endsnippet
+
+snippet for "for(){}" b
+for (int ${1:_}; $1 ${2:_}; ${3:$1++}) {
+ $0
+}
+endsnippet
+
+snippet db "Debugging" b
+import 'dart:developer';
+debugger();
+endsnippet
+
+snippet im "import:math" b
+import 'dart:math';
+endsnippet
+
+
+snippet if "if" b
+if($1) {
+ $0
+}
+endsnippet

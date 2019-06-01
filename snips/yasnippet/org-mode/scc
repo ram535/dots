@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: scp
+# key: scp
+# --
+#+begin_src cpp
+
+#+end_src

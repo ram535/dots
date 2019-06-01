@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: scv
+# key: scv
+# --
+#+begin_src vimrc :tangle ~/.config/nvim/init.vim
+#+end_src

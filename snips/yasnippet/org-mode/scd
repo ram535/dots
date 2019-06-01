@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: scd
+# key: scd
+# --
+#+begin_src dart
+
+#+end_src

@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: scp
+# key: scp
+# --
+#+begin_src python
+
+#+end_src

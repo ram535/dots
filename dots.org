@@ -201,7 +201,8 @@
         (evil-leader/set-key "en" '(lambda() (interactive)(find-file "~/Documents/notes/notes.org")))
         (evil-leader/set-key "eb" '(lambda() (interactive)(find-file "~/Documents/bookmarks/bookmarks.org")))
         (evil-leader/set-key "f" '(lambda() (interactive)(counsel-find-file)))
-        (evil-leader/set-key "s" '(lambda() (interactive)(magit-status)))
+        (evil-leader/set-key "s" 'magit-status)
+	;; (evil-leader/set-key "ee" 'eval-defun)
         (evil-leader/set-key "b" 'ivy-switch-buffer)
         (evil-leader/set-key "q" 'mode-line-other-buffer))
     #+end_src
@@ -219,6 +220,10 @@
 	:init
 	(load-theme 'solarized-dark))
     #+end_src
+*** Ob-go
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+       (use-package ob-go)
+    #+end_src
 *** Org Mode
 **** org-plus-contrib
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
@@ -234,6 +239,7 @@
              (js . t)
              (latex . t)
              (C . t)
+	     (go . t)
              (python . t)
              (emacs-lisp . t))))
     #+end_src
@@ -265,7 +271,6 @@
          :commands (org-bullets-mode)
          :init (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
     #+end_src
-
 *** Hydra
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package hydra)
@@ -328,21 +333,24 @@
 *** Yasnippet
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package yasnippet
+	:bind ("C-u" . yas-expand)
 	:config
 	(yas-global-mode)
 	(setq yas-snippet-dirs
-	      (append yas-snippet-dirs '("~/Projects/dotfiles/snips/yasnippet")))
+	      (append yas-snippet-dirs '("~/Projects/dots/snips/yasnippet")))
 	(yas-reload-all))
     #+end_src
 *** Company
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package company)
+      (use-package company
+	:config
+	(add-hook 'after-init-hook 'global-company-mode))
     #+end_src
 *** Flycheck
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package flycheck
 	:hook (go-mode . flycheck-mode)
-        :hook (dart-mode . flycheck-mode))
+	:hook (dart-mode . flycheck-mode))
     #+end_src
 *** Dart-mode
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
@@ -365,11 +373,10 @@
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package lsp-mode
         :straight (lsp-mode :type git :host github :repo "emacs-lsp/lsp-mode")
-	:hook (go-mode . lsp)
-	:hook (dart-mode . lsp)
+	:after yasnippet
 	:commands lsp
-	:config
-	(remhash 'gopls lsp-clients))
+	:hook (go-mode . lsp)
+	:hook (dart-mode . lsp))
     #+end_src
 *** Lsp-ui
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el

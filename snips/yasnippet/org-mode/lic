@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: lic
+# key: lic
+# --
+[[~/projects/notes/cppNotes/cppFiles/$1][$1]$0
+

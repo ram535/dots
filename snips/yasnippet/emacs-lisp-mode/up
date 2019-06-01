@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: up
+# key: up
+# --
+(use-package ${1:NAME-PACKAGE}
+:ensure t
+$0)
