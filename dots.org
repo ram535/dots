@@ -199,7 +199,7 @@
         (evil-leader/set-key "w" 'evil-write)
         (evil-leader/set-key "ed" '(lambda() (interactive)(find-file "~/Projects/dots/dots.org")))
         (evil-leader/set-key "en" '(lambda() (interactive)(find-file "~/Documents/notes/notes.org")))
-        (evil-leader/set-key "eb" '(lambda() (interactive)'(find-file "~/Documents/bookmarks/bookmarks.org")))
+        (evil-leader/set-key "eb" '(lambda() (interactive)(find-file "~/Documents/bookmarks/bookmarks.org")))
         (evil-leader/set-key "f" 'counsel-find-file)
         (evil-leader/set-key "s" 'magit-status)
 	;; (evil-leader/set-key "ee" 'eval-defun)
@@ -933,9 +933,9 @@ bindsym $mod+a focus parent
   Plug 'fatih/vim-go', { 'do': ':GoUpdateBinaries' }
   #+end_src
 *** Ultisnips
-  #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+    #+begin_src vimrc :tangle ~/.config/nvim/init.vim
     Plug 'SirVer/ultisnips'
-  #+end_src
+    #+end_src
 *** End Plug
     #+begin_src vimrc :tangle ~/.config/nvim/init.vim
 	call plug#end()
@@ -976,7 +976,20 @@ bindsym $mod+a focus parent
       " don't give |ins-completion-menu| messages.
       set shortmess+=c
 
-      let g:coc_global_extensions = ['coc-conjure', 'coc-json', 'coc-tsserver', 'coc-html', 'coc-css', 'coc-yaml', 'coc-python', 'coc-highlight', 'coc-snippets', 'coc-lists', 'coc-angular', 'coc-vimlsp', 'coc-pairs']
+      let g:coc_global_extensions = ['coc-ultisnips', 'coc-conjure', 'coc-json', 'coc-tsserver', 'coc-html', 'coc-css', 'coc-yaml', 'coc-python', 'coc-highlight', 'coc-snippets', 'coc-lists', 'coc-angular', 'coc-vimlsp', 'coc-pairs']
+
+      inoremap <silent><expr> <TAB>
+            \ pumvisible() ? coc#_select_confirm() :
+            \ coc#expandableOrJumpable() ? "\<C-r>=coc#rpc#request('doKeymap', ['snippets-expand-jump',''])\<CR>" :
+            \ <SID>check_back_space() ? "\<TAB>" :
+            \ coc#refresh()
+      
+      function! s:check_back_space() abort
+        let col = col('.') - 1
+        return !col || getline('.')[col - 1]  =~# '\s'
+      endfunction
+      
+      let g:coc_snippet_next = '<tab>'
 
       " Use tab for trigger completion with characters ahead and navigate.
       " Use command ':verbose imap <tab>' to make sure tab is not mapped by other plugin.
@@ -1064,6 +1077,15 @@ bindsym $mod+a focus parent
   #+begin_src vimrc :tangle ~/.config/nvim/init.vim
   nnoremap <F3> :TagbarToggle<CR>
   #+end_src
+*** Ultisnips
+    #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+    let g:UltiSnipsExpandTrigger="<c-u>"
+    let g:UltiSnipsJumpForwardTrigger="<c-l>"
+    let g:UltiSnipsJumpBackwardTrigger="<c-h>"
+    let g:UltiSnipsSnippetDirectories = ['/home/last/Projects/dots/snips/UltiSnips']
+    " If you want :UltiSnipsEdit to split your window.
+    let g:UltiSnipsEditSplit="vertical"
+    #+end_src
 *** Vim-go
     #+begin_src vimrc :tangle ~/.config/nvim/init.vim
 
