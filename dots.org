@@ -4,131 +4,130 @@
    Set up auto-generated variables to its own file, instead of saving
    customize settings in [[file:init.el][init.el]].
    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-        (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
-        (load custom-file)
+     (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
+     (load custom-file)
    #+end_src
 *** Start server
    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-       (server-start)
+     (server-start)
    #+end_src
 *** backup
    Keep all backup and auto-save files in one directory
    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-        ;; Keep all backup and auto-save files in one directory
-        (setq backup-directory-alist '(("." . "~/.emacs.d/backups")))
-        (setq auto-save-file-name-transforms '((".*" "~/.emacs.d/auto-save-list/" t)))
+     ;; Keep all backup and auto-save files in one directory
+     (setq backup-directory-alist '(("." . "~/.emacs.d/backups")))
+     (setq auto-save-file-name-transforms '((".*" "~/.emacs.d/auto-save-list/" t)))
    #+end_src
 *** Set default browser
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-         (setq browse-url-browser-function 'browse-url-generic
-               browse-url-generic-program "google-chrome")
+      (setq browse-url-browser-function 'browse-url-generic
+	    browse-url-generic-program "google-chrome")
     #+end_src
 *** symlinks
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-         (setq vc-follow-symlinks t)
+      (setq vc-follow-symlinks t)
 
-         ;; Resolve symlinks:
-         (setq-default find-file-visit-truename t)
+      ;; Resolve symlinks:
+      (setq-default find-file-visit-truename t)
     #+end_src
 *** Does anyone type yes anymore?
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-         (fset 'yes-or-no-p 'y-or-n-p)
+      (fset 'yes-or-no-p 'y-or-n-p)
     #+end_src
 *** Fix the scrolling
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-         (setq scroll-conservatively 10000
-            scroll-preserve-screen-position t)
+      (setq scroll-conservatively 10000
+	 scroll-preserve-screen-position t)
     #+end_src
 *** Paths
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-     (setenv "PATH"
-      (concat
-       (getenv "PATH")))
-       (add-to-list 'exec-path (concat (getenv "GOPATH") "bin") t)
+      (setenv "PATH"
+	      (concat
+	       (getenv "PATH")))
+
+      (add-to-list 'exec-path (concat (getenv "GOPATH") "bin") t)
     #+end_src
 ** GUI
 *** Hiding elements
     This hide several elements like menu, too bar, etc.
     in GUI mode
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-        (when window-system
-          (menu-bar-mode -1)
-          (tool-bar-mode -1)
-          (scroll-bar-mode -1)
-          (tooltip-mode -1))
+      (when window-system
+	(menu-bar-mode -1)
+	(tool-bar-mode -1)
+	(scroll-bar-mode -1)
+	(tooltip-mode -1))
     #+end_src
 *** Start in a blank page
     This allow to start emacs in a blank page
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-        (setq inhibit-startup-message t)
-        (setq initial-scratch-message "")
+      (setq inhibit-startup-message t)
+      (setq initial-scratch-message "")
     #+end_src
 *** Stop blinking cursor
     Turn off the blinking cursor
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-          (blink-cursor-mode -1)
+      (blink-cursor-mode -1)
     #+end_src
 *** Prettify symbols
     Convert certain words into symbols. Prime example: lambda becomes λ
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-          (global-prettify-symbols-mode)
+      (global-prettify-symbols-mode)
     #+end_src
 *** Show-paren-mode
     Highlight the the matching (){}[]
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-          (show-paren-mode t)
+      (show-paren-mode t)
     #+end_src
 *** UTF-8 encoding
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-          (set-locale-environment "pl_PL.UTF-8")
-          (set-language-environment 'utf-8)
-          (setq locale-coding-system 'utf-8)
-          (set-default-coding-systems 'utf-8)
-          (set-terminal-coding-system 'utf-8)
-          (unless (eq system-type 'windows-nt)
-            (progn
-              (set-selection-coding-system 'utf-8)
-              (set-keyboard-coding-system 'utf-8-mac)))
-          (prefer-coding-system 'utf-8)
+      (set-locale-environment "pl_PL.UTF-8")
+      (set-language-environment 'utf-8)
+      (setq locale-coding-system 'utf-8)
+      (set-default-coding-systems 'utf-8)
+      (set-terminal-coding-system 'utf-8)
+      (unless (eq system-type 'windows-nt)
+	(progn
+	  (set-selection-coding-system 'utf-8)
+	  (set-keyboard-coding-system 'utf-8-mac)))
+      (prefer-coding-system 'utf-8)
     #+end_src
 *** Highlight current line
     #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-          (global-hl-line-mode t)
+      (global-hl-line-mode t)
     #+END_SRC
 *** Default Font
     when "font" is available
     #+begin_src emacs-lisp
-       (when (member "Hack NF" (font-family-list))
-       (set-face-attribute 'default t :font "Hack NF"))
-    ;;(set-fontset-font "fontset-default" 'unicode "Knack Nerd Font")
-    ;;t(set-face-font 'default "Knack Nerd Fontt-11")
-    ;;   (when (member "Knack Nerd Font" (font-family-list))
-    ;;   (set-face-attribute 'default t :font "Knack Nerd Font"))
-      ;; (when (member "FantasqueSansMono Nerd Font" (font-family-list))
-      ;;(add-to-list 'default-frame-alist '(font . "FantasqueSansMono Nerd Font-11" ))
-      ;; (set-face-attribute 'default t :font "FantasqueSansMono Nerd Font-11"))
+	 (when (member "Hack NF" (font-family-list))
+	 (set-face-attribute 'default t :font "Hack NF"))
+      ;;(set-fontset-font "fontset-default" 'unicode "Knack Nerd Font")
+      ;;t(set-face-font 'default "Knack Nerd Fontt-11")
+      ;;   (when (member "Knack Nerd Font" (font-family-list))
+      ;;   (set-face-attribute 'default t :font "Knack Nerd Font"))
+	;; (when (member "FantasqueSansMono Nerd Font" (font-family-list))
+	;;(add-to-list 'default-frame-alist '(font . "FantasqueSansMono Nerd Font-11" ))
+	;; (set-face-attribute 'default t :font "FantasqueSansMono Nerd Font-11"))
     #+end_src
 *** White spaces
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-       ;; Here are the things that whitespace-mode should highlight
+      ;; Here are the things that whitespace-mode should highlight
+      (setq whitespace-style '(tabs newline space-mark
+				    tab-mark newline-mark
+				    face lines-tail))
+      ;; Display pretty things for newlines and tabs (nothing for spaces)
+      (setq whitespace-display-mappings
+	    ;; all numbers are Unicode codepoint in decimal. e.g. (insert-char 182 1)
+	    ;; 32 SPACE, 183 MIDDLE DOT
+	    '((space-mark nil)
+	      ;; 10 LINE FEED
+	      ;;(newline-mark 10 [172 10])
+	      (newline-mark nil)
+	      ;; 9 TAB, MIDDLE DOT
+	      (tab-mark 9 [183 9] [92 9])))
 
-       (setq whitespace-style '(tabs newline space-mark
-                                tab-mark newline-mark
-                                face lines-tail))
-       ;; Display pretty things for newlines and tabs (nothing for spaces)
-
-       (setq whitespace-display-mappings
-             ;; all numbers are Unicode codepoint in decimal. e.g. (insert-char 182 1)
-             ;; 32 SPACE, 183 MIDDLE DOT
-             '((space-mark nil)
-               ;; 10 LINE FEED
-               ;;(newline-mark 10 [172 10])
-               (newline-mark nil)
-               ;; 9 TAB, MIDDLE DOT
-               (tab-mark 9 [183 9] [92 9])))
-
-       ;; Indicate trailing empty lines in the GUI:
-       (setq-default show-trailing-whitespace t)
+      ;; Indicate trailing empty lines in the GUI:
+      (setq-default show-trailing-whitespace t)
     #+end_src
 *** USE SCROLL MARGINS TO GIVE CONTEXT TO YOUR CURSOR
     I add the following line to my emacs config file so the when I move the cursor near
@@ -136,17 +135,18 @@
     from edge. The effect is that (however it is moved) the cursor is always given 3 lines
     of context before the top or bottom of the window, which I find very useful.
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-        (setq scroll-margin 3)
+      (setq scroll-margin 3)
     #+end_src
 *** Make cursor the width of the character it is under
-   i.e. full width of a TAB
+    i.e. full width of a TAB
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-   (setq x-stretch-cursor t)
+      (setq x-stretch-cursor t)
     #+end_src
 ** Packages
 *** Straight.el
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (defvar bootstrap-version)
+
       (let ((bootstrap-file
 	     (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
 	    (bootstrap-version 5))
@@ -159,7 +159,7 @@
 	    (eval-print-last-sexp)))
 	(load bootstrap-file nil 'nomessage))
 
-	(setq straight-use-package-by-default t)
+      (setq straight-use-package-by-default t)
     #+end_src
 *** Use-package
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
@@ -200,7 +200,8 @@
         (evil-leader/set-key "ed" '(lambda() (interactive)(find-file "~/Projects/dots/dots.org")))
         (evil-leader/set-key "en" '(lambda() (interactive)(find-file "~/Documents/notes/notes.org")))
         (evil-leader/set-key "eb" '(lambda() (interactive)(find-file "~/Documents/bookmarks/bookmarks.org")))
-        (evil-leader/set-key "f" 'counsel-find-file)
+        ;;; (evil-leader/set-key "f" 'counsel-find-file)
+        (evil-leader/set-key "f" 'hydra-projectile/body)
         (evil-leader/set-key "s" 'magit-status)
 	;; (evil-leader/set-key "ee" 'eval-defun)
         (evil-leader/set-key "b" 'ivy-switch-buffer)
@@ -222,26 +223,26 @@
     #+end_src
 *** Ob-go
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-       (use-package ob-go)
+      (use-package ob-go)
     #+end_src
 *** Org Mode
 **** org-plus-contrib
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package org
-        :straight org-plus-contrib
-        :config
-          ;; To be able to see the images after bable is execute
-          (add-hook 'org-babel-after-execute-hook 'org-display-inline-images)
-          (setq org-startup-with-inline-images t)
-          (org-babel-do-load-languages
-           'org-babel-load-languages
-           '((dot . t)
-             (js . t)
-             (latex . t)
-             (C . t)
-	     (go . t)
-             (python . t)
-             (emacs-lisp . t))))
+	:straight org-plus-contrib
+	:config
+	;; To be able to see the images after bable is execute
+	(add-hook 'org-babel-after-execute-hook 'org-display-inline-images)
+	(setq org-startup-with-inline-images t)
+	(org-babel-do-load-languages
+	 'org-babel-load-languages
+	 '((dot . t)
+	   (js . t)
+	   (latex . t)
+	   (C . t)
+	   (go . t)
+	   (python . t)
+	   (emacs-lisp . t))))
     #+end_src
 
 **** See down arrow instead of "..." when we have subtrees (noticeable ellipsis)
@@ -262,31 +263,14 @@
 **** HighlightI latex text in org-mode
    Then inline latex like $y=mx+c$ will appear in a different colour in an org-mode file to help it stand out.
    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-   (setq org-highlight-latex-and-related '(latex))
+     (setq org-highlight-latex-and-related '(latex))
    #+END_SRC
 *** Org-bullets
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-       (use-package org-bullets
-         :after org
-         :commands (org-bullets-mode)
-         :init (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
-    #+end_src
-*** Hydra
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package hydra)
-    #+end_src
-*** Major-mode-hydra
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package major-mode-hydra
-	:bind
-	("C-M-m" . major-mode-hydra))
-    #+end_src
-*** Hera
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package hera
-	:straight (hera :type git :host github :repo "dustinlacewell/hera")
-	:config
-	(require 'hera))
+      (use-package org-bullets
+	:after org
+	:commands (org-bullets-mode)
+	:init (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
     #+end_src
 *** Counsel, ivy and swiper
    Ivy is installed as part of swiper package.
@@ -323,7 +307,9 @@
     #+end_src
 *** Helm
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package helm)
+    (use-package helm
+    :config
+    (setq helm-boring-buffer-regexp-list (list (rx "*lsp-") (rx "*helm"))))
     #+end_src
 *** Helm-projectile
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
@@ -367,7 +353,11 @@
       (use-package go-mode
       :config
       (setq gofmt-command "goimports")
-      (add-hook 'before-save-hook 'gofmt-before-save))
+      (add-hook 'go-mode-hook
+		(lambda ()
+		  (add-hook 'before-save-hook 'gofmt-before-save)
+		  (setq tab-width 4)
+		  (setq indent-tabs-mode 1))))
     #+end_src
 *** Lsp-mode
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
@@ -389,7 +379,10 @@
        (lsp-ui-sideline-show-symbol t)
        (lsp-ui-sideline-show-hover t)
        (lsp-ui-sideline-show-diagnostics nil)
-       (lsp-ui-doc-enable nil))
+       (lsp-ui-doc-enable nil)
+       :config
+       (define-key evil-normal-state-map (kbd "gd") 'lsp-find-definition)
+       (define-key evil-normal-state-map (kbd "K") 'lsp-ui-doc-mode))
     #+end_src
 *** Company-lsp
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
@@ -399,36 +392,23 @@
     #+end_src
 *** Helm-lsp-workspace-symbol
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-    (use-package helm-lsp :commands helm-lsp-workspace-symbol)
+      (use-package helm-lsp :commands helm-lsp-workspace-symbol)
     #+end_src
 *** Lsp-treemacs
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-    (use-package lsp-treemacs :commands lsp-treemacs-errors-list)
+      (use-package lsp-treemacs :commands lsp-treemacs-errors-list)
     #+end_src
 *** Dap-mode
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-    (use-package dap-mode)
-    #+end_src
-*** Rich-minority
-    #+begin_src emacs-lisp
-      (use-package rich-minority
-	:config
-	(rich-minority-mode 1)
-
-	(setq rm-whitelist
-	(format "^ \\(%s\\)$"
-        (mapconcat #'identity
-        '("")
-        "\\|"))))
+      (use-package dap-mode)
     #+end_src
 *** All-the-icons
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-    (use-package all-the-icons)
+      (use-package all-the-icons)
     #+end_src
 *** Magit
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package magit
-	:bind ("C-c m" . magit-status))
+      (use-package magit)
     #+end_src
 *** Evil-magit
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
@@ -449,15 +429,54 @@
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package json-mode)
     #+end_src
+*** Hydra
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package hydra)
+    #+end_src
+*** Major-mode-hydra
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package major-mode-hydra
+	:bind
+	("C-M-m" . major-mode-hydra))
+    #+end_src
+*** Hera
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package hera
+	:straight (hera :type git :host github :repo "dustinlacewell/hera"))
+    #+end_src
 *** Doom-modeline
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package doom-modeline
-	    :hook (after-init . doom-modeline-mode)
-	    :config
-	    ;; Whether display buffer encoding.
-	    (setq doom-modeline-buffer-encoding nil)
-	    (setq doom-modeline-icon nil))
+	:hook (after-init . doom-modeline-mode)
+	:config
+	;; Whether display buffer encoding.
+	(setq doom-modeline-buffer-encoding nil)
+	(setq doom-modeline-icon nil))
     #+end_src
+*** Aggressive-indent
+    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package aggressive-indent
+	:hook (emacs-lisp-mode . aggressive-indent-mode))
+    #+END_SRC
+
+** Hydras
+   #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+   (defhydra hydra-projectile (:color teal :hint nil)
+   
+   "
+   _b_: buffers
+   _f_: files
+   _p_: projects
+   _a_: all buffers
+   _q_: quit
+   "
+   
+   ("b" helm-projectile-switch-to-buffer)
+   ("f" helm-projectile-find-file)
+   ("p" helm-projectile-switch-project)
+   ("a" helm-buffers-list)
+   ("q" nil :color blue))
+   #+END_SRC
 
 * Fish
 ** Vi mode
