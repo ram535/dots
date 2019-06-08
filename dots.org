@@ -635,9 +635,13 @@ bindsym $mod+a focus parent
    #+BEGIN_SRC sh :tangle ~/.config/i3/config
    bindsym $mod+Return exec tilix -p Solarized dark
    #+END_SRC
-**** rofi (a program launcher)
+**** Rofi (a program launcher)
    #+BEGIN_SRC sh :tangle ~/.config/i3/config
    bindsym $mod+d exec rofi -show run -lines 3 -eh 2 -width 100 -padding 300 -opacity "85" -bw 0 -bc "$bg-color" -bg "$bg-color" -fg "$text-color" -hlbg "$bg-color" -hlfg "#9575cd" -font "System San Francisco Display 18"
+   #+END_SRC
+**** Firefox
+   #+BEGIN_SRC sh :tangle ~/.config/i3/config
+   bindsym $mod+Shift+f exec /home/last/bin/firefox/firefox --private-window
    #+END_SRC
 *** workingspaces
    #+BEGIN_SRC sh :tangle ~/.config/i3/config
@@ -748,7 +752,7 @@ bindsym $mod+a focus parent
    }
    #+END_SRC
 *** Music player mode
-   #+BEGIN_SRC sh :tangle ~/.config/i3/config
+   #+BEGIN_SRC sh 
    set $mode_music Music Player Mode
    bindsym $mod+m mode "$mode_music"
 
@@ -769,7 +773,7 @@ bindsym $mod+a focus parent
     bindsym $mod+Next exec cmus-remote --seek +5
    #+END_SRC
 *** Audio control mode
-   #+BEGIN_SRC sh :tangle ~/.config/i3/config
+   #+BEGIN_SRC sh 
    set $mode_audio Audio Mode
    bindsym $mod+Shift+v mode "$mode_audio"
 
@@ -1091,6 +1095,21 @@ bindsym $mod+a focus parent
 
       noremap <C-p> :DeniteProjectDir file/rec<CR>
 
+      autocmd FileType denite call s:denite_my_settings()
+      function! s:denite_my_settings() abort
+	nnoremap <silent><buffer><expr> <CR>
+	\ denite#do_map('do_action')
+	nnoremap <silent><buffer><expr> d
+	\ denite#do_map('do_action', 'delete')
+	nnoremap <silent><buffer><expr> p
+	\ denite#do_map('do_action', 'preview')
+	nnoremap <silent><buffer><expr> q
+	\ denite#do_map('quit')
+	nnoremap <silent><buffer><expr> i
+	\ denite#do_map('open_filter_buffer')
+	nnoremap <silent><buffer><expr> <Space>
+	\ denite#do_map('toggle_select').'j'
+      endfunction
     #+end_src
 *** Tagbar
   #+begin_src vimrc :tangle ~/.config/nvim/init.vim
@@ -1109,8 +1128,9 @@ bindsym $mod+a focus parent
     #+begin_src vimrc :tangle ~/.config/nvim/init.vim
 
     let g:go_fmt_command = "goimports"
-    let g:go_info_mode = "gocode"
-    let g:go_def_mode = "gopls"
+    " it is set by default now
+    " let g:go_info_mode = "gocode"
+    " let g:go_def_mode = "gopls"
     let g:go_autodetect_gopath = 1
     " Linters Runner for Go. 5x faster than gometalinter
     let g:go_metalinter_command='golangci-lint'
@@ -1966,9 +1986,8 @@ bindsym $mod+a focus parent
 
 *** Java
    #+BEGIN_SRC sh :tangle ~/.zshrc
-   PATH=$HOME/bin/jdk-12.0.1/bin:$PATH
+   PATH=$HOME/bin/java/jdk-10.0.1/bin:$PATH
    #+END_SRC
-
 *** Dart
    #+BEGIN_SRC sh :tangle ~/.zshrc
    export PATH=$HOME/.pub-cache/bin:$PATH
@@ -2004,9 +2023,8 @@ bindsym $mod+a focus parent
 
 *** Android-SDK
    #+BEGIN_SRC sh :tangle ~/.zshrc
-   export ANDROID_HOME=$HOME/bin/Android/Sdk
+   export ANDROID_HOME=$HOME/bin/android-sdk
    #+END_SRC
-
 ** Plugins
    #+BEGIN_SRC sh :tangle ~/.zshrc
    plugins=(git)
