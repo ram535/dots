@@ -184,10 +184,7 @@
         (evil-insert-state-cursor '("dodger blue" bar))
         (evil-replace-state-cursor '("red" bar))
         :config
-        (evil-mode 1)
-        (add-hook 'eshell-mode-hook
-                  '(lambda ()
-                     (define-key evil-normal-state-local-map (kbd "q") (lambda () (interactive) (kill-buffer-and-window))))))
+        (evil-mode 1))
     #+end_src
 *** Evil leader
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
@@ -272,6 +269,13 @@
 	:commands (org-bullets-mode)
 	:init (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
     #+end_src
+*** Dired
+    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package dired
+	:straight nil
+	:custom
+	(dired-listing-switches "-Bhl --group-directories-first"))
+    #+END_SRC
 *** Counsel, ivy and swiper
    Ivy is installed as part of swiper package.
    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
@@ -458,7 +462,58 @@
       (use-package aggressive-indent
 	:hook (emacs-lisp-mode . aggressive-indent-mode))
     #+END_SRC
+*** Eshell
+    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package eshell
+	:config
+	;; prompt
+	(setq eshell-prompt-function
+	      (lambda ()
+		(concat
+		 (propertize "\xf07c" 'face `(:foreground "steel blue" :bold ultra-bold))
+		 (propertize " " 'face nil)
+		 (propertize (concat (eshell/pwd)) 'face `(:foreground "steel blue"))
+		 (propertize " " 'face nil)
+		 (if (magit-get-current-branch)
+		     (propertize "\xf1d3" 'face `(:foreground "pink"))) ;; branch symbol \xe0a0
+		 (propertize " " 'face nil)
+		 (if (magit-get-current-branch)
+		     (propertize (magit-get-current-branch) 'face `(:foreground "pink")))
+		 (propertize "\n" 'face nil)
+		 (propertize "❯" 'face '(:foreground "#f75f5f"))
+		 (propertize "❯" 'face '(:foreground "#ffaf5f"))
+		 (propertize "❯" 'face '(:foreground "#87af5f"))
+		 (propertize " " 'face nil)
+		 )))
 
+	;; disable welcome messages
+	(eval-after-load 'esh-module
+	  '(progn
+	     (delq 'eshell-banner eshell-modules-list) t))
+
+      (defun eshell/clear ()
+	"Clear the eshell buffer."
+	(interactive)
+	(let ((inhibit-read-only t))
+	  (erase-buffer)
+	  (eshell-send-input)))
+
+        (add-hook 'eshell-mode-hook
+                  '(lambda ()
+                     (define-key evil-normal-state-local-map (kbd "C-l") (lambda () (interactive) (eshell/clear)))))
+        (add-hook 'eshell-mode-hook
+                  '(lambda ()
+                     (define-key evil-insert-state-local-map (kbd "C-l") (lambda () (interactive) (eshell/clear)))))
+        (add-hook 'eshell-mode-hook
+                  '(lambda ()
+                     (define-key evil-normal-state-local-map (kbd "q") (lambda () (interactive) (kill-buffer-and-window))))))
+    #+END_SRC
+*** Avy
+    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package avy
+	:config
+	(define-key evil-normal-state-map "s" 'avy-goto-char-2))
+    #+END_SRC
 ** Hydras
    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
    (defhydra hydra-projectile (:color teal :hint nil)
@@ -953,8 +1008,12 @@ bindsym $mod+a focus parent
   #+end_src
 *** Vim-go
   #+begin_src vimrc :tangle ~/.config/nvim/init.vim
-  Plug 'fatih/vim-go', { 'do': ':GoUpdateBinaries' }
+    Plug 'fatih/vim-go', { 'do': ':GoUpdateBinaries' }
   #+end_src
+*** Vim-easymotion
+    #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+      Plug 'easymotion/vim-easymotion'
+    #+end_src
 *** Ultisnips
     #+begin_src vimrc :tangle ~/.config/nvim/init.vim
     Plug 'SirVer/ultisnips'
@@ -1094,6 +1153,7 @@ bindsym $mod+a focus parent
 	\ ['ag', '--follow', '--nocolor', '--nogroup', '-g', ''])
 
       noremap <C-p> :DeniteProjectDir file/rec<CR>
+      noremap <C-b> :Denite buffer<CR>
 
       autocmd FileType denite call s:denite_my_settings()
       function! s:denite_my_settings() abort
@@ -1163,6 +1223,11 @@ bindsym $mod+a focus parent
 
     " Hide tabs
     autocmd BufNewFile,BufRead *.go setlocal invlist noexpandtab tabstop=4 shiftwidth=4
+    #+end_src
+*** Vim-easymotion
+    #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+      " s{char}{char} to move to {char}{char}
+      nmap s <Plug>(easymotion-overwin-f2)
     #+end_src
 ** GUI
 *** Theme
