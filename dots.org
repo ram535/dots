@@ -276,6 +276,32 @@
 	:custom
 	(dired-listing-switches "-Bhl --group-directories-first"))
     #+END_SRC
+*** Treemacs
+    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+    (use-package treemacs
+)
+    #+END_SRC
+*** Treemacs-icons-dired
+    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package treemacs-icons-dired
+	:after treemacs dired
+	:config (treemacs-icons-dired-mode))
+    #+END_SRC
+*** Treemacs-evil
+    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+    (use-package treemacs-evil
+    :after treemacs)
+    #+END_SRC
+*** Treemacs-projectile
+    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+    (use-package treemacs-projectile
+    :after treemacs)
+    #+END_SRC
+*** Treemacs-magit
+    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+    (use-package treemacs-magit
+    :after (treemacs magit))
+    #+END_SRC
 *** Counsel, ivy and swiper
    Ivy is installed as part of swiper package.
    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
@@ -1058,7 +1084,21 @@ bindsym $mod+a focus parent
       " don't give |ins-completion-menu| messages.
       set shortmess+=c
 
-      let g:coc_global_extensions = ['coc-ultisnips', 'coc-conjure', 'coc-json', 'coc-tsserver', 'coc-html', 'coc-css', 'coc-yaml', 'coc-python', 'coc-highlight', 'coc-snippets', 'coc-lists', 'coc-angular', 'coc-vimlsp', 'coc-pairs']
+      let g:coc_global_extensions = ['coc-ultisnips', 
+				   \ 'coc-go',
+                                   \ 'coc-conjure', 
+                                   \ 'coc-json', 
+                                   \ 'coc-tsserver', 
+                                   \ 'coc-html', 
+                                   \ 'coc-css', 
+                                   \ 'coc-yaml', 
+                                   \ 'coc-python', 
+                                   \ 'coc-highlight', 
+                                   \ 'coc-snippets', 
+                                   \ 'coc-lists', 
+                                   \ 'coc-angular', 
+                                   \ 'coc-vimlsp', 
+                                   \ 'coc-pairs']
 
       inoremap <silent><expr> <TAB>
             \ pumvisible() ? coc#_select_confirm() :
@@ -1216,10 +1256,10 @@ bindsym $mod+a focus parent
     " Show type information and function signature
     let g:go_auto_type_info = 1
 
-    augroup auto_go
-    	autocmd!
-    	autocmd BufWritePost *.go :GoBuild
-    augroup end
+    " augroup auto_go
+    " 	autocmd!
+    " 	autocmd BufWritePost *.go :GoBuild
+    " augroup end
 
     " Hide tabs
     autocmd BufNewFile,BufRead *.go setlocal invlist noexpandtab tabstop=4 shiftwidth=4
