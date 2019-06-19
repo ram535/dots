@@ -211,6 +211,12 @@
        :custom (evil-escape-key-sequence "jk")
        :config (evil-escape-mode))
    #+END_SRC
+*** Evil-commentary
+    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package evil-commentary
+	:bind (:map evil-normal-state-map
+		    ("gc" . evil-commentary)))
+    #+END_SRC
 *** Solarized theme
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package solarized-theme
@@ -277,9 +283,16 @@
 	(dired-listing-switches "-Bhl --group-directories-first"))
     #+END_SRC
 *** Treemacs
+    Remember that binding a key in motion state is like binding a key in the normal, visual, 
+    and operator states all at once (unless that key is already bound in one of those states).
     #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-    (use-package treemacs
-)
+      (use-package treemacs
+	:bind (:map evil-motion-state-map
+		    ("C-`" . treemacs)
+		    :map evil-insert-state-map
+		    ("C-`" . treemacs)
+		    :map evil-emacs-state-map
+		    ("C-`" . treemacs)))
     #+END_SRC
 *** Treemacs-icons-dired
     #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
@@ -295,12 +308,12 @@
 *** Treemacs-projectile
     #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
     (use-package treemacs-projectile
-    :after treemacs)
+    :after treemacs projectile)
     #+END_SRC
 *** Treemacs-magit
     #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
     (use-package treemacs-magit
-    :after (treemacs magit))
+    :after treemacs magit)
     #+END_SRC
 *** Counsel, ivy and swiper
    Ivy is installed as part of swiper package.
@@ -509,30 +522,42 @@
 		 (propertize "❯" 'face '(:foreground "#f75f5f"))
 		 (propertize "❯" 'face '(:foreground "#ffaf5f"))
 		 (propertize "❯" 'face '(:foreground "#87af5f"))
-		 (propertize " " 'face nil)
-		 )))
+		 (propertize " " 'face nil))))
 
 	;; disable welcome messages
 	(eval-after-load 'esh-module
 	  '(progn
 	     (delq 'eshell-banner eshell-modules-list) t))
 
-      (defun eshell/clear ()
-	"Clear the eshell buffer."
-	(interactive)
-	(let ((inhibit-read-only t))
-	  (erase-buffer)
-	  (eshell-send-input)))
+	(defun eshell-foo ()
+	  (interactive)
 
-        (add-hook 'eshell-mode-hook
-                  '(lambda ()
-                     (define-key evil-normal-state-local-map (kbd "C-l") (lambda () (interactive) (eshell/clear)))))
-        (add-hook 'eshell-mode-hook
-                  '(lambda ()
-                     (define-key evil-insert-state-local-map (kbd "C-l") (lambda () (interactive) (eshell/clear)))))
-        (add-hook 'eshell-mode-hook
-                  '(lambda ()
-                     (define-key evil-normal-state-local-map (kbd "q") (lambda () (interactive) (kill-buffer-and-window))))))
+	  (if (get-buffer "*eshell*")
+	      (switch-to-buffer "*eshell*")
+	    (eshell)
+	    (delete-other-windows)))
+
+
+	(define-key evil-normal-state-map (kbd "<C-return>") 'eshell-foo)
+	(define-key evil-emacs-state-map (kbd "<C-return>") 'eshell-foo)
+	(evil-define-key 'treemacs treemacs-mode-map (kbd "<C-return>") 'eshell-foo)
+
+	(defun eshell/clear ()
+	  "Clear the eshell buffer."
+	  (interactive)
+	  (let ((inhibit-read-only t))
+	    (erase-buffer)
+	    (eshell-send-input)))
+
+	(add-hook 'eshell-mode-hook
+		  '(lambda ()
+		     (define-key evil-normal-state-local-map (kbd "C-l") (lambda () (interactive) (eshell/clear)))))
+	(add-hook 'eshell-mode-hook
+		  '(lambda ()
+		     (define-key evil-insert-state-local-map (kbd "C-l") (lambda () (interactive) (eshell/clear)))))
+	(add-hook 'eshell-mode-hook
+		  '(lambda ()
+		     (define-key evil-normal-state-local-map (kbd "q") (lambda () (interactive) (kill-buffer-and-window))))))
     #+END_SRC
 *** Avy
     #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
@@ -854,17 +879,10 @@ bindsym $mod+a focus parent
     bindsym $mod+Next exec cmus-remote --seek +5
    #+END_SRC
 *** Audio control mode
-   #+BEGIN_SRC sh 
-   set $mode_audio Audio Mode
-   bindsym $mod+Shift+v mode "$mode_audio"
-
-   mode "$mode_audio" {
-    bindsym Up exec --no-startup-id pactl set-sink-volume 0 +5% #increase sound volume
-    bindsym Down exec --no-startup-id pactl set-sink-volume 0 -5% #decrease sound volume
-    bindsym Pause exec --no-startup-id pactl set-sink-mute 0 toggle # mute sound
-
-    bindsym Escape mode "default"
-   }
+   #+BEGIN_SRC sh :tangle ~/.config/i3/config
+     bindsym XF86AudioRaiseVolume exec --no-startup-id pactl set-sink-volume 0 +5% #increase sound volume
+     bindsym XF86AudioLowerVolume exec --no-startup-id pactl set-sink-volume 0 -5% #decrease sound volume
+     bindsym XF86AudioMute exec --no-startup-id pactl set-sink-mute 0 toggle # mute sound
    #+END_SRC
 ** i3blocks
    #+BEGIN_SRC sh :tangle ~/.config/i3/i3blocks.conf
@@ -2072,13 +2090,18 @@ bindsym $mod+a focus parent
      ZSH_THEME="powerlevel9k/powerlevel9k"
      # ZSH_THEME="robbyrussell"
    #+END_SRC
+** Default Editor
+   #+BEGIN_SRC sh :tangle ~/.zshrc
+     export EDITOR=nvim
+     #sudo -e
+     export SUDO_EDITOR=/home/last/bin/nvim
+   #+END_SRC
 ** Paths
 *** Zsh
    #+BEGIN_SRC sh :tangle ~/.zshrc
    export ZSH=$HOME/.oh-my-zsh
    source $ZSH/oh-my-zsh.sh
    #+END_SRC
-
 *** Env
    #+BEGIN_SRC sh :tangle ~/.zshrc
    export PATH="$HOME/bin:/snap/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin"
@@ -2132,7 +2155,7 @@ bindsym $mod+a focus parent
    #+END_SRC
 ** Plugins
    #+BEGIN_SRC sh :tangle ~/.zshrc
-   plugins=(git)
+   plugins=(git wd colored-man-pages)
    #+END_SRC
 ** Alias
    #+BEGIN_SRC sh :tangle ~/.zshrc
