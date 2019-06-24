@@ -565,6 +565,14 @@
 	:config
 	(define-key evil-normal-state-map "s" 'avy-goto-char-2))
     #+END_SRC
+*** Web-mode
+    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package web-mode
+	:config
+	(add-to-list 'auto-mode-alist '("\\.mustache\\'" . web-mode))
+	(add-to-list 'auto-mode-alist '("\\.gohtml\\'" . web-mode))
+	(add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode)))
+    #+END_SRC
 ** Hydras
    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
    (defhydra hydra-projectile (:color teal :hint nil)
@@ -1046,6 +1054,10 @@ bindsym $mod+a focus parent
   #+begin_src vimrc :tangle ~/.config/nvim/init.vim
   Plug 'iCyMind/NeoSolarized'
   #+end_src
+*** Mustache
+  #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+  Plug 'mustache/vim-mustache-handlebars'
+  #+end_src
 *** Tagbar
   #+begin_src vimrc :tangle ~/.config/nvim/init.vim
   Plug 'majutsushi/tagbar'
@@ -1205,6 +1217,10 @@ bindsym $mod+a focus parent
       " Use `:Fold` to fold current buffer
       command! -nargs=? Fold :call     CocAction('fold', <f-args>)
     #+end_src
+*** Dart-vim-plugin
+    #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+    let dart_format_on_save = 1
+    #+end_src
 *** Denite
     #+begin_src vimrc :tangle ~/.config/nvim/init.vim
 	call denite#custom#var('file/rec', 'command',
@@ -1281,6 +1297,7 @@ bindsym $mod+a focus parent
 
     " Hide tabs
     autocmd BufNewFile,BufRead *.go setlocal invlist noexpandtab tabstop=4 shiftwidth=4
+    autocmd BufReadPost *.gohtml set syntax=gotexttmpl
     #+end_src
 *** Vim-easymotion
     #+begin_src vimrc :tangle ~/.config/nvim/init.vim
