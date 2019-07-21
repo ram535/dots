@@ -15,8 +15,9 @@
    Keep all backup and auto-save files in one directory
    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
      ;; Keep all backup and auto-save files in one directory
-     (setq backup-directory-alist '(("." . "~/.emacs.d/backups")))
+     (setq backup-directory-alist '(("." . "~/.emacs.d/backups/")))
      (setq auto-save-file-name-transforms '((".*" "~/.emacs.d/auto-save-list/" t)))
+     (setq auto-save-file-name-transforms '((".#" "~/.emacs.d/auto-save-list/" t)))
    #+end_src
 *** Set default browser
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
@@ -177,14 +178,14 @@
 *** Evil
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package evil
-        :custom
-        ;; change the color of the cursor
-        (evil-normal-state-cursor '("gray" box))
-        (evil-visual-state-cursor '("orange" box))
-        (evil-insert-state-cursor '("dodger blue" bar))
-        (evil-replace-state-cursor '("red" bar))
-        :config
-        (evil-mode 1))
+	:custom
+	;; change the color of the cursor
+	(evil-normal-state-cursor '("gray" box))
+	(evil-visual-state-cursor '("orange" box))
+	(evil-insert-state-cursor '("dodger blue" bar))
+	(evil-replace-state-cursor '("red" bar))
+	:config
+	(evil-mode 1))
     #+end_src
 *** Evil leader
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
@@ -216,6 +217,13 @@
       (use-package evil-commentary
 	:bind (:map evil-normal-state-map
 		    ("gc" . evil-commentary)))
+    #+END_SRC
+*** Evil-surround
+    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package evil-surround
+	:ensure t
+	:config
+	(global-evil-surround-mode 1))
     #+END_SRC
 *** Solarized theme
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
@@ -321,27 +329,37 @@
      (use-package counsel
        :commands (counsel-find-file councel-bookmark)
        :config
-         (define-key evil-normal-state-map (kbd "\C-n") 'counsel-up-directory))
+       (setq counsel-find-file-ignore-regexp
+	     (concat
+	      ;; File names beginning with # or .
+	      "\\(?:\\`[#.]\\)"
+	      ;; File names ending with # or ~
+	      "\\|\\(?:\\`.+?[#~]\\'\\)"))
+       (define-key evil-normal-state-map (kbd "\C-n") 'counsel-up-directory))
 
-     (use-package swiper
-       :config
-       (progn
-         (ivy-mode 1)
-         (setq ivy-use-virtual-buffers t)
-         (define-key evil-normal-state-map (kbd "\C-s") 'swiper)
-         (define-key evil-motion-state-map (kbd "\C-s") 'swiper)
-         (define-key evil-emacs-state-map (kbd "\C-s") 'swiper)
-         ))
+	  (use-package swiper
+	    :config
+	    (progn
+	      (ivy-mode 1)
+	      (setq ivy-use-virtual-buffers t)
+	      (define-key evil-normal-state-map (kbd "\C-s") 'swiper)
+	      (define-key evil-motion-state-map (kbd "\C-s") 'swiper)
+	      (define-key evil-emacs-state-map (kbd "\C-s") 'swiper)
+	      ))
 
-     (use-package ivy
-       :bind (:map ivy-minibuffer-map
-                   ("C-j" . ivy-next-line)
-                   ("C-k" . ivy-previous-line))
-       :config
-       (ivy-mode 1)
-       (setq ivy-use-virtual-buffers t)
-       (setq ivy-count-format "(%d/%d) "))
+	  (use-package ivy
+	    :bind (:map ivy-minibuffer-map
+			("C-j" . ivy-next-line)
+			("C-k" . ivy-previous-line))
+	    :config
+	    (ivy-mode 1)
+	    (setq ivy-use-virtual-buffers t)
+	    (setq ivy-count-format "(%d/%d) "))
    #+end_src
+*** Counsel-projectile
+    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+    (use-package counsel-projectile)
+    #+END_SRC
 *** Projectile
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package projectile
@@ -370,10 +388,19 @@
 	(yas-reload-all))
     #+end_src
 *** Company
+    (add-hook 'after-init-hook 'global-company-mode)
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package company
+	:bind
+	(:map company-active-map
+	      ("C-n" . company-select-next-or-abort)
+	      ("C-p" . company-select-previous-or-abort))
+	:hook
+	(after-init . global-company-mode)
 	:config
-	(add-hook 'after-init-hook 'global-company-mode))
+	;; Use tab key to cycle through suggestions.
+	;; ('tng' means 'tab and go')
+	(company-tng-configure-default))
     #+end_src
 *** Flycheck
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
@@ -413,19 +440,44 @@
     #+end_src
 *** Lsp-ui
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-    (use-package lsp-ui
-       :hook (lsp-mode-hook . lsp-ui-mode)
-       :commands lsp-ui-mode
-       :custom
-       (lsp-ui-sideline-enable nil)
-       (lsp-ui-sideline-show-code-actions nil)
-       (lsp-ui-sideline-show-symbol t)
-       (lsp-ui-sideline-show-hover t)
-       (lsp-ui-sideline-show-diagnostics nil)
-       (lsp-ui-doc-enable nil)
-       :config
-       (define-key evil-normal-state-map (kbd "gd") 'lsp-find-definition)
-       (define-key evil-normal-state-map (kbd "K") 'lsp-ui-doc-mode))
+      (use-package lsp-ui
+	:hook (lsp-mode-hook . lsp-ui-mode)
+	:custom
+	;; (lsp-ui-doc-header t)
+	;; (lsp-ui-doc-include-signature nil)
+	(lsp-ui-doc-position 'at-point) ;; top, bottom, or at-point
+	;; (lsp-ui-doc-max-width 120)
+	;; (lsp-ui-doc-max-height 30)
+	;; (lsp-ui-doc-use-childframe t)
+	;; (lsp-ui-doc-use-webkit t)
+	(lsp-ui-doc-enable nil)
+	(lsp-ui-sideline-enable nil)
+	(lsp-ui-sideline-show-code-actions nil)
+	(lsp-ui-sideline-show-symbol t)
+	(lsp-ui-sideline-show-hover t)
+	(lsp-ui-sideline-show-diagnostics nil)
+	;; lsp-ui-imenu
+	(lsp-ui-imenu-enable t)
+	(lsp-ui-imenu-kind-position 'top)
+	:preface
+	(defun toggle-lsp-ui-doc ()
+	  (interactive)
+	  (if lsp-ui-doc-mode
+	      (progn
+		(lsp-ui-doc-mode -1)
+		(lsp-ui-doc--hide-frame))
+	    (lsp-ui-doc-mode 1)))
+
+	(defun toggle-lsp-ui-imenu ()
+	  (interactive)
+
+	  (if (string= (buffer-name) "*lsp-ui-imenu*")
+	  (lsp-ui-imenu--kill)
+	    (lsp-ui-imenu)))
+	:config
+	(define-key evil-normal-state-map (kbd "K") 'toggle-lsp-ui-doc)
+	(define-key evil-normal-state-map (kbd "<f3>") 'toggle-lsp-ui-imenu)
+	(define-key evil-normal-state-map (kbd "gd") 'lsp-find-definition))
     #+end_src
 *** Company-lsp
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
@@ -499,6 +551,7 @@
 *** Aggressive-indent
     #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package aggressive-indent
+	:hook (web-mode . aggressive-indent-mode)
 	:hook (emacs-lisp-mode . aggressive-indent-mode))
     #+END_SRC
 *** Eshell
@@ -532,13 +585,14 @@
 	(defun eshell-foo ()
 	  (interactive)
 
-	  (if (get-buffer "*eshell*")
-	      (switch-to-buffer "*eshell*")
+	  (if (string= (buffer-name) "*eshell*")
+	      (mode-line-other-buffer)
 	    (eshell)
+	    (eshell-kill-process)
 	    (delete-other-windows)))
 
-
 	(define-key evil-normal-state-map (kbd "<C-return>") 'eshell-foo)
+	(define-key evil-insert-state-map (kbd "<C-return>") 'eshell-foo)
 	(define-key evil-emacs-state-map (kbd "<C-return>") 'eshell-foo)
 	(evil-define-key 'treemacs treemacs-mode-map (kbd "<C-return>") 'eshell-foo)
 
@@ -571,7 +625,37 @@
 	:config
 	(add-to-list 'auto-mode-alist '("\\.mustache\\'" . web-mode))
 	(add-to-list 'auto-mode-alist '("\\.gohtml\\'" . web-mode))
-	(add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode)))
+	(add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode))
+	(setq web-mode-markup-indent-offset 2)
+	(setq web-mode-css-indent-offset 2)
+	(setq web-mode-enable-auto-pairing t)
+
+	(setq web-mode-engines-alist
+	      '(("go"    . "\\.gohtml\\'")
+		("mustache"  . "\\.mustache\\."))
+	      )
+	)
+    #+END_SRC
+*** Smartparens
+    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package smartparens
+	:config
+	(require 'smartparens-config)
+
+	(with-eval-after-load 'smartparens
+	  (sp-with-modes
+	      '(c++-mode dart-mode go-mode)
+	    (sp-local-pair "{" nil :post-handlers '(:add ("||\n[i]" "RET")))))
+
+	(smartparens-global-mode t))
+    #+END_SRC
+*** Rainbow-delimiters-mode
+    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package rainbow-delimiters
+	:config
+	(add-hook 'prog-mode-hook 'rainbow-delimiters-mode)
+	;; To start the mode automatically in most programming modes 
+	(add-hook 'dart-mode-hook 'rainbow-delimiters-mode))
     #+END_SRC
 ** Hydras
    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
@@ -585,10 +669,10 @@
    _q_: quit
    "
    
-   ("b" helm-projectile-switch-to-buffer)
-   ("f" helm-projectile-find-file)
-   ("p" helm-projectile-switch-project)
-   ("a" helm-buffers-list)
+   ("b" counsel-projectile-switch-to-buffer)
+   ("f" counsel-projectile-find-file)
+   ("p" counsel-projectile-switch-project)
+   ("a" counsel-switch-buffer)
    ("q" nil :color blue))
    #+END_SRC
 
@@ -1040,7 +1124,7 @@ bindsym $mod+a focus parent
     #+end_src
 *** Coc
     #+begin_src vimrc :tangle ~/.config/nvim/init.vim
-	Plug 'neoclide/coc.nvim', {'tag': '*', 'do': './install.sh'}
+    Plug 'neoclide/coc.nvim', {'tag': '*', 'branch': 'release'}
     #+end_src
 *** Dart-vim-plugin
     #+begin_src vimrc :tangle ~/.config/nvim/init.vim
@@ -1058,17 +1142,21 @@ bindsym $mod+a focus parent
   #+begin_src vimrc :tangle ~/.config/nvim/init.vim
   Plug 'mustache/vim-mustache-handlebars'
   #+end_src
-*** Tagbar
-  #+begin_src vimrc :tangle ~/.config/nvim/init.vim
-  Plug 'majutsushi/tagbar'
-  #+end_src
 *** Vim-go
   #+begin_src vimrc :tangle ~/.config/nvim/init.vim
     Plug 'fatih/vim-go', { 'do': ':GoUpdateBinaries' }
   #+end_src
+*** Vifm
+    #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+    Plug 'vifm/vifm.vim'
+    #+end_src
 *** Vim-easymotion
     #+begin_src vimrc :tangle ~/.config/nvim/init.vim
       Plug 'easymotion/vim-easymotion'
+    #+end_src
+*** Vista
+    #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+      Plug 'liuchengxu/vista.vim'
     #+end_src
 *** Ultisnips
     #+begin_src vimrc :tangle ~/.config/nvim/init.vim
@@ -1081,6 +1169,23 @@ bindsym $mod+a focus parent
 ** Plugin Configuration
 *** Coc
 **** coc-setting.json
+      {
+	"languageserver": {
+	  "dart": {
+	    "command": "dart",
+	    "args": ["/home/last/bin/dart-sdk/bin/snapshots/analysis_server.dart.snapshot", "--lsp"],
+	    "filetypes": ["dart"],
+	    "rootPatterns": ["pubspec.yaml"],
+	    "initializationOptions": {},
+	    "settings": {
+	      "dart": {
+		"validation": {},
+		"completion": {}
+	      }
+	    }
+	  }
+	}
+      }
     #+begin_src json :tangle ~/.config/nvim/coc-settings.json
       {
 	"languageserver": {
@@ -1088,6 +1193,7 @@ bindsym $mod+a focus parent
 	    "command": "dart_language_server",
 	    "args": [],
 	    "filetypes": ["dart"],
+	    "rootPatterns": [],
 	    "initializationOptions": {},
 	    "settings": {
 	      "dart": {
@@ -1219,7 +1325,7 @@ bindsym $mod+a focus parent
     #+end_src
 *** Dart-vim-plugin
     #+begin_src vimrc :tangle ~/.config/nvim/init.vim
-    let dart_format_on_save = 1
+      let dart_format_on_save = 1
     #+end_src
 *** Denite
     #+begin_src vimrc :tangle ~/.config/nvim/init.vim
@@ -1245,10 +1351,6 @@ bindsym $mod+a focus parent
 	\ denite#do_map('toggle_select').'j'
       endfunction
     #+end_src
-*** Tagbar
-  #+begin_src vimrc :tangle ~/.config/nvim/init.vim
-  nnoremap <F3> :TagbarToggle<CR>
-  #+end_src
 *** Ultisnips
     #+begin_src vimrc :tangle ~/.config/nvim/init.vim
     let g:UltiSnipsExpandTrigger="<c-u>"
@@ -1303,6 +1405,29 @@ bindsym $mod+a focus parent
     #+begin_src vimrc :tangle ~/.config/nvim/init.vim
       " s{char}{char} to move to {char}{char}
       nmap s <Plug>(easymotion-overwin-f2)
+    #+end_src
+*** Vista
+    #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+
+    nnoremap <F3> :Vista!!<CR>
+       " Set the executive for some filetypes explicitly. Use the explicit executive
+      " instead of the default one for these filetypes when using `:Vista` without
+      " specifying the executive.
+      let g:vista_executive_for = {
+	\ 'dart': 'coc',
+	\ 'go': 'coc',
+	\ }
+
+
+      " Ensure you have installed some decent font to show these pretty symbols, then you can enable icon for the kind.
+      let g:vista#renderer#enable_icon = 1
+
+      " The default icons can't be suitable for all the filetypes, you can extend it as you wish.
+
+      let g:vista#renderer#icons = {
+      \   "function": "\ue929",
+      \   "variable": "\uf71b",
+      \  }
     #+end_src
 ** GUI
 *** Theme
@@ -1405,6 +1530,15 @@ bindsym $mod+a focus parent
     nnoremap n nzz
     nnoremap N Nzz
     #+end_src
+*** Move opening curly braces to a new line
+    #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+      inoremap <expr> <cr> getline(".")[col(".")-2:col(".")-1]=="{}" ? "<cr><esc>O" : "<cr>"
+    #+end_src
+** Abbreviations
+   #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+   autocmd FileType go iabbrev ane !=
+   autocmd FileType go iabbrev asv :=
+   #+end_src
 ** Programming Languages
 *** Type Script
   #+begin_src vimrc :tangle ~/.config/nvim/init.vim
@@ -2129,6 +2263,11 @@ bindsym $mod+a focus parent
      PATH=$HOME/bin/VSCode:$PATH
    #+END_SRC
 
+*** Universal-ctags
+   #+BEGIN_SRC sh :tangle ~/.zshrc
+     PATH=$HOME/bin/universal-ctags/bin:$PATH
+   #+END_SRC
+
 *** Java
    #+BEGIN_SRC sh :tangle ~/.zshrc
    PATH=$HOME/bin/java/jdk-10.0.1/bin:$PATH
@@ -2166,6 +2305,18 @@ bindsym $mod+a focus parent
    PATH=$HOME/bin/flutter/bin:$PATH
    #+END_SRC
 
+*** Cmake
+   #+BEGIN_SRC sh :tangle ~/.zshrc
+   PATH=$HOME/bin/cmake/bin:$PATH
+   #+END_SRC
+*** Flatbuffers
+   #+BEGIN_SRC sh :tangle ~/.zshrc
+   PATH=$HOME/bin/flatbuffers:$PATH
+   #+END_SRC
+*** Vifm
+   #+BEGIN_SRC sh :tangle ~/.zshrc
+   PATH=$HOME/bin/vifm/bin:$PATH
+   #+END_SRC
 *** Android-SDK
    #+BEGIN_SRC sh :tangle ~/.zshrc
    export ANDROID_HOME=$HOME/bin/android-sdk
@@ -2179,4 +2330,5 @@ bindsym $mod+a focus parent
    alias jd="~/bin/jd2/JDownloader2 &"
    alias vf="vifm ."
    alias n="nvim"
+   alias yd="youtube-dl --extract-audio --audio-format mp3 -o \"%(title)s.%(ext)s\""
    #+END_SRC
