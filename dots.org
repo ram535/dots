@@ -175,6 +175,28 @@
       (use-package s)         ;; strings
       (use-package a)         ;; association lists
     #+end_src
+*** General
+    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package general
+	:config
+	(general-evil-setup)
+	(general-define-key
+	 :states '(normal)
+	 :prefix ","
+	 "s" '(magit-status :which-key "git status")
+	 ))
+    #+END_SRC
+*** Which-key
+    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package which-key
+	:init
+	(which-key-mode)
+	:config
+	(which-key-setup-side-window-right-bottom)
+	(setq which-key-sort-order 'which-key-key-order-alpha
+	      which-key-side-window-max-width 0.33
+	      which-key-idle-delay 0.05))
+    #+END_SRC
 *** Evil
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package evil
@@ -184,11 +206,22 @@
 	(evil-visual-state-cursor '("orange" box))
 	(evil-insert-state-cursor '("dodger blue" bar))
 	(evil-replace-state-cursor '("red" bar))
+	:init
+	(setq evil-want-keybinding nil)
 	:config
 	(evil-mode 1))
     #+end_src
+*** Evil-collection
+    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package evil-collection
+	:after evil
+	:config
+	(evil-collection-swap-key nil 'evil-motion-state-map
+	  ";" ":")
+	(evil-collection-init))
+    #+END_SRC
 *** Evil leader
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp 
       (use-package evil-leader
         :after (evil)
         :config
@@ -221,7 +254,6 @@
 *** Evil-surround
     #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package evil-surround
-	:ensure t
 	:config
 	(global-evil-surround-mode 1))
     #+END_SRC
@@ -237,14 +269,23 @@
       (use-package ob-go)
     #+end_src
 *** Org Mode
-**** org-plus-contrib
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package org
 	:straight org-plus-contrib
+	:general
+	(general-nmap org-mode-map "C-n" 'org-toggle-narrow-to-subtree)
+	:custom
+	(org-startup-with-inline-images t)
+	(org-ellipsis "⤵")
+	;; syntax highlight
+	(org-src-fontify-natively t)
+	;; edit source code in another window
+	(org-src-window-setup 'current-window)
+	;; Then inline latex like $y=mx+c$ will appear in a different colour in an org-mode file to help it stand out.
+	(org-highlight-latex-and-related '(latex))
 	:config
 	;; To be able to see the images after bable is execute
 	(add-hook 'org-babel-after-execute-hook 'org-display-inline-images)
-	(setq org-startup-with-inline-images t)
 	(org-babel-do-load-languages
 	 'org-babel-load-languages
 	 '((dot . t)
@@ -255,27 +296,6 @@
 	   (python . t)
 	   (emacs-lisp . t))))
     #+end_src
-
-**** See down arrow instead of "..." when we have subtrees (noticeable ellipsis)
-   When headers are collapsed, org-mode uses ellipses to represent the hidden text,
-   but I think that’s too subtle, so this makes them stand out more.
-   #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-     (setq org-ellipsis "⤵")
-   #+end_src
-**** Make sure we see syntax highlighting
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (setq org-src-fontify-natively t)
-    #+end_src
-**** Editing source code
-   I don't want to get distracted by the same code in the other window, so I want org src to use the current window.
-   #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-      (setq org-src-window-setup 'current-window)
-   #+END_SRC
-**** HighlightI latex text in org-mode
-   Then inline latex like $y=mx+c$ will appear in a different colour in an org-mode file to help it stand out.
-   #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-     (setq org-highlight-latex-and-related '(latex))
-   #+END_SRC
 *** Org-bullets
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package org-bullets
@@ -335,6 +355,10 @@
 	      "\\(?:\\`[#.]\\)"
 	      ;; File names ending with # or ~
 	      "\\|\\(?:\\`.+?[#~]\\'\\)"))
+
+       (setq all-the-icons-ivy-file-commands
+	     '(counsel-find-file counsel-file-jump counsel-recentf counsel-projectile-find-file counsel-projectile-find-dir))
+
        (define-key evil-normal-state-map (kbd "\C-n") 'counsel-up-directory))
 
 	  (use-package swiper
@@ -350,6 +374,7 @@
 	  (use-package ivy
 	    :bind (:map ivy-minibuffer-map
 			("C-j" . ivy-next-line)
+			("C-u" . counsel-up-directory)
 			("C-k" . ivy-previous-line))
 	    :config
 	    (ivy-mode 1)
@@ -557,9 +582,29 @@
 *** Eshell
     #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package eshell
-	:config
-	;; prompt
-	(setq eshell-prompt-function
+	:general
+	(:states '(normal insert emacs)
+		 "C-t" 'eshell-foo)
+	(general-imap eshell-mode-map "C-l" 'eshell/clear)
+
+	:preface
+	(defun eshell-foo ()
+	  (interactive)
+
+	  (if (string= (buffer-name) "*eshell*")
+	      (mode-line-other-buffer)
+	    (eshell)
+	    (eshell-kill-process)
+	    (delete-other-windows)))
+
+	(defun eshell/clear ()
+	  "Clear the eshell buffer."
+	  (interactive)
+	  (let ((inhibit-read-only t))
+	    (erase-buffer)
+	    (eshell-send-input)))
+	:custom
+	(eshell-prompt-function
 	      (lambda ()
 		(concat
 		 (propertize "\xf07c" 'face `(:foreground "steel blue" :bold ultra-bold))
@@ -576,42 +621,10 @@
 		 (propertize "❯" 'face '(:foreground "#ffaf5f"))
 		 (propertize "❯" 'face '(:foreground "#87af5f"))
 		 (propertize " " 'face nil))))
-
-	;; disable welcome messages
+	:config
 	(eval-after-load 'esh-module
 	  '(progn
-	     (delq 'eshell-banner eshell-modules-list) t))
-
-	(defun eshell-foo ()
-	  (interactive)
-
-	  (if (string= (buffer-name) "*eshell*")
-	      (mode-line-other-buffer)
-	    (eshell)
-	    (eshell-kill-process)
-	    (delete-other-windows)))
-
-	(define-key evil-normal-state-map (kbd "<C-return>") 'eshell-foo)
-	(define-key evil-insert-state-map (kbd "<C-return>") 'eshell-foo)
-	(define-key evil-emacs-state-map (kbd "<C-return>") 'eshell-foo)
-	(evil-define-key 'treemacs treemacs-mode-map (kbd "<C-return>") 'eshell-foo)
-
-	(defun eshell/clear ()
-	  "Clear the eshell buffer."
-	  (interactive)
-	  (let ((inhibit-read-only t))
-	    (erase-buffer)
-	    (eshell-send-input)))
-
-	(add-hook 'eshell-mode-hook
-		  '(lambda ()
-		     (define-key evil-normal-state-local-map (kbd "C-l") (lambda () (interactive) (eshell/clear)))))
-	(add-hook 'eshell-mode-hook
-		  '(lambda ()
-		     (define-key evil-insert-state-local-map (kbd "C-l") (lambda () (interactive) (eshell/clear)))))
-	(add-hook 'eshell-mode-hook
-		  '(lambda ()
-		     (define-key evil-normal-state-local-map (kbd "q") (lambda () (interactive) (kill-buffer-and-window))))))
+	     (delq 'eshell-banner eshell-modules-list) t)))
     #+END_SRC
 *** Avy
     #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
@@ -665,17 +678,20 @@
    _b_: buffers
    _f_: files
    _p_: projects
+   _s_: all files
    _a_: all buffers
+   _d_: dired
    _q_: quit
    "
    
    ("b" counsel-projectile-switch-to-buffer)
    ("f" counsel-projectile-find-file)
    ("p" counsel-projectile-switch-project)
+   ("s" counsel-find-file)
    ("a" counsel-switch-buffer)
+   ("d" dired)
    ("q" nil :color blue))
    #+END_SRC
-
 * Fish
 ** Vi mode
   #+begin_src fish :mkdirp yes :tangle ~/.config/fish/config.fish
@@ -1931,7 +1947,7 @@ bindsym $mod+a focus parent
      command! mkcd :mkdir %a | cd %a
      command! vgrep vim "+grep %a"
      command! reload :write | restart
-     command! touch :touch %a
+     " command! touch :touch %a
 
      " ------------------------------------------------------------------------------
 
