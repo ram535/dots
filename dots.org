@@ -11,6 +11,10 @@
    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
      (server-start)
    #+end_src
+*** Delete trailing whitespaces
+    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+      (add-hook 'before-save-hook 'delete-trailing-whitespace)
+    #+END_SRC
 *** backup
    Keep all backup and auto-save files in one directory
    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
@@ -180,22 +184,23 @@
       (use-package general
 	:config
 	(general-evil-setup)
+
 	(general-define-key
-	 :states '(normal)
+	 :states 'motion
+	 ;; swap ; and :
+	 ";" 'evil-ex
+	 ":" 'evil-repeat-find-char)
+
+	(general-define-key
+	 :states 'normal
 	 :prefix ","
-	 "s" '(magit-status :which-key "git status")
-	 ))
-    #+END_SRC
-*** Which-key
-    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package which-key
-	:init
-	(which-key-mode)
-	:config
-	(which-key-setup-side-window-right-bottom)
-	(setq which-key-sort-order 'which-key-key-order-alpha
-	      which-key-side-window-max-width 0.33
-	      which-key-idle-delay 0.05))
+	 "s" '(magit-status)
+	 "ed" '(lambda () (interactive) (find-file "~/Projects/dots/dots.org"))
+	 "en" '(lambda() (interactive)(find-file "~/Documents/notes/notes.org"))
+	 "eb" '(lambda() (interactive)(find-file "~/Documents/bookmarks/bookmarks.org"))
+	 "f" 'hydra-projectile/body
+	 "s" 'magit-status
+	 "q" 'mode-line-other-buffer))
     #+END_SRC
 *** Evil
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
@@ -216,28 +221,8 @@
       (use-package evil-collection
 	:after evil
 	:config
-	(evil-collection-swap-key nil 'evil-motion-state-map
-	  ";" ":")
 	(evil-collection-init))
     #+END_SRC
-*** Evil leader
-    #+begin_src emacs-lisp 
-      (use-package evil-leader
-        :after (evil)
-        :config
-        (global-evil-leader-mode)
-        (evil-leader/set-leader ",")
-        (evil-leader/set-key "w" 'evil-write)
-        (evil-leader/set-key "ed" '(lambda() (interactive)(find-file "~/Projects/dots/dots.org")))
-        (evil-leader/set-key "en" '(lambda() (interactive)(find-file "~/Documents/notes/notes.org")))
-        (evil-leader/set-key "eb" '(lambda() (interactive)(find-file "~/Documents/bookmarks/bookmarks.org")))
-        ;;; (evil-leader/set-key "f" 'counsel-find-file)
-        (evil-leader/set-key "f" 'hydra-projectile/body)
-        (evil-leader/set-key "s" 'magit-status)
-	;; (evil-leader/set-key "ee" 'eval-defun)
-        (evil-leader/set-key "b" 'ivy-switch-buffer)
-        (evil-leader/set-key "q" 'mode-line-other-buffer))
-    #+end_src
 *** Evil-escape
    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
      (use-package evil-escape
@@ -291,6 +276,7 @@
 	 '((dot . t)
 	   (js . t)
 	   (latex . t)
+	   (sql . t)
 	   (C . t)
 	   (go . t)
 	   (python . t)
@@ -311,7 +297,7 @@
 	(dired-listing-switches "-Bhl --group-directories-first"))
     #+END_SRC
 *** Treemacs
-    Remember that binding a key in motion state is like binding a key in the normal, visual, 
+    Remember that binding a key in motion state is like binding a key in the normal, visual,
     and operator states all at once (unless that key is already bound in one of those states).
     #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package treemacs
@@ -405,11 +391,16 @@
 *** Yasnippet
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package yasnippet
-	:bind ("C-u" . yas-expand)
+	:defer 4
 	:config
-	(yas-global-mode)
 	(setq yas-snippet-dirs
 	      (append yas-snippet-dirs '("~/Projects/dots/snips/yasnippet")))
+
+	(general-define-key
+	 :states 'insert
+	 "C-u" 'yas-expand)
+
+	(yas-global-mode)
 	(yas-reload-all))
     #+end_src
 *** Company
@@ -556,8 +547,9 @@
 *** Major-mode-hydra
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package major-mode-hydra
-	:bind
-	("C-M-m" . major-mode-hydra))
+	:general
+	(:states '(normal emacs)
+		 "SPC" 'major-mode-hydra))
     #+end_src
 *** Hera
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
@@ -582,11 +574,6 @@
 *** Eshell
     #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package eshell
-	:general
-	(:states '(normal insert emacs)
-		 "C-t" 'eshell-foo)
-	(general-imap eshell-mode-map "C-l" 'eshell/clear)
-
 	:preface
 	(defun eshell-foo ()
 	  (interactive)
@@ -605,23 +592,27 @@
 	    (eshell-send-input)))
 	:custom
 	(eshell-prompt-function
-	      (lambda ()
-		(concat
-		 (propertize "\xf07c" 'face `(:foreground "steel blue" :bold ultra-bold))
-		 (propertize " " 'face nil)
-		 (propertize (concat (eshell/pwd)) 'face `(:foreground "steel blue"))
-		 (propertize " " 'face nil)
-		 (if (magit-get-current-branch)
-		     (propertize "\xf1d3" 'face `(:foreground "pink"))) ;; branch symbol \xe0a0
-		 (propertize " " 'face nil)
-		 (if (magit-get-current-branch)
-		     (propertize (magit-get-current-branch) 'face `(:foreground "pink")))
-		 (propertize "\n" 'face nil)
-		 (propertize "❯" 'face '(:foreground "#f75f5f"))
-		 (propertize "❯" 'face '(:foreground "#ffaf5f"))
-		 (propertize "❯" 'face '(:foreground "#87af5f"))
-		 (propertize " " 'face nil))))
+	 (lambda ()
+	   (concat
+	    (propertize "\xf07c" 'face `(:foreground "steel blue" :bold ultra-bold))
+	    (propertize " " 'face nil)
+	    (propertize (concat (eshell/pwd)) 'face `(:foreground "steel blue"))
+	    (propertize " " 'face nil)
+	    (if (magit-get-current-branch)
+		(propertize "\xf1d3" 'face `(:foreground "pink"))) ;; branch symbol \xe0a0
+	    (propertize " " 'face nil)
+	    (if (magit-get-current-branch)
+		(propertize (magit-get-current-branch) 'face `(:foreground "pink")))
+	    (propertize "\n" 'face nil)
+	    (propertize "❯" 'face '(:foreground "#f75f5f"))
+	    (propertize "❯" 'face '(:foreground "#ffaf5f"))
+	    (propertize "❯" 'face '(:foreground "#87af5f"))
+	    (propertize " " 'face nil))))
 	:config
+	(general-define-key
+	 :states '(normal emacs)
+	 "C-t" 'eshell-foo)
+
 	(eval-after-load 'esh-module
 	  '(progn
 	     (delq 'eshell-banner eshell-modules-list) t)))
@@ -667,31 +658,128 @@
       (use-package rainbow-delimiters
 	:config
 	(add-hook 'prog-mode-hook 'rainbow-delimiters-mode)
-	;; To start the mode automatically in most programming modes 
+	;; To start the mode automatically in most programming modes
 	(add-hook 'dart-mode-hook 'rainbow-delimiters-mode))
     #+END_SRC
 ** Hydras
+*** Buffers
    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-   (defhydra hydra-projectile (:color teal :hint nil)
-   
-   "
-   _b_: buffers
-   _f_: files
-   _p_: projects
-   _s_: all files
-   _a_: all buffers
-   _d_: dired
-   _q_: quit
-   "
-   
-   ("b" counsel-projectile-switch-to-buffer)
-   ("f" counsel-projectile-find-file)
-   ("p" counsel-projectile-switch-project)
-   ("s" counsel-find-file)
-   ("a" counsel-switch-buffer)
-   ("d" dired)
-   ("q" nil :color blue))
+     (defhydra hydra-projectile (:color teal :hint nil)
+     "
+     _b_: buffers
+     _f_: files
+     _p_: projects
+     _s_: all files
+     _a_: all buffers
+     _d_: dired
+     _q_: quit
+     "
+
+     ("b" counsel-projectile-switch-to-buffer)
+     ("f" counsel-projectile-find-file)
+     ("p" counsel-projectile-switch-project)
+     ("s" counsel-find-file)
+     ("a" counsel-switch-buffer)
+     ("d" dired)
+     ("q" nil :color blue))
    #+END_SRC
+*** emacs-lisp-mode major mode
+    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+     (major-mode-hydra-define (emacs-lisp-mode lisp-interaction-mode) nil
+       ("Eval"
+	(("b" eval-buffer "buffer")
+	 ("e" eval-defun "defun")
+	 ("r" eval-region "region"))
+	"REPL"
+	(("I" ielm "ielm"))
+	"Test"
+	(("t" ert "prompt")
+	 ("T" (ert t) "all")
+	 ("F" (ert :failed) "failed"))
+	"Doc"
+	(("d" describe-foo-at-point "thing-at-pt")
+	 ("f" describe-function "function")
+	 ("v" describe-variable "variable")
+	 ("i" info-lookup-symbol "info lookup"))))
+    #+END_SRC
+
+** Other Functions
+*** Hide SRC block delimiters
+    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+      (with-eval-after-load 'org
+	(defvar-local rasmus/org-at-src-begin -1
+	  "Variable that holds whether last position was a ")
+
+	(defvar rasmus/ob-header-symbol ?☰
+	  "Symbol used for babel headers")
+
+	(defun rasmus/org-prettify-src--update ()
+	  (let ((case-fold-search t)
+		(re "^[ \t]*#\\+begin_src[ \t]+[^ \f\t\n\r\v]+[ \t]*")
+		found)
+	    (save-excursion
+	      (goto-char (point-min))
+	      (while (re-search-forward re nil t)
+		(goto-char (match-end 0))
+		(let ((args (org-trim
+			     (buffer-substring-no-properties (point)
+							     (line-end-position)))))
+		  (when (org-string-nw-p args)
+		    (let ((new-cell (cons args rasmus/ob-header-symbol)))
+		      (cl-pushnew new-cell prettify-symbols-alist :test #'equal)
+		      (cl-pushnew new-cell found :test #'equal)))))
+	      (setq prettify-symbols-alist
+		    (cl-set-difference prettify-symbols-alist
+				       (cl-set-difference
+					(cl-remove-if-not
+					 (lambda (elm)
+					   (eq (cdr elm) rasmus/ob-header-symbol))
+					 prettify-symbols-alist)
+					found :test #'equal)))
+	      ;; Clean up old font-lock-keywords.
+	      (font-lock-remove-keywords nil prettify-symbols--keywords)
+	      (setq prettify-symbols--keywords (prettify-symbols--make-keywords))
+	      (font-lock-add-keywords nil prettify-symbols--keywords)
+	      (while (re-search-forward re nil t)
+		(font-lock-flush (line-beginning-position) (line-end-position))))))
+
+	(defun rasmus/org-prettify-src ()
+	  "Hide src options via `prettify-symbols-mode'.
+
+      `prettify-symbols-mode' is used because it has uncollpasing. It's
+      may not be efficient."
+	  (let* ((case-fold-search t)
+		 (at-src-block (save-excursion
+				 (beginning-of-line)
+				 (looking-at "^[ \t]*#\\+begin_src[ \t]+[^ \f\t\n\r\v]+[ \t]*"))))
+	    ;; Test if we moved out of a block.
+	    (when (or (and rasmus/org-at-src-begin
+			   (not at-src-block))
+		      ;; File was just opened.
+		      (eq rasmus/org-at-src-begin -1))
+	      (rasmus/org-prettify-src--update))
+	    ;; Remove composition if at line; doesn't work properly.
+	    ;; (when at-src-block
+	    ;;   (with-silent-modifications
+	    ;;     (remove-text-properties (match-end 0)
+	    ;;                             (1+ (line-end-position))
+	    ;;                             '(composition))))
+	    (setq rasmus/org-at-src-begin at-src-block)))
+
+	(defun rasmus/org-prettify-symbols ()
+	  (mapc (apply-partially 'add-to-list 'prettify-symbols-alist)
+		(cl-reduce 'append
+			   (mapcar (lambda (x) (list x (cons (upcase (car x)) (cdr x))))
+				   `(("#+begin_src" . ?✎) ;; ➤ 🖝 ➟ ➤ ✎
+				     ("#+end_src"   . ?□) ;; ⏹
+				     ("#+header:" . ,rasmus/ob-header-symbol)
+				     ("#+begin_quote" . ?»)
+				     ("#+end_quote" . ?«)))))
+	  (turn-on-prettify-symbols-mode)
+	  (add-hook 'post-command-hook 'rasmus/org-prettify-src t t))
+	(add-hook 'org-mode-hook #'rasmus/org-prettify-symbols))
+    #+END_SRC
+
 * Fish
 ** Vi mode
   #+begin_src fish :mkdirp yes :tangle ~/.config/fish/config.fish
@@ -966,7 +1054,7 @@ bindsym $mod+a focus parent
    }
    #+END_SRC
 *** Music player mode
-   #+BEGIN_SRC sh 
+   #+BEGIN_SRC sh
    set $mode_music Music Player Mode
    bindsym $mod+m mode "$mode_music"
 
@@ -1236,20 +1324,20 @@ bindsym $mod+a focus parent
       " don't give |ins-completion-menu| messages.
       set shortmess+=c
 
-      let g:coc_global_extensions = ['coc-ultisnips', 
+      let g:coc_global_extensions = ['coc-ultisnips',
 				   \ 'coc-go',
-                                   \ 'coc-conjure', 
-                                   \ 'coc-json', 
-                                   \ 'coc-tsserver', 
-                                   \ 'coc-html', 
-                                   \ 'coc-css', 
-                                   \ 'coc-yaml', 
-                                   \ 'coc-python', 
-                                   \ 'coc-highlight', 
-                                   \ 'coc-snippets', 
-                                   \ 'coc-lists', 
-                                   \ 'coc-angular', 
-                                   \ 'coc-vimlsp', 
+                                   \ 'coc-conjure',
+                                   \ 'coc-json',
+                                   \ 'coc-tsserver',
+                                   \ 'coc-html',
+                                   \ 'coc-css',
+                                   \ 'coc-yaml',
+                                   \ 'coc-python',
+                                   \ 'coc-highlight',
+                                   \ 'coc-snippets',
+                                   \ 'coc-lists',
+                                   \ 'coc-angular',
+                                   \ 'coc-vimlsp',
                                    \ 'coc-pairs']
 
       inoremap <silent><expr> <TAB>
@@ -1257,12 +1345,12 @@ bindsym $mod+a focus parent
             \ coc#expandableOrJumpable() ? "\<C-r>=coc#rpc#request('doKeymap', ['snippets-expand-jump',''])\<CR>" :
             \ <SID>check_back_space() ? "\<TAB>" :
             \ coc#refresh()
-      
+
       function! s:check_back_space() abort
         let col = col('.') - 1
         return !col || getline('.')[col - 1]  =~# '\s'
       endfunction
-      
+
       let g:coc_snippet_next = '<tab>'
 
       " Use tab for trigger completion with characters ahead and navigate.
