@@ -132,7 +132,7 @@
 	      (tab-mark 9 [183 9] [92 9])))
 
       ;; Indicate trailing empty lines in the GUI:
-      (setq-default show-trailing-whitespace t)
+      ;; (setq-default show-trailing-whitespace t)
     #+end_src
 *** USE SCROLL MARGINS TO GIVE CONTEXT TO YOUR CURSOR
     I add the following line to my emacs config file so the when I move the cursor near
@@ -269,6 +269,7 @@
 	;; Then inline latex like $y=mx+c$ will appear in a different colour in an org-mode file to help it stand out.
 	(org-highlight-latex-and-related '(latex))
 	:config
+	(org-indent-mode)
 	;; To be able to see the images after bable is execute
 	(add-hook 'org-babel-after-execute-hook 'org-display-inline-images)
 	(org-babel-do-load-languages
@@ -276,6 +277,7 @@
 	 '((dot . t)
 	   (js . t)
 	   (latex . t)
+	   (calc . t)
 	   (sql . t)
 	   (C . t)
 	   (go . t)
@@ -661,6 +663,26 @@
 	;; To start the mode automatically in most programming modes
 	(add-hook 'dart-mode-hook 'rainbow-delimiters-mode))
     #+END_SRC
+*** Nov (epubs)
+    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package nov
+	:config
+	(add-to-list 'auto-mode-alist '("\\.epub\\'" . nov-mode))
+	(setq nov-text-width 80)
+	)
+    #+END_SRC
+*** Pdf-tools
+    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+      ;; pdf-tools depends on this package
+      (use-package tablist)
+
+      (use-package pdf-tools
+	:config
+	(pdf-tools-install)
+	;; auxtex and latex-preview-pane
+	(setq TeX-view-program-selection '((output-pdf "pdf-tools")))
+	(setq TeX-view-program-list '(("pdf-tools" "TeX-pdf-tools-sync-view"))))
+    #+END_SRC
 ** Hydras
 *** Buffers
    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
@@ -705,7 +727,7 @@
 
 ** Other Functions
 *** Hide SRC block delimiters
-    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+    #+BEGIN_SRC emacs-lisp
       (with-eval-after-load 'org
 	(defvar-local rasmus/org-at-src-begin -1
 	  "Variable that holds whether last position was a ")
@@ -779,6 +801,8 @@
 	  (add-hook 'post-command-hook 'rasmus/org-prettify-src t t))
 	(add-hook 'org-mode-hook #'rasmus/org-prettify-symbols))
     #+END_SRC
+
+    #+RESULTS:
 
 * Fish
 ** Vi mode
