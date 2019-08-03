@@ -217,7 +217,7 @@
 	(evil-mode 1))
     #+end_src
 *** Evil-collection
-    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+    #+BEGIN_SRC emacs-lisp
       (use-package evil-collection
 	:after evil
 	:config
@@ -296,7 +296,47 @@
       (use-package dired
 	:straight nil
 	:custom
-	(dired-listing-switches "-Bhl --group-directories-first"))
+	(dired-listing-switches "-Bhl --group-directories-first")
+	:config
+	(general-define-key
+	 :states 'normal
+	 :keymaps 'dired-mode-map
+	 "j" 'dired-next-line
+	 "k" 'dired-previous-line
+	 "l" 'dired-find-file
+	 "h" 'dired-up-directory
+	 "y" 'dired-do-copy
+	 "m" 'dired-mark
+	 "u" 'dired-unmark
+	 "t" 'dired-hide-details-mode
+	 "nd" 'dired-create-directory
+	 "q" 'quit-window
+	 "za" 'cycle-dired-switches
+	 "d" 'dired-do-delete)
+
+	(general-define-key
+	 :states 'normal
+	 :keymaps 'image-mode-map
+	 "j" 'image-previous-file
+	 "k" 'image-next-file
+	 "l" 'image-next-file
+	 "h" 'image-previous-file
+	 "q" 'quit-window)
+
+	(defcustom list-of-dired-switches
+	  '(("-Bhl --group-directories-first" . "directories first")
+	    ("-BhlA --group-directories-first" . "no . & .."))
+	  "List of ls switches (together with a name to display in the mode-line) for dired to cycle among.")
+
+	(defun cycle-dired-switches ()
+	  "Cycle through the list `list-of-dired-switches' of switches for ls"
+	  (interactive)
+	  (setq list-of-dired-switches
+		(append (cdr list-of-dired-switches)
+			(list (car list-of-dired-switches))))
+	  (dired-sort-other (caar list-of-dired-switches))
+	  (setq mode-name (concat "Dired " (cdar list-of-dired-switches)))
+	  (force-mode-line-update)))
     #+END_SRC
 *** Treemacs
     Remember that binding a key in motion state is like binding a key in the normal, visual,
@@ -553,6 +593,7 @@
 	(:states '(normal emacs)
 		 "SPC" 'major-mode-hydra))
     #+end_src
+		 "M-SPC" 'major-mode-hydra))
 *** Hera
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package hera
@@ -723,6 +764,23 @@
 	 ("f" describe-function "function")
 	 ("v" describe-variable "variable")
 	 ("i" info-lookup-symbol "info lookup"))))
+    #+END_SRC
+*** Dired major mode
+    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+      (major-mode-hydra-define (dired-mode) nil
+	("Navegation"
+	 (("j" dired-next-line "next line")
+	  ("k" dired-previous-line "previous line")
+	  ("l" dired-find-file "open file")
+	  ("h" dired-up-directory "go to parent directory"))
+	 "Actions"
+	 (("y" dired-do-copy "copy")
+	  ("m" dired-mark "mark")
+	  ("u" dired-unmark "unmark")
+	  ("t" dired-hide-details-mode "show/hide details")
+	  ("nd" dired-create-directory "new directory")
+	  ("d" dired-do-delete "delete"))
+	 ))
     #+END_SRC
 
 ** Other Functions
