@@ -180,6 +180,7 @@
       (use-package a)         ;; association lists
     #+end_src
 *** General
+	"C-TAB" 'other-window)
     #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package general
 	:config
@@ -192,9 +193,13 @@
 	 ":" 'evil-repeat-find-char)
 
 	(general-define-key
+	:states '(normal emacs)
+	:Prefix "C-"
+	 "TAB" 'other-window)
+
+	(general-define-key
 	 :states 'normal
 	 :prefix ","
-	 "s" '(magit-status)
 	 "ed" '(lambda () (interactive) (find-file "~/Projects/dots/dots.org"))
 	 "en" '(lambda() (interactive)(find-file "~/Documents/notes/notes.org"))
 	 "eb" '(lambda() (interactive)(find-file "~/Documents/bookmarks/bookmarks.org"))
@@ -257,8 +262,6 @@
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package org
 	:straight org-plus-contrib
-	:general
-	(general-nmap org-mode-map "C-n" 'org-toggle-narrow-to-subtree)
 	:custom
 	(org-startup-with-inline-images t)
 	(org-ellipsis "⤵")
@@ -268,7 +271,13 @@
 	(org-src-window-setup 'current-window)
 	;; Then inline latex like $y=mx+c$ will appear in a different colour in an org-mode file to help it stand out.
 	(org-highlight-latex-and-related '(latex))
+	:init
+	(setq org-modules '(org-bibtex
+			    org-docview
+			    org-drill))
 	:config
+	(require 'org-drill)
+	(require 'org-eldoc)
 	(org-indent-mode)
 	;; To be able to see the images after bable is execute
 	(add-hook 'org-babel-after-execute-hook 'org-display-inline-images)
@@ -282,7 +291,13 @@
 	   (C . t)
 	   (go . t)
 	   (python . t)
-	   (emacs-lisp . t))))
+	   (emacs-lisp . t)))
+
+	(general-define-key
+	 :prefix ","
+	 :states 'normal
+	 :keymaps 'org-mode-map
+	 "n" 'org-toggle-narrow-to-subtree))
     #+end_src
 *** Org-bullets
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
@@ -298,6 +313,10 @@
 	:custom
 	(dired-listing-switches "-Bhl --group-directories-first")
 	:config
+
+	(eval-after-load "dired-aux"
+	  '(add-to-list 'dired-compress-file-suffixes
+			'("\\.zip\\'" ".zip" "unzip")))
 	(general-define-key
 	 :states 'normal
 	 :keymaps 'dired-mode-map
@@ -308,9 +327,14 @@
 	 "y" 'dired-do-copy
 	 "m" 'dired-mark
 	 "u" 'dired-unmark
+	 "cw" 'dired-do-rename
+	 "r" 'revert-buffer
 	 "t" 'dired-hide-details-mode
 	 "nd" 'dired-create-directory
+	 "nf" 'counsel-find-file
+	 "s" 'dired-do-shell-command
 	 "q" 'quit-window
+	 "x" 'dired-do-compress
 	 "za" 'cycle-dired-switches
 	 "d" 'dired-do-delete)
 
@@ -322,6 +346,18 @@
 	 "l" 'image-next-file
 	 "h" 'image-previous-file
 	 "q" 'quit-window)
+
+	(defvar dired-compress-files-alist
+	  '(("\\.tar\\.gz\\'" . "tar -c %i | gzip -c9 > %o")
+	    ("\\.zip\\'" . "zip %o -r --filesync %i"))
+	  "Control the compression shell command for `dired-do-compress-to'.
+
+		Each element is (REGEXP . CMD), where REGEXP is the name of the
+		archive to which you want to compress, and CMD the the
+		corresponding command.
+
+		Within CMD, %i denotes the input file(s), and %o denotes the
+		output file. %i path(s) are relative, while %o is absolute.")
 
 	(defcustom list-of-dired-switches
 	  '(("-Bhl --group-directories-first" . "directories first")
@@ -337,6 +373,16 @@
 	  (dired-sort-other (caar list-of-dired-switches))
 	  (setq mode-name (concat "Dired " (cdar list-of-dired-switches)))
 	  (force-mode-line-update)))
+
+      (use-package dired-x
+	:straight nil
+	:after dired
+	:config
+	(setq dired-guess-shell-alist-user '(("\\.zip\\'" "file-roller")
+					     ("\\.tar\\.gz'" "file-roller")
+					     ("\\.rar\\'" "file-roller"))))
+
+
     #+END_SRC
 *** Treemacs
     Remember that binding a key in motion state is like binding a key in the normal, visual,
