@@ -204,7 +204,13 @@
 	:init
 	(setq evil-want-keybinding nil)
 	:config
+	;; You can use the following configuration to have all modes start in normal state:
+	;; (setq evil-emacs-state-modes nil)
+	;; (setq evil-insert-state-modes nil)
+	;; (setq evil-motion-state-modes nil)
 	(evil-set-initial-state 'wdired-mode 'normal)
+	(evil-set-initial-state 'pdf-view-mode 'normal)
+	(evil-set-initial-state 'pdf-outline-buffer-mode 'normal)
 
 	(general-define-key
 	 :states '(normal emacs)
@@ -318,6 +324,7 @@
 	 "h" 'dired-up-directory
 	 "yy" 'dired-do-copy
 	 "yn" 'dired-copy-filename-as-kill
+	 "yp" '(lambda() (interactive) (dired-copy-filename-as-kill 0))
 	 "m" 'dired-mark
 	 "u" 'dired-unmark
 	 "cw" 'dired-do-rename
@@ -347,12 +354,12 @@
 	    ("\\.zip\\'" . "zip %o -r --filesync %i"))
 	  "Control the compression shell command for `dired-do-compress-to'.
 
-		Each element is (REGEXP . CMD), where REGEXP is the name of the
-		archive to which you want to compress, and CMD the the
-		corresponding command.
+		      Each element is (REGEXP . CMD), where REGEXP is the name of the
+		      archive to which you want to compress, and CMD the the
+		      corresponding command.
 
-		Within CMD, %i denotes the input file(s), and %o denotes the
-		output file. %i path(s) are relative, while %o is absolute.")
+		      Within CMD, %i denotes the input file(s), and %o denotes the
+		      output file. %i path(s) are relative, while %o is absolute.")
 
 	(defcustom list-of-dired-switches
 	  '(("-Bhl --group-directories-first" . "directories first")
@@ -369,15 +376,15 @@
 	  (setq mode-name (concat "Dired " (cdar list-of-dired-switches)))
 	  (force-mode-line-update)))
 
-      (use-package dired-x
-	:straight nil
-	:after dired
-	:config
-	(setq dired-guess-shell-alist-user '(("\\.zip\\'" "file-roller")
-					     ("\\.tar\\.gz'" "file-roller")
-					     ("\\.rar\\'" "file-roller"))))
+	    (use-package dired-x
+	      :straight nil
+	      :after dired
+	      :config
+	      (setq dired-guess-shell-alist-user '(("\\.zip\\'" "file-roller")
+						   ("\\.tar\\.gz'" "file-roller")
+						   ("\\.rar\\'" "file-roller"))))
 
-(add-to-list 'auto-mode-alist '("\\.rar$" . arc-mode))
+      (add-to-list 'auto-mode-alist '("\\.rar$" . arc-mode))
     #+END_SRC
 *** Treemacs
     Remember that binding a key in motion state is like binding a key in the normal, visual,
@@ -505,7 +512,9 @@
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package flycheck
 	:hook (go-mode . flycheck-mode)
-	:hook (dart-mode . flycheck-mode))
+	:hook (dart-mode . flycheck-mode)
+	:config
+	(setq lsp-prefer-flymake nil))
     #+end_src
 *** Dart-mode
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
@@ -763,8 +772,42 @@
 	(pdf-tools-install)
 	;; auxtex and latex-preview-pane
 	(setq TeX-view-program-selection '((output-pdf "pdf-tools")))
-	(setq TeX-view-program-list '(("pdf-tools" "TeX-pdf-tools-sync-view"))))
+	(setq TeX-view-program-list '(("pdf-tools" "TeX-pdf-tools-sync-view")))
+
+	(general-define-key
+	 :states 'normal
+	 :keymaps 'pdf-view-mode-map
+	 "2" 'pdf-view-enlarge
+	 "1" 'pdf-view-shrink
+         "gg" 'beginning-of-buffer
+         "G" 'end-of-buffer
+         "H" 'pdf-view-fit-height-to-window
+         "W" 'pdf-view-fit-width-to-window
+         "f" 'pdf-view-fit-page-to-window
+         "q" 'quit-window
+         "m" 'pdf-view-position-to-register
+         "'" 'pdf-view-jump-to-register
+         "n" 'pdf-view-next-page-command
+         "p" 'pdf-view-previous-page-command
+         "C-k" 'pdf-view-first-page
+         "C-j" 'pdf-view-last-page
+         "t" 'pdf-view-midnight-minor-mode
+         "o" 'pdf-outline
+	 "k" 'pdf-view-previous-line-or-previous-page
+	 "j" 'pdf-view-next-line-or-next-page)
+
+	(general-define-key
+	 :states 'normal
+	 :keymaps 'pdf-outline-buffer-mode-map
+         "TAB" 'outline-toggle-children
+	 "l" 'pdf-outline-display-link
+	 "z" 'outline-hide-sublevels
+	 "a" 'outline-show-all
+	 "q" 'quit-window
+	 "RET" 'pdf-outline-follow-link)
+	)
     #+END_SRC
+
 *** Hasklig-mode
     #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
       (set-face-attribute 'default nil
@@ -790,46 +833,122 @@
 		     :logic :sets))
 
 	(pretty-activate-groups
-	 '(:sub-and-superscripts :greek :arithmetic-nary)))
+	 '(:sub-and-superscripts :greek :arithmetic-nary))
 
-      (set-fontset-font "fontset-default" '(#x2254 . #x1d4e2) (font-spec :size 17 :weight 'bold :name "FreeSerif"))
-      (global-prettify-symbols-mode 1)
+      (global-prettify-symbols-mode 1))
 
-      (add-hook
-       'go-mode-hook
-       (lambda ()
-	 (mapc (lambda (pair) (push pair prettify-symbols-alist))
-	       '(;; Syntax
-		 (":=" .       #x2254)
-		 ))))
-      (global-prettify-symbols-mode 1)
-      (add-hook
-       'python-mode-hook
-       (lambda ()
-	 (mapc (lambda (pair) (push pair prettify-symbols-alist))
-	       '(;; Syntax
-		 ("def" .      #x2131)
-		 ("not" .      #x2757)
-		 ("in" .       #x2208)
-		 ("not in" .   #x2209)
-		 ("return" .   #x27fc)
-		 ("yield" .    #x27fb)
-		 ("for" .      #x2200)
-		 ;; Base Types
-		 ("int" .      #x2124)
-		 ("float" .    #x211d)
-		 ("str" .      #x1d54a)
-		 ("True" .     #x1d54b)
-		 ("False" .    #x1d53d)
-		 ;; Mypy
-		 ("Dict" .     #x1d507)
-		 ("List" .     #x2112)
-		 ("Tuple" .    #x2a02)
-		 ("Set" .      #x2126)
-		 ("Iterable" . #x1d50a)
-		 ("Any" .      #x2754)
-		 ("Union" .    #x22c3)))))
+
+      ;; (set-fontset-font "fontset-default" '(#x2254 . #x1d4e2) (font-spec :size 17 :weight 'bold :name "FreeSerif"))
+      ;; (add-hook
+      ;;  'go-mode-hook
+      ;;  (lambda ()
+      ;;    (mapc (lambda (pair) (push pair prettify-symbols-alist))
+      ;; 	 '(;; Syntax
+      ;; 	   (":=" .       #x2254)
+      ;; 	   ))))
+      ;; (add-hook
+      ;;  'python-mode-hook
+      ;;  (lambda ()
+      ;;    (mapc (lambda (pair) (push pair prettify-symbols-alist))
+      ;; 	 '(;; Syntax
+      ;; 	   ("def" .      #x2131)
+      ;; 	   ("not" .      #x2757)
+      ;; 	   ("in" .       #x2208)
+      ;; 	   ("not in" .   #x2209)
+      ;; 	   ("return" .   #x27fc)
+      ;; 	   ("yield" .    #x27fb)
+      ;; 	   ("for" .      #x2200)
+      ;; 	   ;; Base Types
+      ;; 	   ("int" .      #x2124)
+      ;; 	   ("float" .    #x211d)
+      ;; 	   ("str" .      #x1d54a)
+      ;; 	   ("True" .     #x1d54b)
+      ;; 	   ("False" .    #x1d53d)
+      ;; 	   ;; Mypy
+      ;; 	   ("Dict" .     #x1d507)
+      ;; 	   ("List" .     #x2112)
+      ;; 	   ("Tuple" .    #x2a02)
+      ;; 	   ("Set" .      #x2126)
+      ;; 	   ("Iterable" . #x1d50a)
+      ;; 	   ("Any" .      #x2754)
+      ;; 	   ("Union" .    #x22c3)))))
     #+end_src
+*** Abbrev
+    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package abbrev
+	:straight nil
+	:config
+	(load "~/.emacs.d/lisp/my-abbrev.el")
+	)
+    #+END_SRC
+**** Go abbrev
+     #+BEGIN_SRC emacs-lisp :mkdirp yes :tangle ~/.emacs.d/lisp/my-abbrev.el
+       ;; -*- coding: utf-8; lexical-binding: t; -*-
+
+       (when (boundp 'go-mode-abbrev-table)
+	 (clear-abbrev-table go-mode-abbrev-table))
+
+       (define-abbrev-table 'go-mode-abbrev-table
+	 '(
+	   ("re" "return")
+	   ("sg" "string")
+	   ("st" "struct")
+	   ("fu" "funct")
+	   ("eq" "==")
+	   ("sv" ":=")
+	   ("co" "const")
+	   ))
+
+       (set-default 'abbrev-mode t)
+
+       (setq save-abbrevs nil)
+     #+END_SRC
+*** Ispell
+    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package ispell
+	:straight nil
+	:config
+	(add-to-list 'ispell-local-dictionary-alist '("en_US"
+						    "[[:alpha:]]"
+						    "[^[:alpha:]]"
+						    "[']"
+						    t
+						    ("-d" "en_US")
+						    nil
+						    iso-8859-1))
+	(add-to-list 'ispell-local-dictionary-alist '("deutsch-hunspell"
+						    "[[:alpha:]]"
+						    "[^[:alpha:]]"
+						    "[']"
+						    t
+						    ("-d" "de_DE"); Dictionary file name
+						    nil
+						    iso-8859-1))
+	(setenv "LANG" "en_US.UTF-8")
+	(setq ispell-program-name "hunspell")
+	(setq ispell-dictionary "en_US")
+
+	(setq ispell-hunspell-dict-paths-alist
+	      '(("en_US" "/usr/share/hunspell/en_US.aff")
+		("de_DE" "/usr/share/hunspell/de_DE.aff"))))
+
+    #+END_SRC
+*** Flyspell
+    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package flyspell
+	:straight nil
+	:config
+	(add-hook 'text-mode-hook 'flyspell-mode))
+    #+END_SRC
+
+*** Flyspell-correct
+    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package flyspell-correct)
+
+      (use-package flyspell-correct-ivy
+	:init
+	(setq flyspell-correct-interface #'flyspell-correct-ivy))
+    #+END_SRC
 ** Hydras
 *** Buffers
    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
@@ -965,8 +1084,6 @@
 	  (add-hook 'post-command-hook 'rasmus/org-prettify-src t t))
 	(add-hook 'org-mode-hook #'rasmus/org-prettify-symbols))
     #+END_SRC
-
-    #+RESULTS:
 
 * Fish
 ** Vi mode
@@ -2612,6 +2729,13 @@ bindsym $mod+a focus parent
 *** Android-SDK
    #+BEGIN_SRC sh :tangle ~/.zshrc
    export ANDROID_HOME=$HOME/bin/android-sdk
+   #+END_SRC
+*** Dictionaries
+    This path needs to be set so ispell work with hunspell
+
+   #+BEGIN_SRC sh :tangle ~/.zshrc
+     export DICPATH=/usr/share/hunspell
+     export LANG=en_US.UTF-8
    #+END_SRC
 ** Plugins
    #+BEGIN_SRC sh :tangle ~/.zshrc
