@@ -936,9 +936,10 @@
 *** Flyspell
     #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package flyspell
-	:straight nil
-	:config
-	(add-hook 'text-mode-hook 'flyspell-mode))
+	      :straight nil
+	      :hook (text-mode . flyspell-mode))
+	      ;; :init
+	      ;; (add-hook 'text-mode-hook 'flyspell-mode))
     #+END_SRC
 
 *** Flyspell-correct
@@ -947,7 +948,13 @@
 
       (use-package flyspell-correct-ivy
 	:init
-	(setq flyspell-correct-interface #'flyspell-correct-ivy))
+	(setq flyspell-correct-interface #'flyspell-correct-ivy)
+	:config
+	(general-define-key
+	 :prefix "g"
+	 :states 'normal
+	 :keymaps 'org-mode-map
+	 "s" 'flyspell-correct-wrapper))
     #+END_SRC
 ** Hydras
 *** Buffers
