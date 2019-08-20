@@ -376,13 +376,13 @@
 	  (setq mode-name (concat "Dired " (cdar list-of-dired-switches)))
 	  (force-mode-line-update)))
 
-	    (use-package dired-x
-	      :straight nil
-	      :after dired
-	      :config
-	      (setq dired-guess-shell-alist-user '(("\\.zip\\'" "file-roller")
-						   ("\\.tar\\.gz'" "file-roller")
-						   ("\\.rar\\'" "file-roller"))))
+	    ;; (use-package dired-x
+	    ;; 	:straight nil
+	    ;; 	:after dired
+	    ;; 	:config
+	    ;; 	(setq dired-guess-shell-alist-user '(("\\.zip\\'" "file-roller")
+	    ;; 					     ("\\.tar\\.gz'" "file-roller")
+	    ;; 					     ("\\.rar\\'" "file-roller"))))
 
       (add-to-list 'auto-mode-alist '("\\.rar$" . arc-mode))
     #+END_SRC
@@ -954,7 +954,7 @@
 	 :prefix "g"
 	 :states 'normal
 	 :keymaps 'org-mode-map
-	 "s" 'flyspell-correct-wrapper))
+	 "s" 'flyspell-correct-at-point))
     #+END_SRC
 ** Hydras
 *** Buffers
@@ -1091,6 +1091,23 @@
 	  (add-hook 'post-command-hook 'rasmus/org-prettify-src t t))
 	(add-hook 'org-mode-hook #'rasmus/org-prettify-symbols))
     #+END_SRC
+
+** Symbols
+   #+BEGIN_SRC emacs-lisp
+     (setq some-variable "less")
+   #+END_SRC
+
+   'some-variable return the value of the variable
+   some-variable is a symbol (name of a variable)
+
+   (boundp some-variable) ;;requiring a symbol (unevaluated)
+   (bound-and-truep 'some-variable) ;;needing the value of the variable 'some-variable
+
+   (boundp SYMBOL)
+   Return t if SYMBOL’s value is not void.
+
+   (bound-and-true-p VAR)
+   Return the value of symbol VAR if it is bound, else nil.
 
 * Fish
 ** Vi mode
