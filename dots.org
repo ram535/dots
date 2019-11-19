@@ -190,12 +190,14 @@
 	 "ed" '(lambda() (interactive) (find-file "~/Projects/dots/dots.org"))
 	 "en" '(lambda() (interactive)(find-file "~/Documents/notes/notes.org"))
 	 "eb" '(lambda() (interactive)(find-file "~/Documents/bookmarks/bookmarks.org"))
-	 "d"  '(lambda() (interactive) (dired default-directory))
+	 "d" '(lambda() (interactive) (dired default-directory))
+	 "k" 'helm-show-kill-ring
 	 "f" 'hydra-projectile/body
 	 "s" 'magit-status
 	 "b" 'counsel-switch-buffer
 	 "q" 'mode-line-other-buffer))
     #+END_SRC
+
 *** Evil
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package evil
@@ -222,6 +224,7 @@
 
 	(evil-mode 1))
     #+end_src
+
 *** Evil-collection
     #+BEGIN_SRC emacs-lisp
       (use-package evil-collection
@@ -251,10 +254,16 @@
 *** Solarized theme
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package solarized-theme
-	:if (window-system)
+	:straight (solarized-theme :type git :host github :repo "bbatsov/solarized-emacs")
 	:init
-	(load-theme 'solarized-dark))
+	;; make the fringe stand out from the background
+	(setq solarized-distinct-fringe-background t)
+	;; Use less colors for indicators such as git:gutter, flycheck and similar
+	(setq solarized-emphasize-indicators nil)
+
+	(load-theme 'solarized-dark t))
     #+end_src
+
 *** Ob-go
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package ob-go)
@@ -299,9 +308,10 @@
 	 :prefix ","
 	 :states 'normal
 	 :keymaps 'org-mode-map
-	 "h" 'helm-org-in-buffer-headings
+	 "h" 'counsel-org-goto
 	 "n" 'org-toggle-narrow-to-subtree))
     #+end_src
+
 *** Org-bullets
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package org-bullets
@@ -390,6 +400,8 @@
 	:config
 	(setq dired-guess-shell-alist-user '(("\\.zip$" "file-roller")
 					     ("\\.tar\\.gz$" "file-roller")
+					     ("\\.pdf$" "okular ? &")
+					     ("\\.epub$" "ebook-viewer ? &")
 					     ("\\.rar$" "file-roller ? &"))))
 
 	  (add-to-list 'auto-mode-alist '("\\.rar$" . arc-mode))
@@ -491,7 +503,6 @@
 *** Yasnippet
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package yasnippet
-	:defer 4
 	:config
 	(setq yas-snippet-dirs
 	      (append yas-snippet-dirs '("~/Projects/dots/snips/yasnippet")))
@@ -842,155 +853,31 @@
 	 "RET" 'pdf-outline-follow-link)
 	)
     #+END_SRC
-
-*** Hasklig-mode
+*** Elfeed
     #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-      (set-face-attribute 'default nil
-			  :family "Hasklig"
-			  :height 100
-			  :weight 'normal
-			  :width 'normal)
-
-      (use-package hasklig-mode
-	:hook (go-mode))
-    #+END_SRC
-*** Prettify symbols
-    Convert certain words into symbols. Prime example: lambda becomes λ
-    http://www.modernemacs.com/post/prettify-mode/
-    (print (font-family-list))
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package pretty-mode
+      (use-package elfeed
 	:config
-	(global-pretty-mode t)
-	(pretty-deactivate-groups
-	 '(:equality :ordering :ordering-double :ordering-triple
-		     :arrows :arrows-twoheaded :punctuation
-		     :logic :sets))
+	(setq elfeed-feeds
+	      '(
+		("https://www.engadget.com/rss.xml" news)
+		("https://www.freecodecamp.org/news/rss/" coding)
+		))
 
-	(pretty-activate-groups
-	 '(:sub-and-superscripts :greek :arithmetic-nary))
-
-      (global-prettify-symbols-mode 1))
-
-
-      ;; (set-fontset-font "fontset-default" '(#x2254 . #x1d4e2) (font-spec :size 17 :weight 'bold :name "FreeSerif"))
-      ;; (add-hook
-      ;;  'go-mode-hook
-      ;;  (lambda ()
-      ;;    (mapc (lambda (pair) (push pair prettify-symbols-alist))
-      ;; 	 '(;; Syntax
-      ;; 	   (":=" .       #x2254)
-      ;; 	   ))))
-      ;; (add-hook
-      ;;  'python-mode-hook
-      ;;  (lambda ()
-      ;;    (mapc (lambda (pair) (push pair prettify-symbols-alist))
-      ;; 	 '(;; Syntax
-      ;; 	   ("def" .      #x2131)
-      ;; 	   ("not" .      #x2757)
-      ;; 	   ("in" .       #x2208)
-      ;; 	   ("not in" .   #x2209)
-      ;; 	   ("return" .   #x27fc)
-      ;; 	   ("yield" .    #x27fb)
-      ;; 	   ("for" .      #x2200)
-      ;; 	   ;; Base Types
-      ;; 	   ("int" .      #x2124)
-      ;; 	   ("float" .    #x211d)
-      ;; 	   ("str" .      #x1d54a)
-      ;; 	   ("True" .     #x1d54b)
-      ;; 	   ("False" .    #x1d53d)
-      ;; 	   ;; Mypy
-      ;; 	   ("Dict" .     #x1d507)
-      ;; 	   ("List" .     #x2112)
-      ;; 	   ("Tuple" .    #x2a02)
-      ;; 	   ("Set" .      #x2126)
-      ;; 	   ("Iterable" . #x1d50a)
-      ;; 	   ("Any" .      #x2754)
-      ;; 	   ("Union" .    #x22c3)))))
-    #+end_src
-*** Abbrev
-    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package abbrev
-	:straight nil
-	:config
-	(load "~/.emacs.d/lisp/my-abbrev.el")
-	)
-    #+END_SRC
-**** Go abbrev
-     #+BEGIN_SRC emacs-lisp :mkdirp yes :tangle ~/.emacs.d/lisp/my-abbrev.el
-       ;; -*- coding: utf-8; lexical-binding: t; -*-
-
-       (when (boundp 'go-mode-abbrev-table)
-	 (clear-abbrev-table go-mode-abbrev-table))
-
-       (define-abbrev-table 'go-mode-abbrev-table
-	 '(
-	   ("re" "return")
-	   ("sg" "string")
-	   ("st" "struct")
-	   ("fu" "funct")
-	   ("eq" "==")
-	   ("sv" ":=")
-	   ("co" "const")
-	   ))
-
-       (set-default 'abbrev-mode t)
-
-       (setq save-abbrevs nil)
-     #+END_SRC
-*** Ispell
-    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package ispell
-	:straight nil
-	:config
-	(add-to-list 'ispell-local-dictionary-alist '("en_US"
-						    "[[:alpha:]]"
-						    "[^[:alpha:]]"
-						    "[']"
-						    t
-						    ("-d" "en_US")
-						    nil
-						    iso-8859-1))
-	(add-to-list 'ispell-local-dictionary-alist '("deutsch-hunspell"
-						    "[[:alpha:]]"
-						    "[^[:alpha:]]"
-						    "[']"
-						    t
-						    ("-d" "de_DE"); Dictionary file name
-						    nil
-						    iso-8859-1))
-	(setenv "LANG" "en_US.UTF-8")
-	(setq ispell-program-name "hunspell")
-	(setq ispell-dictionary "en_US")
-
-	(setq ispell-hunspell-dict-paths-alist
-	      '(("en_US" "/usr/share/hunspell/en_US.aff")
-		("de_DE" "/usr/share/hunspell/de_DE.aff"))))
-
-    #+END_SRC
-*** Flyspell
-    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package flyspell
-	      :straight nil
-	      :hook (text-mode . flyspell-mode))
-	      ;; :init
-	      ;; (add-hook 'text-mode-hook 'flyspell-mode))
-    #+END_SRC
-
-*** Flyspell-correct
-    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package flyspell-correct)
-
-      (use-package flyspell-correct-ivy
-	:init
-	(setq flyspell-correct-interface #'flyspell-correct-ivy)
-	:config
 	(general-define-key
-	 :prefix "g"
 	 :states 'normal
-	 :keymaps 'org-mode-map
-	 "s" 'flyspell-correct-at-point))
+	 :keymaps 'elfeed-show-mode-map
+	 "h" 'elfeed-kill-buffer
+	 "q" 'elfeed-kill-buffer)
+
+	(general-define-key
+	 :states 'normal
+	 :keymaps 'elfeed-search-mode-map
+	 "s" 'elfeed-search-set-filter
+	 "l" 'elfeed-search-show-entry
+	 "q" 'quit-window
+	 "b" 'elfeed-search-browse-url))
     #+END_SRC
+
 ** Hydras
 *** Buffers
    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
@@ -1125,6 +1012,21 @@
 	  (turn-on-prettify-symbols-mode)
 	  (add-hook 'post-command-hook 'rasmus/org-prettify-src t t))
 	(add-hook 'org-mode-hook #'rasmus/org-prettify-symbols))
+    #+END_SRC
+*** Run python code
+    #+BEGIN_SRC emacs-lisp
+      (defun my-run-with-python ()
+	(interactive)
+	(let ($fname
+	      $cmd-str
+	      $outputbuffer)
+	  (when (not (buffer-file-name)) (save-buffer))
+	  (when (buffer-modified-p) (save-buffer))
+	  (setq $fname (buffer-file-name))
+	  (setq $cmd-str (concat "python \""   $fname "\""))
+	  (setq $outputbuffer (concat "*Python output*"))
+	  (message (concat $cmd-str ": executed." ))
+	  (async-shell-command $cmd-str $outputbuffer)))
     #+END_SRC
 
 ** Symbols
