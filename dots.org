@@ -197,7 +197,6 @@
 	 "b" 'counsel-switch-buffer
 	 "q" 'mode-line-other-buffer))
     #+END_SRC
-
 *** Evil
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package evil
@@ -224,7 +223,6 @@
 
 	(evil-mode 1))
     #+end_src
-
 *** Evil-collection
     #+BEGIN_SRC emacs-lisp
       (use-package evil-collection
@@ -251,19 +249,28 @@
 	:config
 	(global-evil-surround-mode 1))
     #+END_SRC
-*** Solarized theme
+*** Doom themes
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package solarized-theme
-	:straight (solarized-theme :type git :host github :repo "bbatsov/solarized-emacs")
-	:init
-	;; make the fringe stand out from the background
-	(setq solarized-distinct-fringe-background t)
-	;; Use less colors for indicators such as git:gutter, flycheck and similar
-	(setq solarized-emphasize-indicators nil)
+      (use-package doom-themes
+	:config
+	;; Global settings (defaults)
+	(setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
+	      doom-themes-enable-italic t) ; if nil, italics is universally disabled
 
-	(load-theme 'solarized-dark t))
+	;; Load the theme (doom-one, doom-molokai, etc); keep in mind that each theme
+	;; may have their own settings.
+	(load-theme 'doom-one t)
+
+	;; Enable flashing mode-line on errors
+	(doom-themes-visual-bell-config)
+
+	;; or for treemacs users
+	(setq doom-themes-treemacs-theme "doom-colors") ; use the colorful treemacs theme
+	(doom-themes-treemacs-config)
+
+	;; Corrects (and improves) org-mode's native fontification.
+	(doom-themes-org-config))
     #+end_src
-
 *** Ob-go
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package ob-go)
@@ -311,7 +318,6 @@
 	 "h" 'counsel-org-goto
 	 "n" 'org-toggle-narrow-to-subtree))
     #+end_src
-
 *** Org-bullets
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package org-bullets
@@ -452,7 +458,6 @@
        (setq ivy-use-virtual-buffers t)
        (setq ivy-count-format "(%d/%d) "))
     #+END_SRC
-
 **** counsel
     #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
      (use-package counsel
@@ -470,7 +475,6 @@
 
        (define-key evil-normal-state-map (kbd "\C-n") 'counsel-up-directory))
     #+END_SRC
-
 **** swiper
     #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
      (use-package swiper
@@ -664,7 +668,6 @@
 	(:states '(normal emacs)
 		 "SPC" 'major-mode-hydra))
     #+end_src
-		 "M-SPC" 'major-mode-hydra))
 *** Hera
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package hera
@@ -877,7 +880,6 @@
 	 "q" 'quit-window
 	 "b" 'elfeed-search-browse-url))
     #+END_SRC
-
 ** Hydras
 *** Buffers
    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
