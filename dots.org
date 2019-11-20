@@ -1542,39 +1542,20 @@ bindsym $mod+a focus parent
 ** Plugin Configuration
 *** Coc
 **** coc-setting.json
+     tangle ~/.config/nvim/coc-settings.json
+    #+begin_src json
       {
-	"languageserver": {
+      "languageserver": {
 	  "dart": {
 	    "command": "dart",
-	    "args": ["/home/last/bin/dart-sdk/bin/snapshots/analysis_server.dart.snapshot", "--lsp"],
+	    "args": [
+	      "~/bin/snapshots/analysis_server.dart.snapshot",
+	      "--lsp"
+	    ],
 	    "filetypes": ["dart"],
-	    "rootPatterns": ["pubspec.yaml"],
-	    "initializationOptions": {},
-	    "settings": {
-	      "dart": {
-		"validation": {},
-		"completion": {}
-	      }
-	    }
-	  }
-	}
-      }
-    #+begin_src json :tangle ~/.config/nvim/coc-settings.json
-      {
-	"languageserver": {
-	  "dart": {
-	    "command": "dart_language_server",
-	    "args": [],
-	    "filetypes": ["dart"],
-	    "rootPatterns": [],
-	    "initializationOptions": {},
-	    "settings": {
-	      "dart": {
-		"validation": {},
-		"completion": {}
-	      }
-	    }
-	  }
+	    "disableDynamicRegister": true,
+	    "trace.server": "verbose"
+	  },
 	}
       }
     #+end_src
@@ -1595,29 +1576,30 @@ bindsym $mod+a focus parent
 
       let g:coc_global_extensions = ['coc-ultisnips',
 				   \ 'coc-go',
-                                   \ 'coc-conjure',
-                                   \ 'coc-json',
-                                   \ 'coc-tsserver',
-                                   \ 'coc-html',
-                                   \ 'coc-css',
-                                   \ 'coc-yaml',
-                                   \ 'coc-python',
-                                   \ 'coc-highlight',
-                                   \ 'coc-snippets',
-                                   \ 'coc-lists',
-                                   \ 'coc-angular',
-                                   \ 'coc-vimlsp',
-                                   \ 'coc-pairs']
+				   \ 'coc-flutter',
+				   \ 'coc-conjure',
+				   \ 'coc-json',
+				   \ 'coc-tsserver',
+				   \ 'coc-html',
+				   \ 'coc-css',
+				   \ 'coc-yaml',
+				   \ 'coc-python',
+				   \ 'coc-highlight',
+				   \ 'coc-snippets',
+				   \ 'coc-lists',
+				   \ 'coc-angular',
+				   \ 'coc-vimlsp',
+				   \ 'coc-pairs']
 
       inoremap <silent><expr> <TAB>
-            \ pumvisible() ? coc#_select_confirm() :
-            \ coc#expandableOrJumpable() ? "\<C-r>=coc#rpc#request('doKeymap', ['snippets-expand-jump',''])\<CR>" :
-            \ <SID>check_back_space() ? "\<TAB>" :
-            \ coc#refresh()
+	    \ pumvisible() ? coc#_select_confirm() :
+	    \ coc#expandableOrJumpable() ? "\<C-r>=coc#rpc#request('doKeymap', ['snippets-expand-jump',''])\<CR>" :
+	    \ <SID>check_back_space() ? "\<TAB>" :
+	    \ coc#refresh()
 
       function! s:check_back_space() abort
-        let col = col('.') - 1
-        return !col || getline('.')[col - 1]  =~# '\s'
+	let col = col('.') - 1
+	return !col || getline('.')[col - 1]  =~# '\s'
       endfunction
 
       let g:coc_snippet_next = '<tab>'
@@ -1625,14 +1607,14 @@ bindsym $mod+a focus parent
       " Use tab for trigger completion with characters ahead and navigate.
       " Use command ':verbose imap <tab>' to make sure tab is not mapped by other plugin.
       inoremap <silent><expr> <TAB>
-            \ pumvisible() ? "\<C-n>" :
-            \ <SID>check_back_space() ? "\<TAB>" :
-            \ coc#refresh()
+	    \ pumvisible() ? "\<C-n>" :
+	    \ <SID>check_back_space() ? "\<TAB>" :
+	    \ coc#refresh()
       inoremap <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
 
       function! s:check_back_space() abort
-        let col = col('.') - 1
-        return !col || getline('.')[col - 1]  =~# '\s'
+	let col = col('.') - 1
+	return !col || getline('.')[col - 1]  =~# '\s'
       endfunction
 
       " Use <c-space> to trigger completion.
@@ -1656,11 +1638,11 @@ bindsym $mod+a focus parent
       nnoremap <silent> K :call <SID>show_documentation()<CR>
 
       function! s:show_documentation()
-        if (index(['vim','help'], &filetype) >= 0)
-          execute 'h '.expand('<cword>')
-        else
-          call CocAction('doHover')
-        endif
+	if (index(['vim','help'], &filetype) >= 0)
+	  execute 'h '.expand('<cword>')
+	else
+	  call CocAction('doHover')
+	endif
       endfunction
 
       " Highlight symbol under cursor on CursorHold
@@ -1674,11 +1656,11 @@ bindsym $mod+a focus parent
       nmap <leader>f  <Plug>(coc-format-selected)
 
       augroup mygroup
-        autocmd!
-        " Setup formatexpr specified filetype(s).
-        autocmd FileType typescript,json setl formatexpr=CocAction('formatSelected')
-        " Update signature help on jump placeholder
-        autocmd User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
+	autocmd!
+	" Setup formatexpr specified filetype(s).
+	autocmd FileType typescript,json setl formatexpr=CocAction('formatSelected')
+	" Update signature help on jump placeholder
+	autocmd User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
       augroup end
 
       " Remap for do codeAction of selected region, ex: `<leader>aap` for current paragraph
