@@ -2660,6 +2660,10 @@ bindsym $mod+a focus parent
    PATH=$HOME/bin/flutter/bin:$PATH
    #+END_SRC
 
+*** Flutter-dev
+   #+BEGIN_SRC sh
+   PATH=$HOME/bin/flutter-dev/bin:$PATH
+   #+END_SRC
 *** Cmake
    #+BEGIN_SRC sh :tangle ~/.zshrc
    PATH=$HOME/bin/cmake/bin:$PATH
