@@ -315,7 +315,7 @@
 	 :prefix ","
 	 :states 'normal
 	 :keymaps 'org-mode-map
-	 "h" 'counsel-org-goto
+	 "h" 'helm-org-in-buffer-headings
 	 "n" 'org-toggle-narrow-to-subtree))
     #+end_src
 *** Org-bullets
@@ -504,6 +504,10 @@
       (use-package helm-projectile
 	:after projectile)
     #+end_src
+*** Helm-org
+    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+    (use-package helm-org)
+    #+END_SRC
 *** Yasnippet
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package yasnippet
