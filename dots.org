@@ -347,6 +347,13 @@
 	 "yy" 'dired-do-copy
 	 "yn" 'dired-copy-filename-as-kill
 	 "yp" '(lambda() (interactive) (dired-copy-filename-as-kill 0))
+	 "gk" '(lambda() (interactive) (dired "~/Documents"))
+	 "gd" '(lambda() (interactive) (dired "~/Downloads"))
+	 "gp" '(lambda() (interactive) (dired "~/Projects"))
+	 "ge" '(lambda() (interactive) (dired "~/.emacs.d"))
+	 "gb" '(lambda() (interactive) (dired "~/bin"))
+	 "gm" '(lambda() (interactive) (dired "/media"))
+	 "gh" '(lambda() (interactive) (dired "~"))
 	 "m" 'dired-mark
 	 "u" 'dired-unmark
 	 "cw" 'dired-do-rename
@@ -410,7 +417,11 @@
 					     ("\\.epub$" "ebook-viewer ? &")
 					     ("\\.rar$" "file-roller ? &"))))
 
-	  (add-to-list 'auto-mode-alist '("\\.rar$" . arc-mode))
+      (add-to-list 'auto-mode-alist '("\\.rar$" . arc-mode))
+      (set-face-attribute 'dired-header nil
+			  :foreground "#282c34"
+			  :weight 'bold)
+
     #+END_SRC
 *** Treemacs
     Remember that binding a key in motion state is like binding a key in the normal, visual,
