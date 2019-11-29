@@ -276,9 +276,10 @@
       (use-package ob-go)
     #+end_src
 *** Org Mode
+	:straight org-plus-contrib
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package org
-	:straight org-plus-contrib
+        :straight (org :type git :host github :repo "emacsmirror/org")
 	:custom
 	(org-startup-with-inline-images t)
 	(org-ellipsis "…")
@@ -318,6 +319,12 @@
 	 "h" 'helm-org-in-buffer-headings
 	 "n" 'org-toggle-narrow-to-subtree))
     #+end_src
+
+*** Org Drill
+    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package org-drill)
+    #+END_SRC
+
 *** Org-bullets
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package org-bullets
@@ -351,6 +358,8 @@
 	 "gd" '(lambda() (interactive) (dired "~/Downloads"))
 	 "gp" '(lambda() (interactive) (dired "~/Projects"))
 	 "ge" '(lambda() (interactive) (dired "~/.emacs.d"))
+	 "gc" '(lambda() (interactive) (dired "~/.config"))
+	 "gy" '(lambda() (interactive) (dired "~/Projects/playground"))
 	 "gb" '(lambda() (interactive) (dired "~/bin"))
 	 "gm" '(lambda() (interactive) (dired "/media"))
 	 "gh" '(lambda() (interactive) (dired "~"))
@@ -411,9 +420,10 @@
 	:straight nil
 	:after dired
 	:config
-	(setq dired-guess-shell-alist-user '(("\\.zip$" "file-roller")
-					     ("\\.tar\\.gz$" "file-roller")
+	(setq dired-guess-shell-alist-user '(("\\.zip$" "file-roller ? &")
+					     ("\\.tar\\.gz$" "file-roller ? &")
 					     ("\\.pdf$" "okular ? &")
+					     ("\\.torrent$" "transmission-gtk ? &")
 					     ("\\.epub$" "ebook-viewer ? &")
 					     ("\\.rar$" "file-roller ? &"))))
 
@@ -584,8 +594,11 @@
 	:after yasnippet
 	:commands lsp
 	:hook (go-mode . lsp)
+	:hook (python-mode . lsp)
+	:hook (js-mode . lsp)
 	:hook (dart-mode . lsp))
     #+end_src
+
 *** Lsp-ui
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package lsp-ui
@@ -1032,7 +1045,7 @@
     #+END_SRC
 *** Run python code
     #+BEGIN_SRC emacs-lisp
-      (defun my-run-with-python ()
+      (defun run-python ()
 	(interactive)
 	(let ($fname
 	      $cmd-str
@@ -1044,6 +1057,53 @@
 	  (setq $outputbuffer (concat "*Python output*"))
 	  (message (concat $cmd-str ": executed." ))
 	  (async-shell-command $cmd-str $outputbuffer)))
+
+	(general-define-key
+	 :states 'normal
+	 :keymaps 'python-mode-map
+	 "<f5>" 'run-python)
+    #+END_SRC
+
+*** Run javascript code
+    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+      (defun run-javascript ()
+	(interactive)
+	(let ($fname
+	      $cmd-str
+	      $outputbuffer)
+	  (when (not (buffer-file-name)) (save-buffer))
+	  (when (buffer-modified-p) (save-buffer))
+	  (setq $fname (buffer-file-name))
+	  (setq $cmd-str (concat "node \""   $fname "\""))
+	  (setq $outputbuffer (concat "*node output*"))
+	  (message (concat $cmd-str ": executed." ))
+	  (async-shell-command $cmd-str $outputbuffer)))
+
+	(general-define-key
+	 :states 'normal
+	 :keymaps 'js-mode-map
+	 "<f5>" 'run-javascript)
+    #+END_SRC
+
+*** Run dart code
+    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+      (defun run-dart ()
+	(interactive)
+	(let ($fname
+	      $cmd-str
+	      $outputbuffer)
+	  (when (not (buffer-file-name)) (save-buffer))
+	  (when (buffer-modified-p) (save-buffer))
+	  (setq $fname (buffer-file-name))
+	  (setq $cmd-str (concat "dart \""   $fname "\""))
+	  (setq $outputbuffer (concat "*dart output*"))
+	  (message (concat $cmd-str ": executed." ))
+	  (async-shell-command $cmd-str $outputbuffer)))
+
+	(general-define-key
+	 :states 'normal
+	 :keymaps 'dart-mode-map
+	 "<f5>" 'run-dart)
     #+END_SRC
 
 ** Symbols
@@ -1223,7 +1283,7 @@ bindsym $mod+a focus parent
    #+END_SRC
 **** Rofi (a program launcher)
    #+BEGIN_SRC sh :tangle ~/.config/i3/config
-   bindsym $mod+d exec rofi -show run -lines 3 -eh 2 -width 100 -padding 300 -opacity "85" -bw 0 -bc "$bg-color" -bg "$bg-color" -fg "$text-color" -hlbg "$bg-color" -hlfg "#9575cd" -font "System San Francisco Display 18"
+   bindsym $mod+d exec "~/bin/scripts/rofi-bangs.sh"
    #+END_SRC
 **** Firefox
    #+BEGIN_SRC sh :tangle ~/.config/i3/config
@@ -1904,6 +1964,10 @@ bindsym $mod+a focus parent
     #+begin_src vimrc :tangle ~/.config/nvim/init.vim
       inoremap <expr> <cr> getline(".")[col(".")-2:col(".")-1]=="{}" ? "<cr><esc>O" : "<cr>"
     #+end_src
+*** Split line without quiting normal mode
+    #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+    nnoremap S :keeppatterns substitute/\s*\%#\s*/\r/e <bar> normal! ==<CR>
+    #+end_src
 ** Abbreviations
    #+begin_src vimrc :tangle ~/.config/nvim/init.vim
    autocmd FileType go iabbrev ane !=
@@ -2367,6 +2431,8 @@ bindsym $mod+a focus parent
 
      " Video
      filextype *.avi,*.mp4,*.wmv,*.dat,*.3gp,*.ogv,*.mkv,*.mpg,*.vob,*.flv,*.m2v,*.mov,*.webm,*.ts,*.m4v
+	     \ {View using vlc}
+	     \ vlc %f & disown,
 	     \ {View using ffplay}
 	     \ ffplay -fs %c,
 	     \ {View using Dragon}
