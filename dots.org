@@ -96,6 +96,8 @@
 *** Highlight current line
     #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
       (global-hl-line-mode t)
+      (add-hook 'prog-mode-hook #'hl-line-mode)
+      (add-hook 'org-mode-hook #'hl-line-mode)
     #+END_SRC
 *** Default Font
     https://www.gnu.org/software/emacs/manual/html_node/emacs/Fonts.html
@@ -189,7 +191,7 @@
 	 :prefix ","
 	 "ed" '(lambda() (interactive) (find-file "~/Projects/dots/dots.org"))
 	 "en" '(lambda() (interactive)(find-file "~/Documents/notes/notes.org"))
-	 "eb" '(lambda() (interactive)(find-file "~/Documents/bookmarks/bookmarks.org"))
+	 "eb" '(lambda() (interactive)(find-file "~/Documents/notes/bookmarks.org"))
 	 "d" '(lambda() (interactive) (dired default-directory))
 	 "k" 'helm-show-kill-ring
 	 "f" 'hydra-projectile/body
@@ -214,6 +216,7 @@
 	;; (setq evil-insert-state-modes nil)
 	;; (setq evil-motion-state-modes nil)
 	(evil-set-initial-state 'wdired-mode 'normal)
+	(evil-set-initial-state 'eshell-mode 'emacs)
 	(evil-set-initial-state 'pdf-view-mode 'normal)
 	(evil-set-initial-state 'pdf-outline-buffer-mode 'normal)
 
@@ -340,6 +343,8 @@
 	:custom
 	(dired-listing-switches "-Bhl --group-directories-first")
 	:config
+
+	(setq dired-dwim-target t)
 
 	(eval-after-load "dired-aux"
 	  '(add-to-list 'dired-compress-file-suffixes
@@ -729,31 +734,9 @@
 	    (eshell-kill-process)
 	    (delete-other-windows)))
 
-	(defun eshell/clear ()
-	  "Clear the eshell buffer."
-	  (interactive)
-	  (let ((inhibit-read-only t))
-	    (erase-buffer)
-	    (eshell-send-input)))
-	:custom
-	(eshell-prompt-function
-	 (lambda ()
-	   (concat
-	    (propertize "\xf07c" 'face `(:foreground "steel blue" :bold ultra-bold))
-	    (propertize " " 'face nil)
-	    (propertize (concat (eshell/pwd)) 'face `(:foreground "steel blue"))
-	    (propertize " " 'face nil)
-	    (if (magit-get-current-branch)
-		(propertize "\xf1d3" 'face `(:foreground "pink"))) ;; branch symbol \xe0a0
-	    (propertize " " 'face nil)
-	    (if (magit-get-current-branch)
-		(propertize (magit-get-current-branch) 'face `(:foreground "pink")))
-	    (propertize "\n" 'face nil)
-	    (propertize "❯" 'face '(:foreground "#f75f5f"))
-	    (propertize "❯" 'face '(:foreground "#ffaf5f"))
-	    (propertize "❯" 'face '(:foreground "#87af5f"))
-	    (propertize " " 'face nil))))
 	:config
+	(add-hook 'eshell-mode-hook (lambda () (global-hl-line-mode -1)))
+
 	(general-define-key
 	 :states '(normal emacs)
 	 "C-t" 'eshell-foo)
@@ -761,6 +744,11 @@
 	(eval-after-load 'esh-module
 	  '(progn
 	     (delq 'eshell-banner eshell-modules-list) t)))
+
+      (use-package eshell-git-prompt
+	:after eshell
+	:config
+	(eshell-git-prompt-use-theme 'powerline))
     #+END_SRC
 *** Avy
     #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
