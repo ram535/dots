@@ -297,7 +297,6 @@
 			    org-docview
 			    org-drill))
 	:config
-	(require 'org-drill)
 	(require 'org-eldoc)
 	(org-indent-mode)
 	;; To be able to see the images after bable is execute
@@ -535,17 +534,22 @@
     (use-package helm-org)
     #+END_SRC
 *** Yasnippet
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package yasnippet
-	:config
 	(setq yas-snippet-dirs
 	      (append yas-snippet-dirs '("~/Projects/dots/snips/yasnippet")))
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package yasnippet
+	:commands yas-minor-mode
+	:hook (go-mode . yas-minor-mode)
+	:hook (js-mode . yas-minor-mode)
+	:hook (dart-mode . yas-minor-mode)
+	:hook (python-mode . yas-minor-mode)
+	:config
+	(setq yas-snippet-dirs
+	      '("~/Projects/dots/snips/yasnippet"))
 
 	(general-define-key
 	 :states 'insert
 	 "C-u" 'yas-expand)
-
-	(yas-global-mode)
 	(yas-reload-all))
     #+end_src
 *** Company
@@ -583,27 +587,38 @@
     #+end_src
 *** Go-mode
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package go-mode
-      :config
-      (setq gofmt-command "goimports")
-      (add-hook 'go-mode-hook
-		(lambda ()
-		  (add-hook 'before-save-hook 'gofmt-before-save)
-		  (setq tab-width 4)
-		  (setq indent-tabs-mode 1))))
+      (use-package go-mode)
     #+end_src
 *** Lsp-mode
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package lsp-mode
-        :straight (lsp-mode :type git :host github :repo "emacs-lsp/lsp-mode")
-	:after yasnippet
-	:commands lsp
-	:hook (go-mode . lsp)
-	:hook (python-mode . lsp)
-	:hook (js-mode . lsp)
-	:hook (dart-mode . lsp))
-    #+end_src
+	:straight (lsp-mode :type git :host github :repo "emacs-lsp/lsp-mode")
+	:commands (lsp lsp-deferred)
+	:hook (go-mode . lsp-deferred)
+	:hook (python-mode . lsp-deferred)
+	:hook (js-mode . lsp-deferred)
+	:hook (dart-mode . lsp-deferred)
+	:config
+	(setq lsp-eldoc-render-all t)
+	(setq lsp-gopls-complete-unimported t))
 
+      ;;Set up before-save hooks to format buffer and add/delete imports.
+      ;;Make sure you don't have other gofmt/goimports hooks enabled.
+
+      (defun lsp-go-install-save-hooks ()
+	(add-hook 'before-save-hook #'lsp-format-buffer t t)
+	(add-hook 'before-save-hook #'lsp-organize-imports t t))
+      (add-hook 'go-mode-hook #'lsp-go-install-save-hooks)
+
+      (defun lsp-js-install-save-hooks ()
+	(add-hook 'js-mode-hook (lambda () (setq indent-line-function 'insert-tab)))
+	(add-hook 'js-mode-hook (lambda () (setq indent-tabs-mode nil)))
+	(add-hook 'js-mode-hook (lambda () (setq tab-width 2)))
+	(add-hook 'before-save-hook #'lsp-format-buffer t t)
+	(add-hook 'before-save-hook #'lsp-organize-imports t t))
+
+      (add-hook 'js-mode-hook #'lsp-js-install-save-hooks)
+    #+end_src
 *** Lsp-ui
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package lsp-ui
@@ -719,6 +734,7 @@
     #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package aggressive-indent
 	:hook (web-mode . aggressive-indent-mode)
+	:hook (json-mode . aggressive-indent-mode)
 	:hook (emacs-lisp-mode . aggressive-indent-mode))
     #+END_SRC
 *** Eshell
@@ -785,7 +801,7 @@
 
 	(with-eval-after-load 'smartparens
 	  (sp-with-modes
-	      '(c++-mode dart-mode go-mode)
+	      '(c++-mode dart-mode go-mode js-mode)
 	    (sp-local-pair "{" nil :post-handlers '(:add ("||\n[i]" "RET")))))
 
 	(smartparens-global-mode t))
@@ -1838,7 +1854,7 @@ bindsym $mod+a focus parent
 
 
       " Ensure you have installed some decent font to show these pretty symbols, then you can enable icon for the kind.
-      let g:vista#renderer#enable_icon = 1
+      let g:vista#renderer#enable_icon = 0
 
       " The default icons can't be suitable for all the filetypes, you can extend it as you wish.
 
@@ -2710,6 +2726,7 @@ bindsym $mod+a focus parent
 
 *** Go
    #+BEGIN_SRC sh :tangle ~/.zshrc
+   GO111MODULES=on
    PATH=$PATH:/usr/local/go/bin
    export GOPATH=$HOME/bin/go
    PATH=$PATH:$HOME/bin/go/bin
