@@ -279,15 +279,18 @@
       (use-package ob-go)
     #+end_src
 *** Org Mode
-	:straight org-plus-contrib
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package org
-        :straight (org :type git :host github :repo "emacsmirror/org")
+	:straight (org :type git :host github :repo "emacsmirror/org")
 	:custom
 	(org-startup-with-inline-images t)
 	(org-ellipsis "…")
 	;; syntax highlight
 	(org-src-fontify-natively t)
+	;; no extra indentation
+	(org-src-preserve-indentation t)
+	(org-src-strip-leading-and-trailing-blank-lines t)
+	(org-src-tab-acts-natively t)
 	;; edit source code in another window
 	(org-src-window-setup 'current-window)
 	;; Then inline latex like $y=mx+c$ will appear in a different colour in an org-mode file to help it stand out.
@@ -301,6 +304,11 @@
 	(org-indent-mode)
 	;; To be able to see the images after bable is execute
 	(add-hook 'org-babel-after-execute-hook 'org-display-inline-images)
+
+	;; unicode bullets without affecting text file
+	(font-lock-add-keywords 'org-mode
+				'(("^ +\\([-*]\\) "
+				   (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
 
 	(org-babel-do-load-languages
 	 'org-babel-load-languages
@@ -610,14 +618,14 @@
 	(add-hook 'before-save-hook #'lsp-organize-imports t t))
       (add-hook 'go-mode-hook #'lsp-go-install-save-hooks)
 
-      (defun lsp-js-install-save-hooks ()
+      (defun js-config-hooks ()
 	(add-hook 'js-mode-hook (lambda () (setq indent-line-function 'insert-tab)))
 	(add-hook 'js-mode-hook (lambda () (setq indent-tabs-mode nil)))
 	(add-hook 'js-mode-hook (lambda () (setq tab-width 2)))
 	(add-hook 'before-save-hook #'lsp-format-buffer t t)
 	(add-hook 'before-save-hook #'lsp-organize-imports t t))
 
-      (add-hook 'js-mode-hook #'lsp-js-install-save-hooks)
+      (add-hook 'js-mode-hook #'js-config-hooks)
     #+end_src
 *** Lsp-ui
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
