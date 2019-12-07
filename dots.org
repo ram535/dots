@@ -161,10 +161,12 @@
 
       (setq straight-use-package-by-default t)
     #+end_src
+
 *** Use-package
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (straight-use-package 'use-package)
     #+end_src
+
 *** Dependencies
     The following package dependencies are used throughout the rest of the configuration.
     They provide contemporary APIs for working with various elisp data structures.
@@ -174,7 +176,8 @@
       (use-package s)         ;; strings
       (use-package a)         ;; association lists
     #+end_src
-*** General
+
+*** General.el
     #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package general
 	:config
@@ -199,6 +202,7 @@
 	 "b" 'counsel-switch-buffer
 	 "q" 'mode-line-other-buffer))
     #+END_SRC
+
 *** Evil
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package evil
@@ -226,6 +230,7 @@
 
 	(evil-mode 1))
     #+end_src
+
 *** Evil-collection
     #+BEGIN_SRC emacs-lisp
       (use-package evil-collection
@@ -233,25 +238,29 @@
 	:config
 	(evil-collection-init))
     #+END_SRC
+
 *** Evil-escape
-   #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-     (use-package evil-escape
-       :after (evil)
-       :custom (evil-escape-key-sequence "jk")
-       :config (evil-escape-mode))
-   #+END_SRC
+    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+	(use-package evil-escape
+	:after (evil)
+	:custom (evil-escape-key-sequence "jk")
+	:config (evil-escape-mode))
+    #+END_SRC
+
 *** Evil-commentary
     #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package evil-commentary
 	:bind (:map evil-normal-state-map
 		    ("gc" . evil-commentary)))
     #+END_SRC
+
 *** Evil-surround
     #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package evil-surround
 	:config
 	(global-evil-surround-mode 1))
     #+END_SRC
+
 *** Doom themes
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package doom-themes
@@ -274,10 +283,12 @@
 	;; Corrects (and improves) org-mode's native fontification.
 	(doom-themes-org-config))
     #+end_src
+
 *** Ob-go
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package ob-go)
     #+end_src
+
 *** Org Mode
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package org
@@ -287,8 +298,6 @@
 	(org-ellipsis "…")
 	;; syntax highlight
 	(org-src-fontify-natively t)
-	;; no extra indentation
-	(org-src-preserve-indentation t)
 	(org-src-strip-leading-and-trailing-blank-lines t)
 	(org-src-tab-acts-natively t)
 	;; edit source code in another window
@@ -342,6 +351,7 @@
 	:commands (org-bullets-mode)
 	:init (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
     #+end_src
+
 *** Dired
     #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package dired
@@ -349,13 +359,12 @@
 	:hook (dired-mode . dired-hide-details-mode)
 	:custom
 	(dired-listing-switches "-Bhl --group-directories-first")
+	(dired-dwim-target t) ;;use to copy to the next buffer visible
 	:config
-
-	(setq dired-dwim-target t)
-
 	(eval-after-load "dired-aux"
 	  '(add-to-list 'dired-compress-file-suffixes
 			'("\\.zip\\'" ".zip" "unzip")))
+
 	(general-define-key
 	 :states 'normal
 	 :keymaps 'dired-mode-map
@@ -445,6 +454,7 @@
 			  :weight 'bold)
 
     #+END_SRC
+
 *** Treemacs
     Remember that binding a key in motion state is like binding a key in the normal, visual,
     and operator states all at once (unless that key is already bound in one of those states).
@@ -457,27 +467,32 @@
 		    :map evil-emacs-state-map
 		    ("C-`" . treemacs)))
     #+END_SRC
+
 *** Treemacs-icons-dired
     #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package treemacs-icons-dired
 	:after treemacs dired
 	:config (treemacs-icons-dired-mode))
     #+END_SRC
+
 *** Treemacs-evil
     #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-    (use-package treemacs-evil
-    :after treemacs)
+      (use-package treemacs-evil
+	:after treemacs)
     #+END_SRC
+
 *** Treemacs-projectile
     #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-    (use-package treemacs-projectile
-    :after treemacs projectile)
+      (use-package treemacs-projectile
+	:after treemacs projectile)
     #+END_SRC
+
 *** Treemacs-magit
     #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-    (use-package treemacs-magit
-    :after treemacs magit)
+      (use-package treemacs-magit
+	:after treemacs magit)
     #+END_SRC
+
 *** Counsel, ivy and swiper
 **** ivy
     #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
@@ -491,6 +506,7 @@
        (setq ivy-use-virtual-buffers t)
        (setq ivy-count-format "(%d/%d) "))
     #+END_SRC
+
 **** counsel
     #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
      (use-package counsel
@@ -508,6 +524,7 @@
 
        (define-key evil-normal-state-map (kbd "\C-n") 'counsel-up-directory))
     #+END_SRC
+
 **** swiper
     #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
      (use-package swiper
@@ -516,50 +533,57 @@
 	:states 'normal
 	"C-s" 'swiper))
     #+END_SRC
+
 *** Counsel-projectile
     #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-    (use-package counsel-projectile)
+      (use-package counsel-projectile)
     #+END_SRC
+
 *** Projectile
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package projectile
       :init
       (projectile-mode +1))
     #+end_src
+
 *** Helm
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package helm
 	:config
 	(setq helm-boring-buffer-regexp-list (list (rx "*lsp-") (rx "*helm"))))
     #+end_src
+
 *** Helm-projectile
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package helm-projectile
 	:after projectile)
     #+end_src
+
 *** Helm-org
     #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-    (use-package helm-org)
+      (use-package helm-org)
     #+END_SRC
+
 *** Yasnippet
-	(setq yas-snippet-dirs
-	      (append yas-snippet-dirs '("~/Projects/dots/snips/yasnippet")))
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package yasnippet
 	:commands yas-minor-mode
-	:hook (go-mode . yas-minor-mode)
-	:hook (js-mode . yas-minor-mode)
-	:hook (dart-mode . yas-minor-mode)
-	:hook (python-mode . yas-minor-mode)
+	:custom
+	(yas-snippet-dirs
+	 '("~/Projects/dots/snips/yasnippet"))
+	:hook
+	((go-mode . yas-minor-mode)
+	 (org-mode . yas-minor-mode)
+	 (js-mode . yas-minor-mode)
+	 (dart-mode . yas-minor-mode)
+	 (python-mode . yas-minor-mode))
 	:config
-	(setq yas-snippet-dirs
-	      '("~/Projects/dots/snips/yasnippet"))
-
 	(general-define-key
 	 :states 'insert
 	 "C-u" 'yas-expand)
 	(yas-reload-all))
     #+end_src
+
 *** Company
     (add-hook 'after-init-hook 'global-company-mode)
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
@@ -575,58 +599,59 @@
 	;; ('tng' means 'tab and go')
 	(company-tng-configure-default))
     #+end_src
+
 *** Flycheck
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package flycheck
-	:hook (go-mode . flycheck-mode)
-	:hook (dart-mode . flycheck-mode)
-	:config
-	(setq lsp-prefer-flymake nil))
+	:hook
+	((go-mode . flycheck-mode)
+	 (dart-mode . flycheck-mode))
+	:custom
+	(lsp-prefer-flymake nil))
     #+end_src
+
 *** Dart-mode
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-    (use-package dart-mode
-    :config
-      (setq dart-format-on-save t)
-      (setq exec-path (append exec-path '("~/bin/dart-sdk/bin")))
-      (with-eval-after-load "projectile"
-        (add-to-list 'projectile-project-root-files-bottom-up "pubspec.yaml")
-        (add-to-list 'projectile-project-root-files-bottom-up "BUILD")))
+      (use-package dart-mode
+	:custom
+	(dart-format-on-save t)
+	(exec-path (append exec-path '("~/bin/dart-sdk/bin")))
+	:config
+	(with-eval-after-load "projectile"
+	  (add-to-list 'projectile-project-root-files-bottom-up "pubspec.yaml")
+	  (add-to-list 'projectile-project-root-files-bottom-up "BUILD")))
     #+end_src
+
 *** Go-mode
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package go-mode)
     #+end_src
+
+*** Js-mode
+
 *** Lsp-mode
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package lsp-mode
 	:straight (lsp-mode :type git :host github :repo "emacs-lsp/lsp-mode")
 	:commands (lsp lsp-deferred)
-	:hook (go-mode . lsp-deferred)
-	:hook (python-mode . lsp-deferred)
-	:hook (js-mode . lsp-deferred)
-	:hook (dart-mode . lsp-deferred)
+	:hook
+	((go-mode . lsp-deferred)
+	 (python-mode . lsp-deferred)
+	 (js-mode . lsp-deferred)
+	 (dart-mode . lsp-deferred))
+	:custom
+	(lsp-eldoc-render-all t)
+	(lsp-gopls-complete-unimported t)
 	:config
-	(setq lsp-eldoc-render-all t)
-	(setq lsp-gopls-complete-unimported t))
-
-      ;;Set up before-save hooks to format buffer and add/delete imports.
-      ;;Make sure you don't have other gofmt/goimports hooks enabled.
-
-      (defun lsp-go-install-save-hooks ()
-	(add-hook 'before-save-hook #'lsp-format-buffer t t)
-	(add-hook 'before-save-hook #'lsp-organize-imports t t))
-      (add-hook 'go-mode-hook #'lsp-go-install-save-hooks)
-
-      (defun js-config-hooks ()
-	(add-hook 'js-mode-hook (lambda () (setq indent-line-function 'insert-tab)))
-	(add-hook 'js-mode-hook (lambda () (setq indent-tabs-mode nil)))
+	(add-hook 'js-mode-hook (lambda () (setq js-indent-level 2)))
 	(add-hook 'js-mode-hook (lambda () (setq tab-width 2)))
-	(add-hook 'before-save-hook #'lsp-format-buffer t t)
-	(add-hook 'before-save-hook #'lsp-organize-imports t t))
 
-      (add-hook 'js-mode-hook #'js-config-hooks)
+	(defun aldama/fmt-config-hooks ()
+	  (add-hook 'before-save-hook #'lsp-format-buffer t t)
+	  (add-hook 'before-save-hook #'lsp-organize-imports t t))
+	(add-hook 'prog-mode-hook #'aldama/fmt-config-hooks))
     #+end_src
+
 *** Lsp-ui
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package lsp-ui
