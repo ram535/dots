@@ -693,55 +693,61 @@
 	(define-key evil-normal-state-map (kbd "<f3>") 'toggle-lsp-ui-imenu)
 	(define-key evil-normal-state-map (kbd "gd") 'lsp-find-definition))
     #+end_src
+
 *** Company-lsp
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
     (use-package company-lsp
       :config
       (push 'company-lsp company-backends))
     #+end_src
+
 *** Helm-lsp-workspace-symbol
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package helm-lsp :commands helm-lsp-workspace-symbol)
     #+end_src
+
 *** Lsp-treemacs
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package lsp-treemacs :commands lsp-treemacs-errors-list)
     #+end_src
+
 *** Dap-mode
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package dap-mode)
     #+end_src
+
 *** All-the-icons
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package all-the-icons)
     #+end_src
+
 *** Magit
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package magit)
     #+end_src
+
 *** Evil-magit
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package evil-magit
         :after (magit))
     #+end_src
-*** Fish-mode
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package fish-mode
-	:mode "\\.fish\\'")
-    #+end_src
+
 *** Vimrc-mode
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package vimrc-mode
 	:mode "\\.vim\\'")
     #+end_src
+
 *** Json-mode
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package json-mode)
     #+end_src
+
 *** Hydra
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package hydra)
     #+end_src
+
 *** Major-mode-hydra
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package major-mode-hydra
@@ -749,34 +755,38 @@
 	(:states '(normal emacs)
 		 "SPC" 'major-mode-hydra))
     #+end_src
+
 *** Hera
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package hera
 	:straight (hera :type git :host github :repo "dustinlacewell/hera"))
     #+end_src
+
 *** Doom-modeline
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package doom-modeline
 	:hook (after-init . doom-modeline-mode)
-	:config
+	:custom
 	;; Whether display buffer encoding.
-	(setq doom-modeline-buffer-encoding nil)
-	(setq doom-modeline-icon nil))
+	(doom-modeline-buffer-encoding nil)
+	(doom-modeline-icon nil))
     #+end_src
+
 *** Aggressive-indent
     #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package aggressive-indent
-	:hook (web-mode . aggressive-indent-mode)
-	:hook (json-mode . aggressive-indent-mode)
-	:hook (emacs-lisp-mode . aggressive-indent-mode))
+	:hook
+	((web-mode . aggressive-indent-mode)
+	 (json-mode . aggressive-indent-mode)
+	 (emacs-lisp-mode . aggressive-indent-mode)))
     #+END_SRC
+
 *** Eshell
     #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package eshell
 	:preface
 	(defun eshell-foo ()
 	  (interactive)
-
 	  (if (string= (buffer-name) "*eshell*")
 	      (mode-line-other-buffer)
 	    (eshell)
@@ -799,33 +809,32 @@
 	:config
 	(eshell-git-prompt-use-theme 'powerline))
     #+END_SRC
+
 *** Avy
     #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package avy
 	:config
-
-      (general-define-key
-	       :states 'normal
-	       "f" 'avy-goto-char-2))
-
+	(general-define-key
+	 :states 'normal
+	 "f" 'avy-goto-char-2))
     #+END_SRC
+
 *** Web-mode
     #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package web-mode
+	:custom
+	(web-mode-markup-indent-offset 2)
+	(web-mode-css-indent-offset 2)
+	(web-mode-enable-auto-pairing t)
+	(web-mode-engines-alist
+	 '(("go"    . "\\.gohtml\\'")
+	   ("mustache"  . "\\.mustache\\.")))
 	:config
 	(add-to-list 'auto-mode-alist '("\\.mustache\\'" . web-mode))
 	(add-to-list 'auto-mode-alist '("\\.gohtml\\'" . web-mode))
-	(add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode))
-	(setq web-mode-markup-indent-offset 2)
-	(setq web-mode-css-indent-offset 2)
-	(setq web-mode-enable-auto-pairing t)
-
-	(setq web-mode-engines-alist
-	      '(("go"    . "\\.gohtml\\'")
-		("mustache"  . "\\.mustache\\."))
-	      )
-	)
+	(add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode)))
     #+END_SRC
+
 *** Smartparens
     #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package smartparens
@@ -839,14 +848,13 @@
 
 	(smartparens-global-mode t))
     #+END_SRC
+
 *** Rainbow-delimiters-mode
     #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package rainbow-delimiters
-	:config
-	(add-hook 'prog-mode-hook 'rainbow-delimiters-mode)
-	;; To start the mode automatically in most programming modes
-	(add-hook 'dart-mode-hook 'rainbow-delimiters-mode))
+	:hook (prog-mode . rainbow-delimiters-mode))
     #+END_SRC
+
 *** Nov (epubs)
     #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package nov
@@ -861,6 +869,7 @@
 	 "n" 'nov-next-document
 	 "p" 'nov-previous-document))
     #+END_SRC
+
 *** Pdf-tools
     #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
       ;; pdf-tools depends on this package
@@ -918,18 +927,16 @@
 	 "z" 'outline-hide-sublevels
 	 "a" 'outline-show-all
 	 "q" 'quit-window
-	 "RET" 'pdf-outline-follow-link)
-	)
+	 "RET" 'pdf-outline-follow-link))
     #+END_SRC
+
 *** Elfeed
     #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package elfeed
 	:config
 	(setq elfeed-feeds
-	      '(
-		("https://www.engadget.com/rss.xml" news)
-		("https://www.freecodecamp.org/news/rss/" coding)
-		))
+	      '(("https://www.engadget.com/rss.xml" news)
+		("https://www.freecodecamp.org/news/rss/" coding)))
 
 	(general-define-key
 	 :states 'normal
@@ -945,6 +952,7 @@
 	 "q" 'quit-window
 	 "b" 'elfeed-search-browse-url))
     #+END_SRC
+
 ** Hydras
 *** Buffers
    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
