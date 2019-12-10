@@ -212,8 +212,8 @@
 	(evil-visual-state-cursor '("orange" box))
 	(evil-insert-state-cursor '("dodger blue" bar))
 	(evil-replace-state-cursor '("red" bar))
-	:init
-	(setq evil-want-keybinding nil)
+	(evil-disable-insert-state-bindings t)
+	(evil-want-keybinding nil)
 	:config
 	;; You can use the following configuration to have all modes start in normal state:
 	;; (setq evil-emacs-state-modes nil)
