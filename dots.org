@@ -181,26 +181,7 @@
     #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package general
 	:config
-	(general-evil-setup)
-
-	(general-define-key
-	 :states 'motion
-	 ;; swap ; and :
-	 ";" 'evil-ex
-	 ":" 'evil-repeat-find-char)
-
-	(general-define-key
-	 :states 'normal
-	 :prefix ","
-	 "ed" '(lambda() (interactive) (find-file "~/Projects/dots/dots.org"))
-	 "en" '(lambda() (interactive)(find-file "~/Documents/notes/notes.org"))
-	 "eb" '(lambda() (interactive)(find-file "~/Documents/notes/bookmarks.org"))
-	 "d" '(lambda() (interactive) (dired default-directory))
-	 "k" 'helm-show-kill-ring
-	 "f" 'hydra-projectile/body
-	 "s" 'magit-status
-	 "b" 'counsel-switch-buffer
-	 "q" 'mode-line-other-buffer))
+	(general-evil-setup))
     #+END_SRC
 
 *** Evil
@@ -292,51 +273,44 @@
 *** Org Mode
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package org
-	:straight (org :type git :host github :repo "emacsmirror/org")
-	:custom
-	(org-startup-with-inline-images t)
-	(org-ellipsis "…")
-	;; syntax highlight
-	(org-src-fontify-natively t)
-	(org-src-strip-leading-and-trailing-blank-lines t)
-	(org-src-tab-acts-natively t)
-	;; edit source code in another window
-	(org-src-window-setup 'current-window)
-	;; Then inline latex like $y=mx+c$ will appear in a different colour in an org-mode file to help it stand out.
-	(org-highlight-latex-and-related '(latex))
-	:init
-	(setq org-modules '(org-bibtex
-			    org-docview
-			    org-drill))
-	:config
-	(require 'org-eldoc)
-	(org-indent-mode)
-	;; To be able to see the images after bable is execute
-	(add-hook 'org-babel-after-execute-hook 'org-display-inline-images)
+        :straight (org :type git :host github :repo "emacsmirror/org")
+        :custom
+        (org-startup-with-inline-images t)
+        (org-ellipsis "…")
+        ;; syntax highlight
+        (org-src-fontify-natively t)
+        (org-src-strip-leading-and-trailing-blank-lines t)
+        (org-src-tab-acts-natively t)
+        ;; edit source code in another window
+        (org-src-window-setup 'current-window)
+        ;; Then inline latex like $y=mx+c$ will appear in a different colour in an org-mode file to help it stand out.
+        (org-highlight-latex-and-related '(latex))
+        :init
+        (setq org-modules '(org-bibtex
+                            org-docview
+                            org-drill))
+        :config
+        (require 'org-eldoc)
+        (org-indent-mode)
+        ;; To be able to see the images after bable is execute
+        (add-hook 'org-babel-after-execute-hook 'org-display-inline-images)
 
-	;; unicode bullets without affecting text file
-	(font-lock-add-keywords 'org-mode
-				'(("^ +\\([-*]\\) "
-				   (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
+        ;; unicode bullets without affecting text file
+        (font-lock-add-keywords 'org-mode
+                                '(("^ +\\([-*]\\) "
+                                   (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
 
-	(org-babel-do-load-languages
-	 'org-babel-load-languages
-	 '((dot . t)
-	   (js . t)
-	   (latex . t)
-	   (calc . t)
-	   (sql . t)
-	   (C . t)
-	   (go . t)
-	   (python . t)
-	   (emacs-lisp . t)))
-
-	(general-define-key
-	 :prefix ","
-	 :states 'normal
-	 :keymaps 'org-mode-map
-	 "h" 'helm-org-in-buffer-headings
-	 "n" 'org-toggle-narrow-to-subtree))
+        (org-babel-do-load-languages
+         'org-babel-load-languages
+         '((dot . t)
+           (js . t)
+           (latex . t)
+           (calc . t)
+           (sql . t)
+           (C . t)
+           (go . t)
+           (python . t)
+           (emacs-lisp . t))))
     #+end_src
 
 *** Org Drill
@@ -1011,6 +985,44 @@
 	  ("d" dired-do-delete "delete"))
 	 ))
     #+END_SRC
+
+** Bindings
+*** Normal-mode bindings
+    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package aldama/normal-mode-bindings
+	:straight nil
+	:after general
+	:no-require t
+	:general
+	(:states 'normal
+		 :prefix ","
+		 ;; swap ; and :
+		 ";" 'evil-ex
+		 ":" 'evil-repeat-find-char
+		 "ed" '(lambda() (interactive) (find-file "~/Projects/dots/dots.org"))
+		 "en" '(lambda() (interactive)(find-file "~/Documents/notes/notes.org"))
+		 "eb" '(lambda() (interactive)(find-file "~/Documents/notes/bookmarks.org"))
+		 "d" '(lambda() (interactive) (dired default-directory))
+		 "k" 'helm-show-kill-ring
+		 "f" 'hydra-projectile/body
+		 "s" 'magit-status
+		 "b" 'counsel-switch-buffer
+		 "q" 'mode-line-other-buffer))
+      #+END_SRC
+
+*** Org bindings
+    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package aldama/org-bindings
+	:straight nil
+	:after general
+	:no-require t
+	:general
+	(:prefix ","
+		 :states 'normal
+		 :keymaps 'org-mode-map
+		 "h" 'helm-org-in-buffer-headings
+		 "n" 'org-toggle-narrow-to-subtree))
+      #+END_SRC
 
 ** Other Functions
 *** Hide SRC block delimiters
