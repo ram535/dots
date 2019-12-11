@@ -201,13 +201,9 @@
 	;; (setq evil-insert-state-modes nil)
 	;; (setq evil-motion-state-modes nil)
 	(evil-set-initial-state 'wdired-mode 'normal)
-	(evil-set-initial-state 'eshell-mode 'emacs)
+	(evil-set-initial-state 'eshell-mode 'normal)
 	(evil-set-initial-state 'pdf-view-mode 'normal)
 	(evil-set-initial-state 'pdf-outline-buffer-mode 'normal)
-
-	(general-define-key
-	 :states '(normal emacs)
-	 "gb" 'evil-jump-backward)
 
 	(evil-mode 1))
     #+end_src
@@ -230,9 +226,7 @@
 
 *** Evil-commentary
     #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package evil-commentary
-	:bind (:map evil-normal-state-map
-		    ("gc" . evil-commentary)))
+      (use-package evil-commentary)
     #+END_SRC
 
 *** Evil-surround
@@ -339,50 +333,6 @@
 	  '(add-to-list 'dired-compress-file-suffixes
 			'("\\.zip\\'" ".zip" "unzip")))
 
-	(general-define-key
-	 :states 'normal
-	 :keymaps 'dired-mode-map
-	 "j" 'dired-next-line
-	 "k" 'dired-previous-line
-	 "l" 'dired-find-file
-	 "h" 'dired-up-directory
-	 "yy" 'dired-do-copy
-	 "yn" 'dired-copy-filename-as-kill
-	 "yp" '(lambda() (interactive) (dired-copy-filename-as-kill 0))
-	 "gk" '(lambda() (interactive) (dired "~/Documents"))
-	 "gd" '(lambda() (interactive) (dired "~/Downloads"))
-	 "gp" '(lambda() (interactive) (dired "~/Projects"))
-	 "ge" '(lambda() (interactive) (dired "~/.emacs.d"))
-	 "gc" '(lambda() (interactive) (dired "~/.config"))
-	 "gy" '(lambda() (interactive) (dired "~/Projects/playground"))
-	 "gb" '(lambda() (interactive) (dired "~/bin"))
-	 "gm" '(lambda() (interactive) (dired "/media"))
-	 "gh" '(lambda() (interactive) (dired "~"))
-	 "m" 'dired-mark
-	 "u" 'dired-unmark
-	 "cw" 'dired-do-rename
-	 "r" 'revert-buffer
-	 "t" 'dired-hide-details-mode
-	 "nd" 'dired-create-directory
-	 "nf" 'counsel-find-file
-	 "s" 'dired-do-shell-command
-	 "q" 'quit-window
-	 "w" 'dired-toggle-read-only
-	 "W" 'wdired-finish-edit
-	 "x" 'dired-do-compress
-	 "za" 'cycle-dired-switches
-	 "zd" 'dired-hide-details-mode
-	 "d" 'dired-do-delete)
-
-	(general-define-key
-	 :states 'normal
-	 :keymaps 'image-mode-map
-	 "j" 'image-previous-file
-	 "k" 'image-next-file
-	 "l" 'image-next-file
-	 "h" 'image-previous-file
-	 "q" 'quit-window)
-
 	(defvar dired-compress-files-alist
 	  '(("\\.tar\\.gz\\'" . "tar -c %i | gzip -c9 > %o")
 	    ("\\.zip\\'" . "zip %o -r --filesync %i"))
@@ -415,35 +365,28 @@
 	:straight nil
 	:after dired
 	:config
-	(setq dired-guess-shell-alist-user '(("\\.zip$" "file-roller ? &")
-					     ("\\.tar\\.gz$" "file-roller ? &")
-					     ("\\.pdf$" "okular ? &")
-					     ("\\.torrent$" "transmission-gtk ? &")
-					     ("\\.epub$" "ebook-viewer ? &")
-					     ("\\.rar$" "file-roller ? &"))))
+	(setq dired-guess-shell-alist-user '(("\\.zip$" "file-roller ? & >/dev/null")
+					     ("\\.tar\\.gz$" "file-roller ? & >/dev/null")
+					     ("\\.pdf$" "okular ? & >/dev/null")
+					     ("\\.torrent$" "transmission-gtk ? & >/dev/null")
+					     ("\\.epub$" "ebook-viewer ? & >/dev/null")
+					     ("\\.rar$" "file-roller ? & disown &>/dev/null"))))
 
       (add-to-list 'auto-mode-alist '("\\.rar$" . arc-mode))
       (set-face-attribute 'dired-header nil
 			  :foreground "#282c34"
 			  :weight 'bold)
-
     #+END_SRC
 
 *** Treemacs
     Remember that binding a key in motion state is like binding a key in the normal, visual,
     and operator states all at once (unless that key is already bound in one of those states).
     #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package treemacs
-	:bind (:map evil-motion-state-map
-		    ("C-`" . treemacs)
-		    :map evil-insert-state-map
-		    ("C-`" . treemacs)
-		    :map evil-emacs-state-map
-		    ("C-`" . treemacs)))
+      (use-package treemacs)
     #+END_SRC
 
 *** Treemacs-icons-dired
-    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+    #+BEGIN_SRC emacs-lisp
       (use-package treemacs-icons-dired
 	:after treemacs dired
 	:config (treemacs-icons-dired-mode))
@@ -470,42 +413,33 @@
 *** Counsel, ivy and swiper
 **** ivy
     #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-     (use-package ivy
-       :bind (:map ivy-minibuffer-map
-		   ("C-j" . ivy-next-line)
-		   ("C-u" . counsel-up-directory)
-		   ("C-k" . ivy-previous-line))
-       :config
-       (ivy-mode 1)
-       (setq ivy-use-virtual-buffers t)
-       (setq ivy-count-format "(%d/%d) "))
+      (use-package ivy
+	:custom
+	(ivy-use-virtual-buffers t)
+	(ivy-count-format "(%d/%d) ")
+	:config
+	(ivy-mode 1))
     #+END_SRC
 
 **** counsel
     #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-     (use-package counsel
-       :commands (counsel-find-file councel-bookmark)
-       :config
-       (setq counsel-find-file-ignore-regexp
-	     (concat
-	      ;; File names beginning with # or .
-	      "\\(?:\\`[#.]\\)"
-	      ;; File names ending with # or ~
-	      "\\|\\(?:\\`.+?[#~]\\'\\)"))
+      (use-package counsel
+	:commands (counsel-find-file councel-bookmark)
+	:custom
+	(counsel-find-file-ignore-regexp
+	 (concat
+	  ;; File names beginning with # or .
+	  "\\(?:\\`[#.]\\)"
+	  ;; File names ending with # or ~
+	  "\\|\\(?:\\`.+?[#~]\\'\\)"))
 
-       (setq all-the-icons-ivy-file-commands
-	     '(counsel-find-file counsel-file-jump counsel-recentf counsel-projectile-find-file counsel-projectile-find-dir))
-
-       (define-key evil-normal-state-map (kbd "\C-n") 'counsel-up-directory))
+	(all-the-icons-ivy-file-commands
+	 '(counsel-find-file counsel-file-jump counsel-recentf counsel-projectile-find-file counsel-projectile-find-dir)))
     #+END_SRC
 
 **** swiper
     #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-     (use-package swiper
-       :config
-       (general-define-key
-	:states 'normal
-	"C-s" 'swiper))
+     (use-package swiper)
     #+END_SRC
 
 *** Counsel-projectile
@@ -552,9 +486,6 @@
 	 (dart-mode . yas-minor-mode)
 	 (python-mode . yas-minor-mode))
 	:config
-	(general-define-key
-	 :states 'insert
-	 "C-u" 'yas-expand)
 	(yas-reload-all))
     #+end_src
 
@@ -562,10 +493,6 @@
     (add-hook 'after-init-hook 'global-company-mode)
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package company
-	:bind
-	(:map company-active-map
-	      ("C-n" . company-select-next-or-abort)
-	      ("C-p" . company-select-previous-or-abort))
 	:hook
 	(after-init . global-company-mode)
 	:config
@@ -600,8 +527,6 @@
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package go-mode)
     #+end_src
-
-*** Js-mode
 
 *** Lsp-mode
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
@@ -726,7 +651,7 @@
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package major-mode-hydra
 	:general
-	(:states '(normal emacs)
+	(:states '(normal)
 		 "SPC" 'major-mode-hydra))
     #+end_src
 
@@ -995,10 +920,21 @@
 	:no-require t
 	:general
 	(:states 'normal
-		 :prefix ","
+		 "C-s" 'swiper
 		 ;; swap ; and :
 		 ";" 'evil-ex
-		 ":" 'evil-repeat-find-char
+		 ":" 'evil-repeat-find-char))
+      #+END_SRC
+
+*** =,= Normal-mode bindings
+    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package aldama/normal-mode-bindings
+	:straight nil
+	:after general
+	:no-require t
+	:general
+	(:states 'normal
+		 :prefix ","
 		 "ed" '(lambda() (interactive) (find-file "~/Projects/dots/dots.org"))
 		 "en" '(lambda() (interactive)(find-file "~/Documents/notes/notes.org"))
 		 "eb" '(lambda() (interactive)(find-file "~/Documents/notes/bookmarks.org"))
@@ -1008,6 +944,20 @@
 		 "s" 'magit-status
 		 "b" 'counsel-switch-buffer
 		 "q" 'mode-line-other-buffer))
+      #+END_SRC
+
+*** Prog-mode bindings
+    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package aldama/Prog-mode-bindings
+	:straight nil
+	:after general
+	:no-require t
+	:general
+	(:states 'normal
+		 :keymaps 'prog-mode-map
+		 "C-`" 'treemacs
+		 "gc" 'evil-commentary
+		 "gb" 'evil-jump-backward))
       #+END_SRC
 
 *** Org bindings
@@ -1022,6 +972,81 @@
 		 :keymaps 'org-mode-map
 		 "h" 'helm-org-in-buffer-headings
 		 "n" 'org-toggle-narrow-to-subtree))
+      #+END_SRC
+
+*** Dired bindings
+    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package aldama/dired-mode-bindings
+	:straight nil
+	:after general
+	:no-require t
+	:general
+	(:states 'normal
+		 :keymaps 'dired-mode-map
+		 "j" 'dired-next-line
+		 "k" 'dired-previous-line
+		 "l" 'dired-find-file
+		 "h" 'dired-up-directory
+		 "yy" 'dired-do-copy
+		 "yn" 'dired-copy-filename-as-kill
+		 "yp" '(lambda() (interactive) (dired-copy-filename-as-kill 0))
+		 "gk" '(lambda() (interactive) (dired "~/Documents"))
+		 "gd" '(lambda() (interactive) (dired "~/Downloads"))
+		 "gp" '(lambda() (interactive) (dired "~/Projects"))
+		 "ge" '(lambda() (interactive) (dired "~/.emacs.d"))
+		 "gc" '(lambda() (interactive) (dired "~/.config"))
+		 "gy" '(lambda() (interactive) (dired "~/Projects/playground"))
+		 "gb" '(lambda() (interactive) (dired "~/bin"))
+		 "gm" '(lambda() (interactive) (dired "/media"))
+		 "gh" '(lambda() (interactive) (dired "~"))
+		 "m" 'dired-mark
+		 "u" 'dired-unmark
+		 "cw" 'dired-do-rename
+		 "r" 'revert-buffer
+		 "t" 'dired-hide-details-mode
+		 "nd" 'dired-create-directory
+		 "nf" 'counsel-find-file
+		 "s" 'dired-do-shell-command
+		 "q" 'quit-window
+		 "w" 'dired-toggle-read-only
+		 "W" 'wdired-finish-edit
+		 "x" 'dired-do-compress
+		 "za" 'cycle-dired-switches
+		 "zd" 'dired-hide-details-mode
+		 "d" 'dired-do-delete)
+
+	(:states 'normal
+		 :keymaps 'image-mode-map
+		 "j" 'image-previous-file
+		 "k" 'image-next-file
+		 "l" 'image-next-file
+		 "h" 'image-previous-file
+		 "q" 'quit-window))
+      #+END_SRC
+
+*** Ivy bindings
+    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package aldama/ivy-mode-binding
+	:straight nil
+	:after general
+	:no-require t
+	:general
+	(:keymaps 'ivy-minibuffer-map
+	      "C-j" 'ivy-next-line
+	      "C-u" 'counsel-up-directory
+	      "C-k" 'ivy-previous-line))
+      #+END_SRC
+
+*** Company bindings
+    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package aldama/comapany-bindings
+	:straight nil
+	:after general
+	:no-require t
+	:general
+	(:keymaps 'company-active-map
+		  "C-n" 'company-select-next-or-abort
+		  "C-p" 'company-select-previous-or-abort))
       #+END_SRC
 
 ** Other Functions
