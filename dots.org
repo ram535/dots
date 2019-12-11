@@ -571,26 +571,7 @@
 	(lsp-ui-sideline-show-diagnostics nil)
 	;; lsp-ui-imenu
 	(lsp-ui-imenu-enable t)
-	(lsp-ui-imenu-kind-position 'top)
-	:preface
-	(defun toggle-lsp-ui-doc ()
-	  (interactive)
-	  (if lsp-ui-doc-mode
-	      (progn
-		(lsp-ui-doc-mode -1)
-		(lsp-ui-doc--hide-frame))
-	    (lsp-ui-doc-mode 1)))
-
-	(defun toggle-lsp-ui-imenu ()
-	  (interactive)
-
-	  (if (string= (buffer-name) "*lsp-ui-imenu*")
-	  (lsp-ui-imenu--kill)
-	    (lsp-ui-imenu)))
-	:config
-	(define-key evil-normal-state-map (kbd "K") 'toggle-lsp-ui-doc)
-	(define-key evil-normal-state-map (kbd "<f3>") 'toggle-lsp-ui-imenu)
-	(define-key evil-normal-state-map (kbd "gd") 'lsp-find-definition))
+	(lsp-ui-imenu-kind-position 'top))
     #+end_src
 
 *** Company-lsp
@@ -649,10 +630,7 @@
 
 *** Major-mode-hydra
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package major-mode-hydra
-	:general
-	(:states '(normal)
-		 "SPC" 'major-mode-hydra))
+      (use-package major-mode-hydra)
     #+end_src
 
 *** Hera
@@ -683,21 +661,8 @@
 *** Eshell
     #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package eshell
-	:preface
-	(defun eshell-foo ()
-	  (interactive)
-	  (if (string= (buffer-name) "*eshell*")
-	      (mode-line-other-buffer)
-	    (eshell)
-	    (eshell-kill-process)
-	    (delete-other-windows)))
-
 	:config
 	(add-hook 'eshell-mode-hook (lambda () (global-hl-line-mode -1)))
-
-	(general-define-key
-	 :states '(normal emacs)
-	 "C-t" 'eshell-foo)
 
 	(eval-after-load 'esh-module
 	  '(progn
@@ -711,11 +676,7 @@
 
 *** Avy
     #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package avy
-	:config
-	(general-define-key
-	 :states 'normal
-	 "f" 'avy-goto-char-2))
+      (use-package avy)
     #+END_SRC
 
 *** Web-mode
@@ -918,11 +879,23 @@
 	:straight nil
 	:after general
 	:no-require t
+	:preface
+	(defun eshell-foo ()
+	  (interactive)
+	  (if (string= (buffer-name) "*eshell*")
+	      (mode-line-other-buffer)
+	    (eshell)
+	    (eshell-kill-process)
+	    (delete-other-windows)))
+
 	:general
 	(:states 'normal
+		 "f" 'avy-goto-char-2
 		 "C-s" 'swiper
 		 ;; swap ; and :
 		 ";" 'evil-ex
+		 "SPC" 'major-mode-hydra
+		 "C-t" 'eshell-foo
 		 ":" 'evil-repeat-find-char))
       #+END_SRC
 
@@ -948,13 +921,31 @@
 
 *** Prog-mode bindings
     #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package aldama/Prog-mode-bindings
+      (use-package aldama/prog-mode-bindings
 	:straight nil
 	:after general
 	:no-require t
+	:preface
+	(defun toggle-lsp-ui-doc ()
+	  (interactive)
+	  (if lsp-ui-doc-mode
+	      (progn
+		(lsp-ui-doc-mode -1)
+		(lsp-ui-doc--hide-frame))
+	    (lsp-ui-doc-mode 1)))
+
+	(defun toggle-lsp-ui-imenu ()
+	  (interactive)
+
+	  (if (string= (buffer-name) "*lsp-ui-imenu*")
+	      (lsp-ui-imenu--kill)
+	    (lsp-ui-imenu)))
 	:general
 	(:states 'normal
 		 :keymaps 'prog-mode-map
+		 "K" 'toggle-lsp-ui-doc
+		 "<f3>" 'toggle-lsp-ui-imenu
+		 "gd" 'lsp-find-definition
 		 "C-`" 'treemacs
 		 "gc" 'evil-commentary
 		 "gb" 'evil-jump-backward))
