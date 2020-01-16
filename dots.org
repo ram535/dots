@@ -201,6 +201,7 @@
 	;; (setq evil-insert-state-modes nil)
 	;; (setq evil-motion-state-modes nil)
 	(evil-set-initial-state 'wdired-mode 'normal)
+	(evil-set-initial-state 'ebib-index-mode 'emacs)
 	(evil-set-initial-state 'eshell-mode 'normal)
 	(evil-set-initial-state 'pdf-view-mode 'normal)
 	(evil-set-initial-state 'pdf-outline-buffer-mode 'normal)
@@ -273,19 +274,21 @@
         (org-ellipsis "…")
         ;; syntax highlight
         (org-src-fontify-natively t)
-        (org-src-strip-leading-and-trailing-blank-lines t)
+        ;; (org-src-strip-leading-and-trailing-blank-lines t)
         (org-src-tab-acts-natively t)
+        ;; (org-edit-src-content-indentation 0)
+        ;; (org-src-preserve-indentation nil)
         ;; edit source code in another window
         (org-src-window-setup 'current-window)
         ;; Then inline latex like $y=mx+c$ will appear in a different colour in an org-mode file to help it stand out.
         (org-highlight-latex-and-related '(latex))
+        (org-modules '(org-bibtex
+                       org-docview
+                       org-drill))
         :init
-        (setq org-modules '(org-bibtex
-                            org-docview
-                            org-drill))
+        (org-indent-mode)
         :config
         (require 'org-eldoc)
-        (org-indent-mode)
         ;; To be able to see the images after bable is execute
         (add-hook 'org-babel-after-execute-hook 'org-display-inline-images)
 
@@ -293,6 +296,15 @@
         (font-lock-add-keywords 'org-mode
                                 '(("^ +\\([-*]\\) "
                                    (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
+
+        (setq-default indent-tabs-mode nil)
+        (setq-default tab-width 2)
+        ;; (defun my-tab-related-stuff ()
+        ;;   (setq tab-stop-list (number-sequence 4 200 4))
+        ;;   (setq tab-width 2)
+        ;;   (setq indent-line-function 'insert-tab))
+
+        (add-hook 'org-mode-hook 'my-tab-related-stuff)
 
         (org-babel-do-load-languages
          'org-babel-load-languages
@@ -319,6 +331,14 @@
 	:commands (org-bullets-mode)
 	:init (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
     #+end_src
+
+*** org-ref
+    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package org-ref
+	:custom
+	(reftex-default-bibliography '("~/Documents/references.bib"))
+	(org-ref-default-bibliography '("~/Documents/references.bib")))
+      #+END_SRC
 
 *** Dired
     #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
@@ -365,12 +385,12 @@
 	:straight nil
 	:after dired
 	:config
-	(setq dired-guess-shell-alist-user '(("\\.zip$" "file-roller ? & >/dev/null")
-					     ("\\.tar\\.gz$" "file-roller ? & >/dev/null")
-					     ("\\.pdf$" "okular ? & >/dev/null")
-					     ("\\.torrent$" "transmission-gtk ? & >/dev/null")
-					     ("\\.epub$" "ebook-viewer ? & >/dev/null")
-					     ("\\.rar$" "file-roller ? & disown &>/dev/null"))))
+	(setq dired-guess-shell-alist-user '(("\\.zip$" "file-roller ? &>/dev/null")
+					     ("\\.tar\\.gz$" "file-roller ? &>/dev/null")
+					     ("\\.pdf$" "okular ? &>/dev/null")
+					     ("\\.torrent$" "transmission-gtk ? &>/dev/null")
+					     ("\\.epub$" "ebook-viewer ? &>/dev/null")
+					     ("\\.rar$" "file-roller ? &>/dev/null"))))
 
       (add-to-list 'auto-mode-alist '("\\.rar$" . arc-mode))
       (set-face-attribute 'dired-header nil
@@ -472,6 +492,18 @@
       (use-package helm-org)
     #+END_SRC
 
+*** helm-bibtex
+    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package helm-bibtex
+	:custom
+	(bibtex-completion-bibliography '("~/references.bib")))
+      #+END_SRC
+
+*** ebib
+    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package ebib)
+      #+END_SRC
+
 *** Yasnippet
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package yasnippet
@@ -498,7 +530,8 @@
 	:config
 	;; Use tab key to cycle through suggestions.
 	;; ('tng' means 'tab and go')
-	(company-tng-configure-default))
+	;;(company-tng-configure-default)
+)
     #+end_src
 
 *** Flycheck
@@ -514,14 +547,24 @@
 *** Dart-mode
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package dart-mode
-	:custom
-	(dart-format-on-save t)
-	(exec-path (append exec-path '("~/bin/dart-sdk/bin")))
+	:init
+	(setq lsp-dart-analysis-sdk-dir "~/bin/flutter/bin/cache/dart-sdk/")
 	:config
 	(with-eval-after-load "projectile"
 	  (add-to-list 'projectile-project-root-files-bottom-up "pubspec.yaml")
 	  (add-to-list 'projectile-project-root-files-bottom-up "BUILD")))
     #+end_src
+
+*** Flutter
+    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package flutter
+	:after dart-mode
+	:init
+	(setq flutter-sdk-path "~/bin/flutter/")
+	:bind
+	(:map dart-mode-map
+	      ("C-M-x" . #'flutter-run-or-hot-reload)))
+      #+END_SRC
 
 *** Go-mode
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
@@ -539,8 +582,9 @@
 	 (js-mode . lsp-deferred)
 	 (dart-mode . lsp-deferred))
 	:custom
-	(lsp-eldoc-render-all t)
+	(lsp-eldoc-render-all nil)
 	(lsp-gopls-complete-unimported t)
+	(lsp-print-io t)
 	:config
 	(add-hook 'js-mode-hook (lambda () (setq js-indent-level 2)))
 	(add-hook 'js-mode-hook (lambda () (setq tab-width 2)))
@@ -813,6 +857,11 @@
 	 "b" 'elfeed-search-browse-url))
     #+END_SRC
 
+*** request.el
+    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package request)
+    #+END_SRC
+
 ** Hydras
 *** Buffers
    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
@@ -892,6 +941,7 @@
 	(:states 'normal
 		 "f" 'avy-goto-char-2
 		 "C-s" 'swiper
+		 "<f7>" 'counsel-projectile-switch-project
 		 ;; swap ; and :
 		 ";" 'evil-ex
 		 "SPC" 'major-mode-hydra
@@ -943,10 +993,11 @@
 	:general
 	(:states 'normal
 		 :keymaps 'prog-mode-map
+                 "<f6>" 'async-shell-command
 		 "K" 'toggle-lsp-ui-doc
-		 "<f3>" 'toggle-lsp-ui-imenu
+		 "gs" 'toggle-lsp-ui-imenu
 		 "gd" 'lsp-find-definition
-		 "C-`" 'treemacs
+		 "ge" 'treemacs
 		 "gc" 'evil-commentary
 		 "gb" 'evil-jump-backward))
       #+END_SRC
@@ -958,6 +1009,10 @@
 	:after general
 	:no-require t
 	:general
+	(:states '(normal insert emacs)
+		 :keymaps 'org-mode-map
+		 "M-l" 'org-metaright
+		 "M-h" 'org-metaleft)
 	(:prefix ","
 		 :states 'normal
 		 :keymaps 'org-mode-map
@@ -982,6 +1037,7 @@
 		 "yn" 'dired-copy-filename-as-kill
 		 "yp" '(lambda() (interactive) (dired-copy-filename-as-kill 0))
 		 "gk" '(lambda() (interactive) (dired "~/Documents"))
+		 "gn" '(lambda() (interactive) (dired "~/Documents/notes"))
 		 "gd" '(lambda() (interactive) (dired "~/Downloads"))
 		 "gp" '(lambda() (interactive) (dired "~/Projects"))
 		 "ge" '(lambda() (interactive) (dired "~/.emacs.d"))
@@ -997,7 +1053,7 @@
 		 "t" 'dired-hide-details-mode
 		 "nd" 'dired-create-directory
 		 "nf" 'counsel-find-file
-		 "s" 'dired-do-shell-command
+		 "s" 'dired-do-async-shell-command
 		 "q" 'quit-window
 		 "w" 'dired-toggle-read-only
 		 "W" 'wdired-finish-edit
@@ -1039,6 +1095,19 @@
 		  "C-n" 'company-select-next-or-abort
 		  "C-p" 'company-select-previous-or-abort))
       #+END_SRC
+
+*** ebib bindings
+    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package aldama/ebib-bindings
+	:straight nil
+	:after general
+	:no-require t
+	:general
+	(:states 'normal
+		 :keymaps 'ebib-index-mode-map
+		 "o" 'ebib-open-bibtex-file
+		 "q" 'ebib-quit))
+    #+END_SRC
 
 ** Other Functions
 *** Hide SRC block delimiters
@@ -1117,24 +1186,11 @@
 	(add-hook 'org-mode-hook #'rasmus/org-prettify-symbols))
     #+END_SRC
 *** Run python code
-    #+BEGIN_SRC emacs-lisp
-      (defun run-python ()
-	(interactive)
-	(let ($fname
-	      $cmd-str
-	      $outputbuffer)
-	  (when (not (buffer-file-name)) (save-buffer))
-	  (when (buffer-modified-p) (save-buffer))
-	  (setq $fname (buffer-file-name))
-	  (setq $cmd-str (concat "python \""   $fname "\""))
-	  (setq $outputbuffer (concat "*Python output*"))
-	  (message (concat $cmd-str ": executed." ))
-	  (async-shell-command $cmd-str $outputbuffer)))
-
-	(general-define-key
-	 :states 'normal
-	 :keymaps 'python-mode-map
-	 "<f5>" 'run-python)
+    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+      (general-define-key
+       :states 'normal
+       :keymaps 'python-mode-map
+       "<f5>" '(lambda() (interactive) (async-shell-command (concat "python " (buffer-file-name)) "*python output*")))
     #+END_SRC
 
 *** Run javascript code
@@ -1356,7 +1412,7 @@ bindsym $mod+a focus parent
    #+END_SRC
 **** Rofi (a program launcher)
    #+BEGIN_SRC sh :tangle ~/.config/i3/config
-   bindsym $mod+d exec "~/bin/scripts/rofi-bangs.sh"
+   bindsym $mod+d exec "~/bin/scripts/rofi_bangs.dart"
    #+END_SRC
 **** Firefox
    #+BEGIN_SRC sh :tangle ~/.config/i3/config
@@ -1683,6 +1739,10 @@ bindsym $mod+a focus parent
     #+begin_src vimrc :tangle ~/.config/nvim/init.vim
     Plug 'SirVer/ultisnips'
     #+end_src
+*** vim-commentary
+    #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+    Plug 'tpope/vim-commentary'
+    #+end_src
 *** End Plug
     #+begin_src vimrc :tangle ~/.config/nvim/init.vim
 	call plug#end()
@@ -1690,20 +1750,66 @@ bindsym $mod+a focus parent
 ** Plugin Configuration
 *** Coc
 **** coc-setting.json
-     tangle ~/.config/nvim/coc-settings.json
-    #+begin_src json
+
+    #+begin_src json tangle ~/.config/nvim/coc-settings.json
       {
-      "languageserver": {
-	  "dart": {
-	    "command": "dart",
-	    "args": [
-	      "~/bin/snapshots/analysis_server.dart.snapshot",
-	      "--lsp"
-	    ],
-	    "filetypes": ["dart"],
-	    "disableDynamicRegister": true,
-	    "trace.server": "verbose"
-	  },
+	"coc.preferences.formatOnSaveFiletypes": ["javascript"],
+	"explorer.keyMappings": {
+	  "k": "nodePrev",
+	  "j": "nodeNext",
+
+	  "*": "toggleSelection",
+	  "<tab>": "actionMenu",
+
+	  "h": "collapse",
+	  "l": "expand",
+	  "J": ["toggleSelection", "normal:j"],
+	  "K": ["toggleSelection", "normal:k"],
+	  "gl": "expandRecursive",
+	  "gh": "collapseRecursive",
+	  "o": "expandOrCollapse",
+	  "<cr>": "open",
+	  "e": "open",
+	  "E": "openInVsplit",
+	  "t": "openInTab",
+	  "<bs>": "gotoParent",
+
+	  "y": "copyFilepath",
+	  "Y": "copyFilename",
+	  "c": "copyFile",
+	  "x": "cutFile",
+	  "p": "pasteFile",
+	  "d": "delete",
+	  "D": "deleteForever",
+
+	  "a": "addFile",
+	  "A": "addDirectory",
+	  "r": "rename",
+
+	  ".": "toggleHidden",
+	  "R": "refresh",
+
+	  "?": "help",
+	  "q": "quit",
+	  "X": "systemExecute",
+	  "gd": "listDrive",
+
+	  "f": "search",
+	  "F": "searchRecursive",
+
+	  "gf": "gotoSource:file",
+	  "gb": "gotoSource:buffer",
+
+	  "[[": "sourcePrev",
+	  "]]": "sourceNext",
+
+	  "[d": "diagnosticPrev",
+	  "]d": "diagnosticNext",
+
+	  "[c": "gitPrev",
+	  "]c": "gitNext",
+	  "<<": "gitStage",
+	  ">>": "gitUnstage"
 	}
       }
     #+end_src
@@ -1726,8 +1832,12 @@ bindsym $mod+a focus parent
 				   \ 'coc-go',
 				   \ 'coc-flutter',
 				   \ 'coc-conjure',
+				   \ 'coc-prettier',
+				   \ 'coc-css',
+				   \ 'coc-eslint',
 				   \ 'coc-json',
 				   \ 'coc-tsserver',
+				   \ 'coc-explorer',
 				   \ 'coc-html',
 				   \ 'coc-css',
 				   \ 'coc-yaml',
@@ -1781,6 +1891,7 @@ bindsym $mod+a focus parent
       nmap <silent> gy <Plug>(coc-type-definition)
       nmap <silent> gi <Plug>(coc-implementation)
       nmap <silent> gr <Plug>(coc-references)
+      nmap ge :CocCommand explorer<CR>
 
       " Use K to show documentation in preview window
       nnoremap <silent> K :call <SID>show_documentation()<CR>
@@ -2075,8 +2186,16 @@ bindsym $mod+a focus parent
     #+end_src
 **** Indent
   #+begin_src vimrc :tangle ~/.config/nvim/init.vim
-  autocmd! FileType javascript set tabstop=4|set shiftwidth=4|set softtabstop=4|set expandtab|set smarttab|set smartindent
+  autocmd! FileType javascript set tabstop=2|set shiftwidth=2|set softtabstop=2|set expandtab|set smarttab|set smartindent
   #+end_src
+**** Format js file at saving
+     #+begin_src vimrc :tangle ~/.config/nvim/init.vim
+       command! -nargs=0 Prettier :CocCommand prettier.formatFile
+       augroup formatJs
+	  autocmd!
+	  autocmd BufWritePre *.js :Prettier
+       augroup END
+     #+end_src
 *** python
 **** Python3 provider path
    Nvim delegates some features to dynamic "providers".
@@ -2505,7 +2624,7 @@ bindsym $mod+a focus parent
      " Video
      filextype *.avi,*.mp4,*.wmv,*.dat,*.3gp,*.ogv,*.mkv,*.mpg,*.vob,*.flv,*.m2v,*.mov,*.webm,*.ts,*.m4v
 	     \ {View using vlc}
-	     \ vlc %f & disown,
+	     \ cvlc %f & &>/dev/null,
 	     \ {View using ffplay}
 	     \ ffplay -fs %c,
 	     \ {View using Dragon}
@@ -2817,11 +2936,11 @@ bindsym $mod+a focus parent
    #+END_SRC
 
 *** Flutter
-   #+BEGIN_SRC sh
+   #+BEGIN_SRC sh :tangle ~/.zshrc
    PATH=$HOME/bin/flutter/bin:$PATH
    #+END_SRC
 *** Flutter-dev
-   #+BEGIN_SRC sh :tangle ~/.zshrc
+   #+BEGIN_SRC
    PATH=$HOME/bin/flutter-dev/bin:$PATH
    #+END_SRC
 *** Cmake
@@ -2853,7 +2972,6 @@ bindsym $mod+a focus parent
    #+END_SRC
 ** Alias
    #+BEGIN_SRC sh :tangle ~/.zshrc
-   alias jd="~/bin/jd2/JDownloader2 &"
    alias vf="vifm ."
    alias n="nvim"
    alias yd="youtube-dl --extract-audio --audio-format mp3 -o \"%(title)s.%(ext)s\""
