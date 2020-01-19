@@ -1,74 +1,39 @@
 * Emacs
-** General settings
-*** custom.el
-   Set up auto-generated variables to its own file, instead of saving
-   customize settings in [[file:init.el][init.el]].
-   #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-     (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
-     (load custom-file)
-   #+end_src
-*** Start server
-   #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-     (server-start)
-   #+end_src
-*** Delete trailing whitespaces
-    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-      (add-hook 'before-save-hook 'delete-trailing-whitespace)
-    #+END_SRC
-*** backup
-   Keep all backup and auto-save files in one directory
-   #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-     ;; Keep all backup and auto-save files in one directory
-     (setq backup-directory-alist '(("." . "~/.emacs.d/backups/")))
-     (setq auto-save-file-name-transforms '((".*" "~/.emacs.d/auto-save-list/" t)))
-     (setq auto-save-file-name-transforms '((".#" "~/.emacs.d/auto-save-list/" t)))
-   #+end_src
-*** Set default browser
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (setq browse-url-browser-function 'browse-url-generic
-	    browse-url-generic-program "google-chrome")
-    #+end_src
-*** symlinks
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (setq vc-follow-symlinks t)
+** Custom configuration
+*** Convert tabs to white spaces
+      #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+        (setq-default indent-tabs-mode nil)
+      #+end_src
 
-      ;; Resolve symlinks:
-      (setq-default find-file-visit-truename t)
+*** Make tabs to be 2 whitespaces width
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (setq-default tab-width 2)
     #+end_src
+
 *** Does anyone type yes anymore?
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (fset 'yes-or-no-p 'y-or-n-p)
     #+end_src
-*** Fix the scrolling
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (setq scroll-conservatively 10000
-	 scroll-preserve-screen-position t)
-    #+end_src
-*** Paths
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (setenv "PATH"
-	      (concat
-	       (getenv "PATH")))
 
-      (add-to-list 'exec-path (concat (getenv "GOPATH") "bin") t)
-    #+end_src
 ** GUI
 *** Hiding elements
     This hide several elements like menu, too bar, etc.
     in GUI mode
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (when window-system
-	(menu-bar-mode -1)
-	(tool-bar-mode -1)
-	(scroll-bar-mode -1)
-	(tooltip-mode -1))
+        (menu-bar-mode -1)
+        (tool-bar-mode -1)
+        (scroll-bar-mode -1)
+        (tooltip-mode -1))
     #+end_src
+
 *** Start in a blank page
     This allow to start emacs in a blank page
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (setq inhibit-startup-message t)
       (setq initial-scratch-message "")
     #+end_src
+    
 *** Stop blinking cursor
     Turn off the blinking cursor
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
@@ -80,1262 +45,533 @@
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (show-paren-mode t)
     #+end_src
-*** UTF-8 encoding
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (set-locale-environment "pl_PL.UTF-8")
-      (set-language-environment 'utf-8)
-      (setq locale-coding-system 'utf-8)
-      (set-default-coding-systems 'utf-8)
-      (set-terminal-coding-system 'utf-8)
-      (unless (eq system-type 'windows-nt)
-	(progn
-	  (set-selection-coding-system 'utf-8)
-	  (set-keyboard-coding-system 'utf-8-mac)))
-      (prefer-coding-system 'utf-8)
-    #+end_src
+
 *** Highlight current line
-    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (global-hl-line-mode t)
       (add-hook 'prog-mode-hook #'hl-line-mode)
       (add-hook 'org-mode-hook #'hl-line-mode)
-    #+END_SRC
-*** Default Font
-    https://www.gnu.org/software/emacs/manual/html_node/emacs/Fonts.html
-    when "font" is available
-    (message "%s" (font-family-list))
-    https://github.com/IBM/plex
-    https://github.com/i-tu/Hasklig
-    #+begin_src emacs-lisp
-      (when (member "Hasklig" (font-family-list))
-	(set-frame-font "Hasklig-11" nil t))
     #+end_src
-*** White spaces
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      ;; Here are the things that whitespace-mode should highlight
-      (setq whitespace-style '(tabs newline space-mark
-				    tab-mark newline-mark
-				    face lines-tail))
-      ;; Display pretty things for newlines and tabs (nothing for spaces)
-      (setq whitespace-display-mappings
-	    ;; all numbers are Unicode codepoint in decimal. e.g. (insert-char 182 1)
-	    ;; 32 SPACE, 183 MIDDLE DOT
-	    '((space-mark nil)
-	      ;; 10 LINE FEED
-	      ;;(newline-mark 10 [172 10])
-	      (newline-mark nil)
-	      ;; 9 TAB, MIDDLE DOT
-	      (tab-mark 9 [183 9] [92 9])))
 
-      ;; Indicate trailing empty lines in the GUI:
-      ;; (setq-default show-trailing-whitespace t)
-    #+end_src
-*** USE SCROLL MARGINS TO GIVE CONTEXT TO YOUR CURSOR
-    I add the following line to my emacs config file so the when I move the cursor near
-    to the top or bottom of the window, the window will scroll when I am 3 lines away
-    from edge. The effect is that (however it is moved) the cursor is always given 3 lines
-    of context before the top or bottom of the window, which I find very useful.
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (setq scroll-margin 3)
-    #+end_src
-*** Make cursor the width of the character it is under
-    i.e. full width of a TAB
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (setq x-stretch-cursor t)
-    #+end_src
 ** Packages
-*** Straight.el
+*** straight.el
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (defvar bootstrap-version)
 
       (let ((bootstrap-file
-	     (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
-	    (bootstrap-version 5))
-	(unless (file-exists-p bootstrap-file)
-	  (with-current-buffer
-	      (url-retrieve-synchronously
-	       "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
-	       'silent 'inhibit-cookies)
-	    (goto-char (point-max))
-	    (eval-print-last-sexp)))
-	(load bootstrap-file nil 'nomessage))
+             (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+            (bootstrap-version 5))
+        (unless (file-exists-p bootstrap-file)
+          (with-current-buffer
+              (url-retrieve-synchronously
+               "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
+               'silent 'inhibit-cookies)
+            (goto-char (point-max))
+            (eval-print-last-sexp)))
+        (load bootstrap-file nil 'nomessage))
 
       (setq straight-use-package-by-default t)
     #+end_src
 
-*** Use-package
+*** use-package
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (straight-use-package 'use-package)
     #+end_src
-
-*** Dependencies
-    The following package dependencies are used throughout the rest of the configuration.
-    They provide contemporary APIs for working with various elisp data structures.
+    
+*** org-mode
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package dash)      ;; lists
-      (use-package ht)        ;; hash-tables
-      (use-package s)         ;; strings
-      (use-package a)         ;; association lists
-    #+end_src
-
-*** General.el
-    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package general
-	:config
-	(general-evil-setup))
-    #+END_SRC
-
-*** Evil
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package evil
-	:custom
-	;; change the color of the cursor
-	(evil-normal-state-cursor '("gray" box))
-	(evil-visual-state-cursor '("orange" box))
-	(evil-insert-state-cursor '("dodger blue" bar))
-	(evil-replace-state-cursor '("red" bar))
-	(evil-disable-insert-state-bindings t)
-	(evil-want-keybinding nil)
-	:config
-	;; You can use the following configuration to have all modes start in normal state:
-	;; (setq evil-emacs-state-modes nil)
-	;; (setq evil-insert-state-modes nil)
-	;; (setq evil-motion-state-modes nil)
-	(evil-set-initial-state 'wdired-mode 'normal)
-	(evil-set-initial-state 'ebib-index-mode 'emacs)
-	(evil-set-initial-state 'eshell-mode 'normal)
-	(evil-set-initial-state 'pdf-view-mode 'normal)
-	(evil-set-initial-state 'pdf-outline-buffer-mode 'normal)
-
-	(evil-mode 1))
-    #+end_src
-
-*** Evil-collection
-    #+BEGIN_SRC emacs-lisp
-      (use-package evil-collection
-	:after evil
-	:config
-	(evil-collection-init))
-    #+END_SRC
-
-*** Evil-escape
-    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-	(use-package evil-escape
-	:after (evil)
-	:custom (evil-escape-key-sequence "jk")
-	:config (evil-escape-mode))
-    #+END_SRC
-
-*** Evil-commentary
-    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package evil-commentary)
-    #+END_SRC
-
-*** Evil-surround
-    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package evil-surround
-	:config
-	(global-evil-surround-mode 1))
-    #+END_SRC
-
-*** Doom themes
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package doom-themes
-	:config
-	;; Global settings (defaults)
-	(setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
-	      doom-themes-enable-italic t) ; if nil, italics is universally disabled
-
-	;; Load the theme (doom-one, doom-molokai, etc); keep in mind that each theme
-	;; may have their own settings.
-	(load-theme 'doom-one t)
-
-	;; Enable flashing mode-line on errors
-	(doom-themes-visual-bell-config)
-
-	;; or for treemacs users
-	(setq doom-themes-treemacs-theme "doom-colors") ; use the colorful treemacs theme
-	(doom-themes-treemacs-config)
-
-	;; Corrects (and improves) org-mode's native fontification.
-	(doom-themes-org-config))
-    #+end_src
-
-*** Ob-go
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package ob-go)
-    #+end_src
-
-*** Org Mode
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package org
-        :straight (org :type git :host github :repo "emacsmirror/org")
+      (use-package aldama/org-config
+        :straight nil
+        :no-require t
         :custom
         (org-startup-with-inline-images t)
         (org-ellipsis "…")
         ;; syntax highlight
         (org-src-fontify-natively t)
-        ;; (org-src-strip-leading-and-trailing-blank-lines t)
         (org-src-tab-acts-natively t)
-        ;; (org-edit-src-content-indentation 0)
-        ;; (org-src-preserve-indentation nil)
-        ;; edit source code in another window
-        (org-src-window-setup 'current-window)
-        ;; Then inline latex like $y=mx+c$ will appear in a different colour in an org-mode file to help it stand out.
-        (org-highlight-latex-and-related '(latex))
-        (org-modules '(org-bibtex
-                       org-docview
-                       org-drill))
-        :init
-        (org-indent-mode)
-        :config
-        (require 'org-eldoc)
-        ;; To be able to see the images after bable is execute
-        (add-hook 'org-babel-after-execute-hook 'org-display-inline-images)
-
-        ;; unicode bullets without affecting text file
-        (font-lock-add-keywords 'org-mode
-                                '(("^ +\\([-*]\\) "
-                                   (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
-
-        (setq-default indent-tabs-mode nil)
-        (setq-default tab-width 2)
-        ;; (defun my-tab-related-stuff ()
-        ;;   (setq tab-stop-list (number-sequence 4 200 4))
-        ;;   (setq tab-width 2)
-        ;;   (setq indent-line-function 'insert-tab))
-
-        ;; (add-hook 'org-mode-hook 'my-tab-related-stuff)
-
-        (org-babel-do-load-languages
-         'org-babel-load-languages
-         '((dot . t)
-           (js . t)
-           (latex . t)
-           (calc . t)
-           (sql . t)
-           (C . t)
-           (go . t)
-           (python . t)
-           (emacs-lisp . t))))
+        (org-src-window-setup 'current-window))
     #+end_src
 
-*** Org Drill
-    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package org-drill)
-    #+END_SRC
-
-*** Org-bullets
+*** evil
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package org-bullets
-	:after org
-	:commands (org-bullets-mode)
-	:init (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
+      (use-package evil
+        :custom
+        ;; change the color of the cursor
+        (evil-normal-state-cursor '("gray" box))
+        (evil-visual-state-cursor '("orange" box))
+        (evil-insert-state-cursor '("dodger blue" bar))
+        (evil-replace-state-cursor '("red" bar))
+        (evil-disable-insert-state-bindings t)
+        (evil-want-keybinding nil)
+        :config
+        (evil-set-initial-state 'wdired-mode 'normal)
+        (evil-set-initial-state 'ebib-index-mode 'emacs)
+        (evil-set-initial-state 'eshell-mode 'normal)
+        (evil-set-initial-state 'pdf-view-mode 'normal)
+        (evil-set-initial-state 'pdf-outline-buffer-mode 'normal)
+        (evil-mode 1))
     #+end_src
 
-*** org-ref
-    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package org-ref
-	:custom
-	(reftex-default-bibliography '("~/Documents/references.bib"))
-	(org-ref-default-bibliography '("~/Documents/references.bib")))
-      #+END_SRC
+**** evil-escape
+     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+       (use-package evil-escape
+       :after (evil)
+       :custom (evil-escape-key-sequence "jk")
+       :config (evil-escape-mode))
+     #+end_src
 
-*** Dired
-    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+**** evil-commentary
+     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+       (use-package evil-commentary)
+     #+end_src
+
+**** evil-surround
+     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+       (use-package evil-surround
+         :config
+         (global-evil-surround-mode 1))
+     #+end_src
+
+*** general.el
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package general
+        :config
+        (general-evil-setup))
+    #+end_src
+
+*** doom themes
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package doom-themes
+        :custom
+        (doom-themes-enable-bold t)    ; if nil, bold is universally disabled
+        (doom-themes-enable-italic t)  ; if nil, italics is universally disabled
+        (doom-themes-treemacs-theme "doom-colors") ; use the colorful treemacs theme
+        :config
+        ;; Load the theme (doom-one, doom-molokai, etc); keep in mind that each theme
+        ;; may have their own settings.
+        ;; (load-theme 'doom-one t)
+        (load-theme 'doom-solarized-dark t)
+
+        ;; Enable flashing mode-line on errors
+        (doom-themes-visual-bell-config)
+
+        ;; or for treemacs users
+        (doom-themes-treemacs-config)
+
+        ;; Corrects (and improves) org-mode's native fontification.
+        (doom-themes-org-config))
+    #+end_src
+    
+*** dired
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package dired
-	:straight nil
-	:hook (dired-mode . dired-hide-details-mode)
-	:custom
-	(dired-listing-switches "-Bhl --group-directories-first")
-	(dired-dwim-target t) ;;use to copy to the next buffer visible
-	:config
-	(eval-after-load "dired-aux"
-	  '(add-to-list 'dired-compress-file-suffixes
-			'("\\.zip\\'" ".zip" "unzip")))
+        :straight nil
+        :hook (dired-mode . dired-hide-details-mode)
+        :custom
+        (dired-listing-switches "-Bhl --group-directories-first")
+        (dired-dwim-target t) ;;use to copy to the next buffer visible
+        :config
+        (set-face-attribute 'dired-header nil
+                            :foreground "#282c34"
+                            :weight 'bold)
 
-	(defvar dired-compress-files-alist
-	  '(("\\.tar\\.gz\\'" . "tar -c %i | gzip -c9 > %o")
-	    ("\\.zip\\'" . "zip %o -r --filesync %i"))
-	  "Control the compression shell command for `dired-do-compress-to'.
+        (eval-after-load "dired-aux"
+          '(add-to-list 'dired-compress-file-suffixes
+                        '("\\.zip\\'" ".zip" "unzip")))
 
-			  Each element is (REGEXP . CMD), where REGEXP is the name of the
-			  archive to which you want to compress, and CMD the the
-			  corresponding command.
+        (defvar dired-compress-files-alist
+          '(("\\.tar\\.gz\\'" . "tar -c %i | gzip -c9 > %o")
+            ("\\.zip\\'" . "zip %o -r --filesync %i"))
+          "Control the compression shell command for `dired-do-compress-to'.
 
-			  Within CMD, %i denotes the input file(s), and %o denotes the
-			  output file. %i path(s) are relative, while %o is absolute.")
+            Each element is (REGEXP . CMD), where REGEXP is the name of the
+            archive to which you want to compress, and CMD the the
+            corresponding command.
 
-	(defcustom list-of-dired-switches
-	  '(("-Bhl --group-directories-first" . "directories first")
-	    ("-BhlA --group-directories-first" . "no . & .."))
-	  "List of ls switches (together with a name to display in the mode-line) for dired to cycle among.")
+            Within CMD, %i denotes the input file(s), and %o denotes the
+            output file. %i path(s) are relative, while %o is absolute.")
 
-	(defun cycle-dired-switches ()
-	  "Cycle through the list `list-of-dired-switches' of switches for ls"
-	  (interactive)
-	  (setq list-of-dired-switches
-		(append (cdr list-of-dired-switches)
-			(list (car list-of-dired-switches))))
-	  (dired-sort-other (caar list-of-dired-switches))
-	  (setq mode-name (concat "Dired " (cdar list-of-dired-switches)))
-	  (force-mode-line-update)))
+        (defcustom list-of-dired-switches
+          '(("-Bhl --group-directories-first" . "directories first")
+            ("-BhlA --group-directories-first" . "no . & .."))
+          "List of ls switches (together with a name to display in the mode-line) for dired to cycle among.")
+
+        (defun cycle-dired-switches ()
+          "Cycle through the list `list-of-dired-switches' of switches for ls"
+          (interactive)
+          (setq list-of-dired-switches
+                (append (cdr list-of-dired-switches)
+                        (list (car list-of-dired-switches))))
+          (dired-sort-other (caar list-of-dired-switches))
+          (setq mode-name (concat "Dired " (cdar list-of-dired-switches)))
+          (force-mode-line-update)))
 
 
       (use-package dired-x
-	:straight nil
-	:after dired
-	:config
-	(setq dired-guess-shell-alist-user '(("\\.zip$" "file-roller ? &>/dev/null")
-					     ("\\.tar\\.gz$" "file-roller ? &>/dev/null")
-					     ("\\.pdf$" "okular ? &>/dev/null")
-					     ("\\.torrent$" "transmission-gtk ? &>/dev/null")
-					     ("\\.epub$" "ebook-viewer ? &>/dev/null")
-					     ("\\.rar$" "file-roller ? &>/dev/null"))))
+        :straight nil
+        :after dired
+        :config
+        (setq dired-guess-shell-alist-user '(("\\.zip$" "file-roller ? &>/dev/null")
+                                             ("\\.tar\\.gz$" "file-roller ? &>/dev/null")
+                                             ("\\.pdf$" "okular ? &>/dev/null")
+                                             ("\\.torrent$" "transmission-gtk ? &>/dev/null")
+                                             ("\\.epub$" "ebook-viewer ? &>/dev/null")
+                                             ("\\.rar$" "file-roller ? &>/dev/null"))))
 
-      (add-to-list 'auto-mode-alist '("\\.rar$" . arc-mode))
-      (set-face-attribute 'dired-header nil
-			  :foreground "#282c34"
-			  :weight 'bold)
-    #+END_SRC
+    #+end_src
 
-*** Treemacs
-    Remember that binding a key in motion state is like binding a key in the normal, visual,
-    and operator states all at once (unless that key is already bound in one of those states).
-    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package treemacs)
-    #+END_SRC
-
-*** Treemacs-icons-dired
-    #+BEGIN_SRC emacs-lisp
-      (use-package treemacs-icons-dired
-	:after treemacs dired
-	:config (treemacs-icons-dired-mode))
-    #+END_SRC
-
-*** Treemacs-evil
-    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package treemacs-evil
-	:after treemacs)
-    #+END_SRC
-
-*** Treemacs-projectile
-    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package treemacs-projectile
-	:after treemacs projectile)
-    #+END_SRC
-
-*** Treemacs-magit
-    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package treemacs-magit
-	:after treemacs magit)
-    #+END_SRC
-
-*** Counsel, ivy and swiper
+*** counsel, ivy and swiper
 **** ivy
-    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package ivy
-	:custom
-	(ivy-use-virtual-buffers t)
-	(ivy-count-format "(%d/%d) ")
-	:config
-	(ivy-mode 1))
-    #+END_SRC
+        :custom
+        (ivy-use-virtual-buffers t)
+        (ivy-count-format "(%d/%d) ")
+        :config
+        (ivy-mode 1))
+    #+end_src
 
 **** counsel
-    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package counsel
-	:commands (counsel-find-file councel-bookmark)
-	:custom
-	(counsel-find-file-ignore-regexp
-	 (concat
-	  ;; File names beginning with # or .
-	  "\\(?:\\`[#.]\\)"
-	  ;; File names ending with # or ~
-	  "\\|\\(?:\\`.+?[#~]\\'\\)"))
+        :commands (counsel-find-file councel-bookmark)
+        :custom
+        (counsel-find-file-ignore-regexp
+         (concat
+          ;; File names beginning with # or .
+          "\\(?:\\`[#.]\\)"
+          ;; File names ending with # or ~
+          "\\|\\(?:\\`.+?[#~]\\'\\)"))
 
-	(all-the-icons-ivy-file-commands
-	 '(counsel-find-file counsel-file-jump counsel-recentf counsel-projectile-find-file counsel-projectile-find-dir)))
-    #+END_SRC
+        (all-the-icons-ivy-file-commands
+         '(counsel-find-file counsel-file-jump counsel-recentf counsel-projectile-find-file counsel-projectile-find-dir)))
+    #+end_src
 
 **** swiper
-    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
      (use-package swiper)
-    #+END_SRC
-
-*** Counsel-projectile
-    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package counsel-projectile)
-    #+END_SRC
-
-*** Projectile
+    #+end_src
+    
+*** doom-modeline
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package projectile
-      :init
-      (projectile-mode +1))
+      (use-package doom-modeline
+        :hook (after-init . doom-modeline-mode)
+        :custom
+        ;; Whether display buffer encoding.
+        (doom-modeline-buffer-encoding nil)
+        (doom-modeline-icon nil))
     #+end_src
 
-*** Helm
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package helm
-	:config
-	(setq helm-boring-buffer-regexp-list (list (rx "*lsp-") (rx "*helm"))))
-    #+end_src
-
-*** Helm-projectile
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package helm-projectile
-	:after projectile)
-    #+end_src
-
-*** Helm-org
-    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package helm-org)
-    #+END_SRC
-
-*** helm-bibtex
-    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package helm-bibtex
-	:custom
-	(bibtex-completion-bibliography '("~/references.bib")))
-      #+END_SRC
-
-*** ebib
-    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package ebib)
-      #+END_SRC
-
-*** Yasnippet
+*** yasnippet
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package yasnippet
-	:commands yas-minor-mode
-	:custom
-	(yas-snippet-dirs
-	 '("~/Projects/dots/snips/yasnippet"))
-	:hook
-	((go-mode . yas-minor-mode)
-	 (org-mode . yas-minor-mode)
-	 (js-mode . yas-minor-mode)
-	 (dart-mode . yas-minor-mode)
-	 (python-mode . yas-minor-mode))
-	:config
-	(yas-reload-all))
+        :commands yas-minor-mode
+        :custom
+        (yas-snippet-dirs
+         '("~/Projects/dots/snips/yasnippet"))
+        :hook
+        ((go-mode . yas-minor-mode)
+         (org-mode . yas-minor-mode)
+         (js-mode . yas-minor-mode)
+         (dart-mode . yas-minor-mode)
+         (python-mode . yas-minor-mode))
+        :config
+        (yas-reload-all))
     #+end_src
 
-*** Company
-    (add-hook 'after-init-hook 'global-company-mode)
+*** magit
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package company
-	:hook
-	(after-init . global-company-mode)
-	:config
-	;; Use tab key to cycle through suggestions.
-	;; ('tng' means 'tab and go')
-	;;(company-tng-configure-default)
-)
+      (use-package magit)
     #+end_src
 
-*** Flycheck
+*** evil-magit
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package flycheck
-	:hook
-	((go-mode . flycheck-mode)
-	 (dart-mode . flycheck-mode))
-	:custom
-	(lsp-prefer-flymake nil))
+      (use-package evil-magit
+        :after (magit))
     #+end_src
 
-*** Dart-mode
+*** lsp-mode
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package dart-mode
-	:init
-	(setq lsp-dart-analysis-sdk-dir "~/bin/flutter/bin/cache/dart-sdk/")
-	:config
-	(with-eval-after-load "projectile"
-	  (add-to-list 'projectile-project-root-files-bottom-up "pubspec.yaml")
-	  (add-to-list 'projectile-project-root-files-bottom-up "BUILD")))
+      (use-package lsp-mode
+        :straight (lsp-mode :type git :host github :repo "emacs-lsp/lsp-mode")
+        :commands (lsp lsp-deferred)
+        :hook
+        ((go-mode . lsp-deferred)
+         (python-mode . lsp-deferred)
+         ;; (dart-mode . lsp-deferred)
+         (js-mode . lsp-deferred))
+        :custom
+        ;; (lsp-dart-analysis-sdk-dir "~/bin/flutter/bin/cache/dart-sdk/bin/snapshots/")
+        (lsp-eldoc-render-all nil)
+        (lsp-gopls-complete-unimported t)
+        (lsp-print-io t)
+        :config
+        (add-hook 'js-mode-hook (lambda () (setq js-indent-level 2)))
+        (add-hook 'js-mode-hook (lambda () (setq tab-width 2)))
+
+        (defun aldama/fmt-config-hooks ()
+          (add-hook 'before-save-hook #'lsp-format-buffer t t)
+          (add-hook 'before-save-hook #'lsp-organize-imports t t))
+        (add-hook 'prog-mode-hook #'aldama/fmt-config-hooks))
     #+end_src
 
-*** Flutter
-    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package flutter
-	:after dart-mode
-	:init
-	(setq flutter-sdk-path "~/bin/flutter/")
-	:bind
-	(:map dart-mode-map
-	      ("C-M-x" . #'flutter-run-or-hot-reload)))
-      #+END_SRC
-
-*** Go-mode
+*** go-mode
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package go-mode)
     #+end_src
 
-*** Lsp-mode
+*** json-mode
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package lsp-mode
-	:straight (lsp-mode :type git :host github :repo "emacs-lsp/lsp-mode")
-	:commands (lsp lsp-deferred)
-	:hook
-	((go-mode . lsp-deferred)
-	 (python-mode . lsp-deferred)
-	 (js-mode . lsp-deferred)
-	 (dart-mode . lsp-deferred))
-	:custom
-	(lsp-eldoc-render-all nil)
-	(lsp-gopls-complete-unimported t)
-	(lsp-print-io t)
-	:config
-	(add-hook 'js-mode-hook (lambda () (setq js-indent-level 2)))
-	(add-hook 'js-mode-hook (lambda () (setq tab-width 2)))
-
-	(defun aldama/fmt-config-hooks ()
-	  (add-hook 'before-save-hook #'lsp-format-buffer t t)
-	  (add-hook 'before-save-hook #'lsp-organize-imports t t))
-	(add-hook 'prog-mode-hook #'aldama/fmt-config-hooks))
+      (use-package json-mode)
     #+end_src
 
-*** Lsp-ui
+*** dart-mode
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package lsp-ui
-	:hook (lsp-mode-hook . lsp-ui-mode)
-	:custom
-	;; (lsp-ui-doc-header t)
-	;; (lsp-ui-doc-include-signature nil)
-	(lsp-ui-doc-position 'at-point) ;; top, bottom, or at-point
-	;; (lsp-ui-doc-max-width 120)
-	;; (lsp-ui-doc-max-height 30)
-	;; (lsp-ui-doc-use-childframe t)
-	;; (lsp-ui-doc-use-webkit t)
-	(lsp-ui-doc-enable nil)
-	(lsp-ui-sideline-enable nil)
-	(lsp-ui-sideline-show-code-actions nil)
-	(lsp-ui-sideline-show-symbol t)
-	(lsp-ui-sideline-show-hover t)
-	(lsp-ui-sideline-show-diagnostics nil)
-	;; lsp-ui-imenu
-	(lsp-ui-imenu-enable t)
-	(lsp-ui-imenu-kind-position 'top))
+      (use-package dart-mode
+        :config
+        (with-eval-after-load "projectile"
+          (add-to-list 'projectile-project-root-files-bottom-up "pubspec.yaml")
+          (add-to-list 'projectile-project-root-files-bottom-up "BUILD")))
     #+end_src
 
-*** Company-lsp
+*** dart-server
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package dart-server
+        :custom
+        (dart-server-sdk-path "~/bin/dart-sdk/bin/")
+        (dart-server-enable-analysis-server t)
+        (dart-format-on-save t)
+        :config
+        (add-hook 'dart-server-hook 'dart-mode)
+        (add-hook 'dart-server-hook 'flycheck-mode))
+    #+end_src
+
+*** flutter
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package flutter
+        :after dart-mode
+        :custom
+        (flutter-sdk-path "~/bin/flutter/")
+        :bind
+        (:map dart-mode-map
+              ("C-M-x" . #'flutter-run-or-hot-reload)))
+    #+end_src
+
+*** company
+    (add-hook 'after-init-hook 'global-company-mode)
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package company
+        :hook
+        (after-init . global-company-mode))
+      ;; :config
+      ;; Use tab key to cycle through suggestions.
+      ;; ('tng' means 'tab and go')
+      ;;(company-tng-configure-default)
+    #+end_src
+
+*** company-lsp
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
     (use-package company-lsp
       :config
       (push 'company-lsp company-backends))
     #+end_src
 
-*** Helm-lsp-workspace-symbol
+*** flycheck
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package helm-lsp :commands helm-lsp-workspace-symbol)
+      (use-package flycheck
+        :hook
+        ((go-mode . flycheck-mode)
+         (python-mode . flycheck-mode)
+         (dart-mode . flycheck-mode)
+         (js-mode . flycheck-mode))
+        ;; (dart-mode . flycheck-mode)
+        :custom
+        (lsp-prefer-flymake nil))
     #+end_src
 
-*** Lsp-treemacs
+*** treemacs
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package lsp-treemacs :commands lsp-treemacs-errors-list)
+      (use-package treemacs)
     #+end_src
 
-*** Dap-mode
+*** treemacs-icons-dired
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package dap-mode)
+      (use-package treemacs-icons-dired
+        :after treemacs dired
+        :config )
     #+end_src
 
-*** All-the-icons
+*** treemacs-evil
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package all-the-icons)
+      (use-package treemacs-evil
+        :after treemacs)
     #+end_src
 
-*** Magit
+*** aggressive-indent
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package magit)
-    #+end_src
-
-*** Evil-magit
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package evil-magit
-        :after (magit))
-    #+end_src
-
-*** Vimrc-mode
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package vimrc-mode
-	:mode "\\.vim\\'")
-    #+end_src
-
-*** Json-mode
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package json-mode)
-    #+end_src
-
-*** Hydra
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package hydra)
-    #+end_src
-
-*** Major-mode-hydra
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package major-mode-hydra)
-    #+end_src
-
-*** Hera
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package hera
-	:straight (hera :type git :host github :repo "dustinlacewell/hera"))
-    #+end_src
-
-*** Doom-modeline
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package doom-modeline
-	:hook (after-init . doom-modeline-mode)
-	:custom
-	;; Whether display buffer encoding.
-	(doom-modeline-buffer-encoding nil)
-	(doom-modeline-icon nil))
-    #+end_src
-
-*** Aggressive-indent
-    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package aggressive-indent
-	:hook
-	((web-mode . aggressive-indent-mode)
-	 (json-mode . aggressive-indent-mode)
-	 (emacs-lisp-mode . aggressive-indent-mode)))
-    #+END_SRC
+        :hook
+        ((web-mode . aggressive-indent-mode)
+         (json-mode . aggressive-indent-mode)
+         (emacs-lisp-mode . aggressive-indent-mode)))
+    #+end_src
 
-*** Eshell
-    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package eshell
-	:config
-	(add-hook 'eshell-mode-hook (lambda () (global-hl-line-mode -1)))
+*** projectile
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package projectile
+        :init
+        (projectile-mode +1))
+    #+end_src
 
-	(eval-after-load 'esh-module
-	  '(progn
-	     (delq 'eshell-banner eshell-modules-list) t)))
-
-      (use-package eshell-git-prompt
-	:after eshell
-	:config
-	(eshell-git-prompt-use-theme 'powerline))
-    #+END_SRC
-
-*** Avy
-    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+*** avy
+    Search for character
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package avy)
-    #+END_SRC
+    #+end_src
 
-*** Web-mode
-    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package web-mode
-	:custom
-	(web-mode-markup-indent-offset 2)
-	(web-mode-css-indent-offset 2)
-	(web-mode-enable-auto-pairing t)
-	(web-mode-engines-alist
-	 '(("go"    . "\\.gohtml\\'")
-	   ("mustache"  . "\\.mustache\\.")))
-	:config
-	(add-to-list 'auto-mode-alist '("\\.mustache\\'" . web-mode))
-	(add-to-list 'auto-mode-alist '("\\.gohtml\\'" . web-mode))
-	(add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode)))
-    #+END_SRC
-
-*** Smartparens
-    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+*** smartparens
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package smartparens
-	:config
-	(require 'smartparens-config)
+        :config
+        (require 'smartparens-config)
 
-	(with-eval-after-load 'smartparens
-	  (sp-with-modes
-	      '(c++-mode dart-mode go-mode js-mode)
-	    (sp-local-pair "{" nil :post-handlers '(:add ("||\n[i]" "RET")))))
+        (with-eval-after-load 'smartparens
+          (sp-with-modes
+              '(c++-mode dart-mode go-mode js-mode)
+            (sp-local-pair "{" nil :post-handlers '(:add ("||\n[i]" "RET")))))
 
-	(smartparens-global-mode t))
-    #+END_SRC
+        (smartparens-global-mode t))
+    #+end_src
 
-*** Rainbow-delimiters-mode
-    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package rainbow-delimiters
-	:hook (prog-mode . rainbow-delimiters-mode))
-    #+END_SRC
-
-*** Nov (epubs)
-    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package nov
-	:config
-	(add-to-list 'auto-mode-alist '("\\.epub\\'" . nov-mode))
-	(setq nov-text-width 80)
-
-	(general-define-key
-	 :states 'normal
-	 :keymaps 'nov-mode-map
-	 "o" 'nov-goto-toc
-	 "n" 'nov-next-document
-	 "p" 'nov-previous-document))
-    #+END_SRC
-
-*** Pdf-tools
-    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-      ;; pdf-tools depends on this package
-      (use-package tablist)
-
-      (use-package pdf-tools
-	:config
-	;; initialise
-	(pdf-tools-install)
-
-	;; open pdfs scaled to fit page
-	(setq-default pdf-view-display-size 'fit-page)
-
-	;; more fine-grained zooming
-	(setq pdf-view-resize-factor 1.1)
-
-	;; turn off cua so copy works
-	(add-hook 'pdf-view-mode-hook 'evil-normal-state)
-
-	;; automatically annotate highlights
-	(setq pdf-annot-activate-created-annotations t)
-
-	;; auxtex and latex-preview-pane
-	(setq TeX-view-program-selection '((output-pdf "pdf-tools")))
-	(setq TeX-view-program-list '(("pdf-tools" "TeX-pdf-tools-sync-view")))
-
-	(general-define-key
-	 :states 'normal
-	 :keymaps 'pdf-view-mode-map
-	 "2" 'pdf-view-enlarge
-	 "1" 'pdf-view-shrink
-         "gg" 'beginning-of-buffer
-         "G" 'end-of-buffer
-         "H" 'pdf-view-fit-height-to-window
-         "W" 'pdf-view-fit-width-to-window
-         "f" 'pdf-view-fit-page-to-window
-         "q" 'quit-window
-         "m" 'pdf-view-position-to-register
-         "'" 'pdf-view-jump-to-register
-         "n" 'pdf-view-next-page-command
-         "p" 'pdf-view-previous-page-command
-         "C-k" 'pdf-view-first-page
-         "C-j" 'pdf-view-last-page
-         "t" 'pdf-view-midnight-minor-mode
-         "o" 'pdf-outline
-	 "down-mouse-1" 'pdf-view-mouse-set-region
-	 "k" 'pdf-view-previous-line-or-previous-page
-	 "j" 'pdf-view-next-line-or-next-page)
-
-	(general-define-key
-	 :states 'normal
-	 :keymaps 'pdf-outline-buffer-mode-map
-         "TAB" 'outline-toggle-children
-	 "l" 'pdf-outline-display-link
-	 "z" 'outline-hide-sublevels
-	 "a" 'outline-show-all
-	 "q" 'quit-window
-	 "RET" 'pdf-outline-follow-link))
-    #+END_SRC
-
-*** Elfeed
-    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package elfeed
-	:config
-	(setq elfeed-feeds
-	      '(("https://www.engadget.com/rss.xml" news)
-		("https://www.freecodecamp.org/news/rss/" coding)))
-
-	(general-define-key
-	 :states 'normal
-	 :keymaps 'elfeed-show-mode-map
-	 "h" 'elfeed-kill-buffer
-	 "q" 'elfeed-kill-buffer)
-
-	(general-define-key
-	 :states 'normal
-	 :keymaps 'elfeed-search-mode-map
-	 "s" 'elfeed-search-set-filter
-	 "l" 'elfeed-search-show-entry
-	 "q" 'quit-window
-	 "b" 'elfeed-search-browse-url))
-    #+END_SRC
-
-*** request.el
-    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package request)
-    #+END_SRC
-
-** Hydras
-*** Buffers
-   #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-     (defhydra hydra-projectile (:color teal :hint nil)
-     "
-     _b_: buffers
-     _f_: files
-     _p_: projects
-     _s_: all files
-     _a_: all buffers
-     _d_: dired
-     _q_: quit
-     "
-
-     ("b" counsel-projectile-switch-to-buffer)
-     ("f" counsel-projectile-find-file)
-     ("p" counsel-projectile-switch-project)
-     ("s" counsel-find-file)
-     ("a" counsel-switch-buffer)
-     ("d" dired)
-     ("q" nil :color blue))
-   #+END_SRC
-*** emacs-lisp-mode major mode
-    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-     (major-mode-hydra-define (emacs-lisp-mode lisp-interaction-mode) nil
-       ("Eval"
-	(("b" eval-buffer "buffer")
-	 ("e" eval-defun "defun")
-	 ("r" eval-region "region"))
-	"REPL"
-	(("I" ielm "ielm"))
-	"Test"
-	(("t" ert "prompt")
-	 ("T" (ert t) "all")
-	 ("F" (ert :failed) "failed"))
-	"Doc"
-	(("d" describe-foo-at-point "thing-at-pt")
-	 ("f" describe-function "function")
-	 ("v" describe-variable "variable")
-	 ("i" info-lookup-symbol "info lookup"))))
-    #+END_SRC
-*** Dired major mode
-    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-      (major-mode-hydra-define (dired-mode) nil
-	("Navegation"
-	 (("j" dired-next-line "next line")
-	  ("k" dired-previous-line "previous line")
-	  ("l" dired-find-file "open file")
-	  ("h" dired-up-directory "go to parent directory"))
-	 "Actions"
-	 (("y" dired-do-copy "copy")
-	  ("m" dired-mark "mark")
-	  ("u" dired-unmark "unmark")
-	  ("t" dired-hide-details-mode "show/hide details")
-	  ("nd" dired-create-directory "new directory")
-	  ("d" dired-do-delete "delete"))
-	 ))
-    #+END_SRC
+*** org drill
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package org-drill)
+    #+end_src
 
 ** Bindings
 *** Normal-mode bindings
-    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package aldama/normal-mode-bindings
-	:straight nil
-	:after general
-	:no-require t
-	:preface
-	(defun eshell-foo ()
-	  (interactive)
-	  (if (string= (buffer-name) "*eshell*")
-	      (mode-line-other-buffer)
-	    (eshell)
-	    (eshell-kill-process)
-	    (delete-other-windows)))
-
-	:general
-	(:states 'normal
-		 "f" 'avy-goto-char-2
-		 "C-s" 'swiper
-		 "<f7>" 'counsel-projectile-switch-project
-		 ;; swap ; and :
-		 ";" 'evil-ex
-		 "SPC" 'major-mode-hydra
-		 "C-t" 'eshell-foo
-		 ":" 'evil-repeat-find-char))
-      #+END_SRC
+        :straight nil
+        :after general
+        :no-require t
+        :general
+        (:states 'normal
+                 "f" 'avy-goto-char-2
+                 "C-s" 'swiper
+                 "<f7>" 'counsel-projectile-switch-project
+                 ;; swap ; and :
+                 ";" 'evil-ex
+                 ":" 'evil-repeat-find-char))
+    #+end_src
 
 *** =,= Normal-mode bindings
-    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package aldama/normal-mode-bindings
-	:straight nil
-	:after general
-	:no-require t
-	:general
-	(:states 'normal
-		 :prefix ","
-		 "ed" '(lambda() (interactive) (find-file "~/Projects/dots/dots.org"))
-		 "en" '(lambda() (interactive)(find-file "~/Documents/notes/notes.org"))
-		 "eb" '(lambda() (interactive)(find-file "~/Documents/notes/bookmarks.org"))
-		 "d" '(lambda() (interactive) (dired default-directory))
-		 "k" 'helm-show-kill-ring
-		 "f" 'hydra-projectile/body
-		 "s" 'magit-status
-		 "b" 'counsel-switch-buffer
-		 "q" 'mode-line-other-buffer))
-      #+END_SRC
+        :straight nil
+        :after general
+        :no-require t
+        :general
+        (:states 'normal
+                 :prefix ","
+                 "ed" '(lambda() (interactive) (find-file "~/Projects/dots/dots.org"))
+                 "en" '(lambda() (interactive)(find-file "~/Documents/notes/notes.org"))
+                 "eb" '(lambda() (interactive)(find-file "~/Documents/notes/bookmarks.org"))
+                 "d" '(lambda() (interactive) (dired default-directory))
+		             "b" 'counsel-switch-buffer
+                 "q" 'mode-line-other-buffer))
+    #+end_src
 
-*** Prog-mode bindings
-    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+*** Dired bindings
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package aldama/dired-mode-bindings
+        :straight nil
+        :after general
+        :no-require t
+        :general
+        (:states 'normal
+                 :keymaps 'dired-mode-map
+                 "j" 'dired-next-line
+                 "k" 'dired-previous-line
+                 "l" 'dired-find-file
+                 "h" 'dired-up-directory
+                 "yy" 'dired-do-copy
+                 "yn" 'dired-copy-filename-as-kill
+                 "yp" '(lambda() (interactive) (dired-copy-filename-as-kill 0))
+                 "gk" '(lambda() (interactive) (dired "~/Documents"))
+                 "gn" '(lambda() (interactive) (dired "~/Documents/notes"))
+                 "gd" '(lambda() (interactive) (dired "~/Downloads"))
+                 "gp" '(lambda() (interactive) (dired "~/Projects"))
+                 "ge" '(lambda() (interactive) (dired "~/.emacs.d"))
+                 "gc" '(lambda() (interactive) (dired "~/.config"))
+                 "gy" '(lambda() (interactive) (dired "~/Projects/playground"))
+                 "gb" '(lambda() (interactive) (dired "~/bin"))
+                 "gm" '(lambda() (interactive) (dired "/media"))
+                 "gh" '(lambda() (interactive) (dired "~"))
+                 "m" 'dired-mark
+                 "u" 'dired-unmark
+                 "cw" 'dired-do-rename
+                 "r" 'revert-buffer
+                 "t" 'dired-hide-details-mode
+                 "nd" 'dired-create-directory
+                 "nf" 'counsel-find-file
+                 "s" 'dired-do-async-shell-command
+                 "q" 'quit-window
+                 "w" 'dired-toggle-read-only
+                 "W" 'wdired-finish-edit
+                 "x" 'dired-do-compress
+                 "za" 'cycle-dired-switches
+                 "zd" 'dired-hide-details-mode
+                 "d" 'dired-do-delete))
+    #+end_src
+
+*** Org bindings
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package aldama/org-bindings
+        :straight nil
+        :after general
+        :no-require t
+        :general
+        (:states '(normal insert emacs)
+                 :keymaps 'org-mode-map
+                 "M-l" 'org-metaright
+                 "M-h" 'org-metaleft)
+        (:prefix ","
+                 :states 'normal
+                 :keymaps 'org-mode-map
+                 "h" 'helm-org-in-buffer-headings
+                 "n" 'org-toggle-narrow-to-subtree))
+    #+end_src
+
+*** Ivy bindings
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package aldama/ivy-mode-binding
+        :straight nil
+        :after general
+        :no-require t
+        :general
+        (:keymaps 'ivy-minibuffer-map
+                  "C-j" 'ivy-next-line
+                  "C-u" 'counsel-up-directory
+                  "C-k" 'ivy-previous-line))
+    #+end_src
+
+*** Programming bindings
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package aldama/prog-mode-bindings
         :straight nil
         :after general
         :no-require t
-        :preface
-        (defun toggle-lsp-ui-doc ()
-          (interactive)
-          (if lsp-ui-doc-mode
-              (progn
-                (lsp-ui-doc-mode -1)
-                (lsp-ui-doc--hide-frame))
-            (lsp-ui-doc-mode 1)))
-
-        (defun toggle-lsp-ui-imenu ()
-          (interactive)
-
-          (if (string= (buffer-name) "*lsp-ui-imenu*")
-              (lsp-ui-imenu--kill)
-            (lsp-ui-imenu)))
         :general
         (:states 'normal
                  :keymaps 'prog-mode-map
                  "<f6>" 'async-shell-command
-                 "K" 'toggle-lsp-ui-doc
-                 "gs" 'toggle-lsp-ui-imenu
                  "gd" 'lsp-find-definition
                  "ge" 'treemacs
                  "gc" 'evil-commentary
                  "gb" 'evil-jump-backward))
-      #+END_SRC
 
-*** Org bindings
-    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package aldama/org-bindings
-	:straight nil
-	:after general
-	:no-require t
-	:general
-	(:states '(normal insert emacs)
-		 :keymaps 'org-mode-map
-		 "M-l" 'org-metaright
-		 "M-h" 'org-metaleft)
-	(:prefix ","
-		 :states 'normal
-		 :keymaps 'org-mode-map
-		 "h" 'helm-org-in-buffer-headings
-		 "n" 'org-toggle-narrow-to-subtree))
-      #+END_SRC
-
-*** Dired bindings
-    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package aldama/dired-mode-bindings
-	:straight nil
-	:after general
-	:no-require t
-	:general
-	(:states 'normal
-		 :keymaps 'dired-mode-map
-		 "j" 'dired-next-line
-		 "k" 'dired-previous-line
-		 "l" 'dired-find-file
-		 "h" 'dired-up-directory
-		 "yy" 'dired-do-copy
-		 "yn" 'dired-copy-filename-as-kill
-		 "yp" '(lambda() (interactive) (dired-copy-filename-as-kill 0))
-		 "gk" '(lambda() (interactive) (dired "~/Documents"))
-		 "gn" '(lambda() (interactive) (dired "~/Documents/notes"))
-		 "gd" '(lambda() (interactive) (dired "~/Downloads"))
-		 "gp" '(lambda() (interactive) (dired "~/Projects"))
-		 "ge" '(lambda() (interactive) (dired "~/.emacs.d"))
-		 "gc" '(lambda() (interactive) (dired "~/.config"))
-		 "gy" '(lambda() (interactive) (dired "~/Projects/playground"))
-		 "gb" '(lambda() (interactive) (dired "~/bin"))
-		 "gm" '(lambda() (interactive) (dired "/media"))
-		 "gh" '(lambda() (interactive) (dired "~"))
-		 "m" 'dired-mark
-		 "u" 'dired-unmark
-		 "cw" 'dired-do-rename
-		 "r" 'revert-buffer
-		 "t" 'dired-hide-details-mode
-		 "nd" 'dired-create-directory
-		 "nf" 'counsel-find-file
-		 "s" 'dired-do-async-shell-command
-		 "q" 'quit-window
-		 "w" 'dired-toggle-read-only
-		 "W" 'wdired-finish-edit
-		 "x" 'dired-do-compress
-		 "za" 'cycle-dired-switches
-		 "zd" 'dired-hide-details-mode
-		 "d" 'dired-do-delete)
-
-	(:states 'normal
-		 :keymaps 'image-mode-map
-		 "j" 'image-previous-file
-		 "k" 'image-next-file
-		 "l" 'image-next-file
-		 "h" 'image-previous-file
-		 "q" 'quit-window))
-      #+END_SRC
-
-*** Ivy bindings
-    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package aldama/ivy-mode-binding
-	:straight nil
-	:after general
-	:no-require t
-	:general
-	(:keymaps 'ivy-minibuffer-map
-	      "C-j" 'ivy-next-line
-	      "C-u" 'counsel-up-directory
-	      "C-k" 'ivy-previous-line))
-      #+END_SRC
-
-*** Company bindings
-    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package aldama/comapany-bindings
-	:straight nil
-	:after general
-	:no-require t
-	:general
-	(:keymaps 'company-active-map
-		  "C-n" 'company-select-next-or-abort
-		  "C-p" 'company-select-previous-or-abort))
-      #+END_SRC
-
-*** ebib bindings
-    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package aldama/ebib-bindings
-	:straight nil
-	:after general
-	:no-require t
-	:general
-	(:states 'normal
-		 :keymaps 'ebib-index-mode-map
-		 "o" 'ebib-open-bibtex-file
-		 "q" 'ebib-quit))
-    #+END_SRC
-
-** Other Functions
-*** Hide SRC block delimiters
-    #+BEGIN_SRC emacs-lisp
-      (with-eval-after-load 'org
-	(defvar-local rasmus/org-at-src-begin -1
-	  "Variable that holds whether last position was a ")
-
-	(defvar rasmus/ob-header-symbol ?☰
-	  "Symbol used for babel headers")
-
-	(defun rasmus/org-prettify-src--update ()
-	  (let ((case-fold-search t)
-		(re "^[ \t]*#\\+begin_src[ \t]+[^ \f\t\n\r\v]+[ \t]*")
-		found)
-	    (save-excursion
-	      (goto-char (point-min))
-	      (while (re-search-forward re nil t)
-		(goto-char (match-end 0))
-		(let ((args (org-trim
-			     (buffer-substring-no-properties (point)
-							     (line-end-position)))))
-		  (when (org-string-nw-p args)
-		    (let ((new-cell (cons args rasmus/ob-header-symbol)))
-		      (cl-pushnew new-cell prettify-symbols-alist :test #'equal)
-		      (cl-pushnew new-cell found :test #'equal)))))
-	      (setq prettify-symbols-alist
-		    (cl-set-difference prettify-symbols-alist
-				       (cl-set-difference
-					(cl-remove-if-not
-					 (lambda (elm)
-					   (eq (cdr elm) rasmus/ob-header-symbol))
-					 prettify-symbols-alist)
-					found :test #'equal)))
-	      ;; Clean up old font-lock-keywords.
-	      (font-lock-remove-keywords nil prettify-symbols--keywords)
-	      (setq prettify-symbols--keywords (prettify-symbols--make-keywords))
-	      (font-lock-add-keywords nil prettify-symbols--keywords)
-	      (while (re-search-forward re nil t)
-		(font-lock-flush (line-beginning-position) (line-end-position))))))
-
-	(defun rasmus/org-prettify-src ()
-	  "Hide src options via `prettify-symbols-mode'.
-
-      `prettify-symbols-mode' is used because it has uncollpasing. It's
-      may not be efficient."
-	  (let* ((case-fold-search t)
-		 (at-src-block (save-excursion
-				 (beginning-of-line)
-				 (looking-at "^[ \t]*#\\+begin_src[ \t]+[^ \f\t\n\r\v]+[ \t]*"))))
-	    ;; Test if we moved out of a block.
-	    (when (or (and rasmus/org-at-src-begin
-			   (not at-src-block))
-		      ;; File was just opened.
-		      (eq rasmus/org-at-src-begin -1))
-	      (rasmus/org-prettify-src--update))
-	    ;; Remove composition if at line; doesn't work properly.
-	    ;; (when at-src-block
-	    ;;   (with-silent-modifications
-	    ;;     (remove-text-properties (match-end 0)
-	    ;;                             (1+ (line-end-position))
-	    ;;                             '(composition))))
-	    (setq rasmus/org-at-src-begin at-src-block)))
-
-	(defun rasmus/org-prettify-symbols ()
-	  (mapc (apply-partially 'add-to-list 'prettify-symbols-alist)
-		(cl-reduce 'append
-			   (mapcar (lambda (x) (list x (cons (upcase (car x)) (cdr x))))
-				   `(("#+begin_src" . ?✎) ;; ➤ 🖝 ➟ ➤ ✎
-				     ("#+end_src"   . ?□) ;; ⏹
-				     ("#+header:" . ,rasmus/ob-header-symbol)
-				     ("#+begin_quote" . ?»)
-				     ("#+end_quote" . ?«)))))
-	  (turn-on-prettify-symbols-mode)
-	  (add-hook 'post-command-hook 'rasmus/org-prettify-src t t))
-	(add-hook 'org-mode-hook #'rasmus/org-prettify-symbols))
-    #+END_SRC
-*** Run python code
-    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-      (general-define-key
-       :states 'normal
-       :keymaps 'python-mode-map
-       "<f5>" '(lambda() (interactive) (async-shell-command (concat "python " (buffer-file-name)) "*python output*")))
-    #+END_SRC
-
-*** Run javascript code
-    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-      (defun run-javascript ()
-	(interactive)
-	(let ($fname
-	      $cmd-str
-	      $outputbuffer)
-	  (when (not (buffer-file-name)) (save-buffer))
-	  (when (buffer-modified-p) (save-buffer))
-	  (setq $fname (buffer-file-name))
-	  (setq $cmd-str (concat "node \""   $fname "\""))
-	  (setq $outputbuffer (concat "*node output*"))
-	  (message (concat $cmd-str ": executed." ))
-	  (async-shell-command $cmd-str $outputbuffer)))
-
-	(general-define-key
-	 :states 'normal
-	 :keymaps 'js-mode-map
-	 "<f5>" 'run-javascript)
-    #+END_SRC
-
-*** Run dart code
-    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-      (defun run-dart ()
-	(interactive)
-	(let ($fname
-	      $cmd-str
-	      $outputbuffer)
-	  (when (not (buffer-file-name)) (save-buffer))
-	  (when (buffer-modified-p) (save-buffer))
-	  (setq $fname (buffer-file-name))
-	  (setq $cmd-str (concat "dart \""   $fname "\""))
-	  (setq $outputbuffer (concat "*dart output*"))
-	  (message (concat $cmd-str ": executed." ))
-	  (async-shell-command $cmd-str $outputbuffer)))
-
-	(general-define-key
-	 :states 'normal
-	 :keymaps 'dart-mode-map
-	 "<f5>" 'run-dart)
-    #+END_SRC
-
-** Symbols
-   #+BEGIN_SRC emacs-lisp
-     (setq some-variable "less")
-   #+END_SRC
-
-   'some-variable return the value of the variable
-   some-variable is a symbol (name of a variable)
-
-   (boundp some-variable) ;;requiring a symbol (unevaluated)
-   (bound-and-truep 'some-variable) ;;needing the value of the variable 'some-variable
-
-   (boundp SYMBOL)
-   Return t if SYMBOL’s value is not void.
-
-   (bound-and-true-p VAR)
-   Return the value of symbol VAR if it is bound, else nil.
-   It is used to determine whether a known variable is defined and if so use its value
-
-* Fish
-** Vi mode
-  #+begin_src fish :mkdirp yes :tangle ~/.config/fish/config.fish
-    fish_vi_key_bindings
-  #+end_src
-** Paths
-*** .Env
-  #+begin_src fish :mkdirp yes :tangle ~/.config/fish/config.fish
-  set -x PATH $HOME/bin /snap/bin /usr/bin /bin /usr/sbin /sbin /usr/local/bin
-  #+end_src
-*** Android-SDK
-  #+begin_src fish :mkdirp yes :tangle ~/.config/fish/config.fish
-   set -x ANDROID_HOME $HOME/bin/Android/Sdk
-  #+end_src
-*** Clang
-  #+begin_src fish :mkdirp yes :tangle ~/.config/fish/config.fish
-  set -x PATH $HOME/bin/clang/bin $PATH
-  #+end_src
-*** Dart
-  #+begin_src fish :mkdirp yes :tangle ~/.config/fish/config.fish
-  set -x PATH $HOME/.pub-cache/bin $PATH
-  set -x PATH $HOME/bin/dart-sdk/bin $PATH
-  #+end_src
-*** Flutter
-  #+begin_src fish :mkdirp yes :tangle ~/.config/fish/config.fish
-   set -x PATH $HOME/bin/flutter/bin $PATH
-  #+end_src
-*** Go
-  #+begin_src fish :mkdirp yes :tangle ~/.config/fish/config.fish
-  set -x PATH /usr/local/go/bin $PATH
-  set -x GOPATH $HOME/bin/go
-  set -x PATH $HOME/bin/go/bin $PATH
-  #+end_src
-*** Java
-  #+begin_src fish :mkdirp yes :tangle ~/.config/fish/config.fish
-  set -x PATH $HOME/bin/jdk-12.0.1/bin $PATH
-  #+end_src
-*** Node
-  #+begin_src fish :mkdirp yes :tangle ~/.config/fish/config.fish
-   set -x PATH PATH $HOME/bin/node/bin $PATH
-  #+end_src
-*** Python
-  #+begin_src fish :mkdirp yes :tangle ~/.config/fish/config.fish
-   set -x PATH $HOME/bin/anaconda3/bin $PATH
-  #+end_src
-*** VSCode
-  #+begin_src fish :mkdirp yes :tangle ~/.config/fish/config.fish
-  set -x PATH $HOME/bin/VSCode $PATH
-  #+end_src
-** Alias
-  #+begin_src fish :mkdirp yes :tangle ~/.config/fish/config.fish
-    alias jd '~/bin/jd2/JDownloader2 &; clear'
-    alias e '~/bin/emacs/bin/emacs &; clear'
-    alias n '~/bin/nvim; clear'
-    alias vf 'vifm .'
-    alias emulator '~/bin/Android/Sdk/emulator/emulator'
-  #+end_src
-** Abbreviations
-  #+begin_src fish :mkdirp yes :tangle ~/.config/fish/config.fish
-  abbr -a gco git checkout
-  abbr -a gc git commit -m \'\'
-  abbr -a ga git add
-  abbr -a gp git push
-  abbr -a gpo git push origin
-  abbr -a gl git log
-  abbr -a gd git diff
-  abbr -a sh stagehand
-  #+end_src
-** Remap ll for autocomplete suggestion
-  #+begin_src fish :mkdirp yes :tangle ~/.config/fish/config.fish
-  bind -M insert ll forward-char
-  #+end_src
-** Map jk as Esc
-  #+begin_src fish :mkdirp yes :tangle ~/.config/fish/config.fish
-    function fish_user_key_bindings
-      fish_vi_key_bindings
-      bind -M insert -m default jk backward-char force-repaint
-    end
-  #+end_src
-
-  #+begin_src fish :mkdirp yes :tangle ~/.config/fish/config.fish
-  set fish_key_bindings fish_user_key_bindings
-  #+end_src
+    #+end_src
 * I3wm
 ** Config
 *** mod
@@ -2877,7 +2113,8 @@ bindsym $mod+a focus parent
    #+END_SRC
 ** Default Editor
    #+BEGIN_SRC sh :tangle ~/.zshrc
-     export EDITOR=nvim
+     export EDITOR=/home/last/bin/emacs/lib-src/emacsclient
+     export ALTERNATE_EDITOR=/home/last/bin/emacs/src/emacs
      #sudo -e
      export SUDO_EDITOR=/home/last/bin/nvim
    #+END_SRC
@@ -2958,6 +2195,11 @@ bindsym $mod+a focus parent
 *** Android-SDK
    #+BEGIN_SRC sh :tangle ~/.zshrc
    export ANDROID_HOME=$HOME/bin/android-sdk
+   #+END_SRC
+*** Emacs
+   #+BEGIN_SRC sh :tangle ~/.zshrc
+   PATH=$HOME/bin/emacs/src:$PATH
+   PATH=$HOME/bin/emacs/lib-src:$PATH
    #+END_SRC
 *** Dictionaries
     This path needs to be set so ispell work with hunspell
