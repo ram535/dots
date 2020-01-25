@@ -2,7 +2,6 @@
 # name: source code emacs-lisp
 # key: sce
 # --
-#+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
-   (use-package $0
-   :ensure t)
-#+END_SRC
+#+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+   (use-package $0)
+#+end_src
