@@ -14,6 +14,11 @@
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (fset 'yes-or-no-p 'y-or-n-p)
     #+end_src
+*** This plays nicely with lsp and company
+      #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+        (setq read-process-output-max (* 1024 1024))
+        (setq gc-cons-threshold 100000000)
+      #+end_src
 
 ** GUI
 *** Hiding elements
@@ -322,22 +327,17 @@
         ((go-mode . lsp-deferred)
          (python-mode . lsp-deferred)
          (dart-mode . lsp-deferred)
-         (js-mode . lsp-deferred))
+         (js-mode . lsp-deferred)
+         (before-save . lsp-format-buffer)
+         (before-save . lsp-organize-imports))
         :custom
-        ;; (lsp-dart-analysis-sdk-dir "~/bin/flutter/bin/cache/dart-sdk/bin/snapshots/")
-        ;; (lsp-eldoc-render-all nil)
         (lsp-dart-sdk-dir "~/bin/flutter/bin/cache/dart-sdk/")
         (lsp-signature-render-documentation nil)
         (lsp-gopls-complete-unimported t)
-        (lsp-print-io t)
         :config
         (add-hook 'js-mode-hook (lambda () (setq js-indent-level 2)))
         (add-hook 'js-mode-hook (lambda () (setq tab-width 2)))
-
-        (defun aldama/fmt-config-hooks ()
-          (add-hook 'before-save-hook #'lsp-format-buffer t t)
-          (add-hook 'before-save-hook #'lsp-organize-imports t t))
-        (add-hook 'prog-mode-hook #'aldama/fmt-config-hooks))
+        )
     #+end_src
 
 *** lsp-ui
@@ -413,13 +413,10 @@
     #+end_src
 
 *** company
-    (add-hook 'after-init-hook 'global-company-mode)
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package company
         :hook
-        (after-init . global-company-mode)
-        :custom
-        (read-process-output-max (* 1024 1024)))
+        (after-init . global-company-mode))
       ;; :config
       ;; Use tab key to cycle through suggestions.
       ;; ('tng' means 'tab and go')
@@ -427,7 +424,7 @@
     #+end_src
 
 *** company-lsp
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp 
       (use-package company-lsp
         :config
         (push 'company-lsp company-backends))
@@ -644,6 +641,8 @@
                   "<f5>" '(lambda() (interactive) (async-shell-command (concat "dart " (buffer-file-name)) "*dart output*")))
         (:keymaps 'js-mode-map
                   "<f5>" '(lambda() (interactive) (async-shell-command (concat "node " (buffer-file-name)) "*javascript output*")))
+        (:keymaps 'go-mode-map
+                  "<f5>" '(lambda() (interactive) (async-shell-command (concat "go run " (buffer-file-name)) "*go output*")))
         (:keymaps 'lsp-ui-peek-mode-map
                   "j" 'lsp-ui-peek--select-next
                   "k" 'lsp-ui-peek--select-prev))
@@ -726,6 +725,10 @@ bindsym $mod+a focus parent
 **** Rofi (a program launcher)
    #+BEGIN_SRC sh :tangle ~/.config/i3/config
    bindsym $mod+d exec "~/bin/scripts/rofi_bangs.dart"
+   #+END_SRC
+**** Emacs
+   #+BEGIN_SRC sh :tangle ~/.config/i3/config
+     bindsym $mod+m exec "~/bin/emacs/src/emacs"
    #+END_SRC
 **** Firefox
    #+BEGIN_SRC sh :tangle ~/.config/i3/config
