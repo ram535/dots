@@ -14,6 +14,13 @@
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (fset 'yes-or-no-p 'y-or-n-p)
     #+end_src
+
+*** Do not display buffers with the name ~*Async Shell Command*~
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (add-to-list 'display-buffer-alist
+                   (cons "\\*Async Shell Command\\*.*" (cons #'display-buffer-no-window nil)))
+    #+end_src
+
 *** This plays nicely with lsp and company
       #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
         (setq read-process-output-max (* 1024 1024))
@@ -517,7 +524,6 @@
         (:states 'normal
                  "f" 'avy-goto-char-2
                  "C-s" 'swiper
-                 "<f7>" 'counsel-projectile-switch-project
                  ;; swap ; and :
                  ";" 'evil-ex
                  ":" 'evil-repeat-find-char)
@@ -539,7 +545,12 @@
                  "en" '(lambda() (interactive)(find-file "~/Documents/notes/notes.org"))
                  "eb" '(lambda() (interactive)(find-file "~/Documents/notes/bookmarks.org"))
                  "d" '(lambda() (interactive) (dired default-directory))
-		             "b" 'counsel-switch-buffer
+                 "pp" 'counsel-projectile-switch-project
+                 "pb" 'counsel-projectile-switch-to-buffer
+                 "pf" 'counsel-projectile-find-file
+                 "pg" 'counsel-projectile-grep
+                 "b" 'counsel-switch-buffer
+                 "s" 'magit-status
                  "q" 'mode-line-other-buffer))
     #+end_src
 
@@ -1928,6 +1939,8 @@ bindsym $mod+a focus parent
 
      " Audio
      filetype *.wav,*.mp3,*.flac,*.ogg,*.m4a,*.wma,*.ape,*.ac3
+	    \ {Play using cmus}
+	    \ cmus %c,
 	    \ {Play using ffplay}
 	    \ ffplay -nodisp %c,
 	    \ {Play using MPlayer}
