@@ -61,8 +61,8 @@
 *** Highlight current line
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (global-hl-line-mode t)
-      (add-hook 'prog-mode-hook #'hl-line-mode)
-      (add-hook 'org-mode-hook #'hl-line-mode)
+      ;; (add-hook 'prog-mode-hook #'hl-line-mode)
+      ;; (add-hook 'org-mode-hook #'hl-line-mode)
     #+end_src
 
 ** Packages
@@ -2306,7 +2306,8 @@ bindsym $mod+a focus parent
    #+END_SRC
 ** Alias
    #+BEGIN_SRC sh :tangle ~/.zshrc
-   alias vf="vifm ."
-   alias n="nvim"
-   alias yd="youtube-dl --extract-audio --audio-format mp3 -o \"%(title)s.%(ext)s\""
+     alias vf="vifm ."
+     alias n="nvim"
+     alias cm="~/bin/cmus/bin/cmus"
+     alias yd="youtube-dl --extract-audio --audio-format mp3 -o \"%(title)s.%(ext)s\""
    #+END_SRC
