@@ -611,7 +611,7 @@
         (:prefix ","
                  :states 'normal
                  :keymaps 'org-mode-map
-                 "h" 'helm-org-in-buffer-headings
+                 ;; "h" 'helm-org-in-buffer-headings
                  "n" 'org-toggle-narrow-to-subtree))
     #+end_src
 
