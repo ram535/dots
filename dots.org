@@ -102,27 +102,7 @@
         ;; syntax highlight
         (org-src-fontify-natively t)
         (org-src-tab-acts-natively t)
-        (org-src-window-setup 'current-window)
-        :config
-        (add-hook 'org-mode-hook (lambda ()
-                                   "Beautify Org Checkbox Symbol"
-                                   (push '("[ ]" .  "☐") prettify-symbols-alist)
-                                   (push '("[X]" . "☑" ) prettify-symbols-alist)
-                                   (push '("[-]" . "❍" ) prettify-symbols-alist)
-                                   (push '("#+BEGIN_SRC" . "↦" ) prettify-symbols-alist)
-                                   (push '("#+END_SRC" . "⇤" ) prettify-symbols-alist)
-                                   (push '("#+BEGIN_EXAMPLE" . "↦" ) prettify-symbols-alist)
-                                   (push '("#+END_EXAMPLE" . "⇤" ) prettify-symbols-alist)
-                                   (push '("#+BEGIN_QUOTE" . "↦" ) prettify-symbols-alist)
-                                   (push '("#+END_QUOTE" . "⇤" ) prettify-symbols-alist)
-                                   (push '("#+begin_quote" . "↦" ) prettify-symbols-alist)
-                                   (push '("#+end_quote" . "⇤" ) prettify-symbols-alist)
-                                   (push '("#+begin_example" . "↦" ) prettify-symbols-alist)
-                                   (push '("#+end_example" . "⇤" ) prettify-symbols-alist)
-                                   (push '("#+begin_src" . "↦" ) prettify-symbols-alist)
-                                   (push '("#+end_src" . "⇤" ) prettify-symbols-alist)
-                                   (prettify-symbols-mode)))
-        )
+        (org-src-window-setup 'current-window))
     #+end_src
 
 *** evil
@@ -529,7 +509,7 @@
                   "C-k" 'company-select-previous))
     #+end_src
 
-*** =,= Normal-mode bindings
+*** =t= Normal-mode bindings
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package aldama/normal-mode-bindings
         :straight nil
@@ -537,7 +517,7 @@
         :no-require t
         :general
         (:states 'normal
-                 :prefix ","
+                 :prefix "t"
                  "ed" '(lambda() (interactive) (find-file "~/Projects/dots/dots.org"))
                  "en" '(lambda() (interactive)(find-file "~/Documents/notes/notes.org"))
                  "eb" '(lambda() (interactive)(find-file "~/Documents/notes/bookmarks.org"))
@@ -657,7 +637,7 @@
     #+end_src
 * Alacritty
 ** Theme
-   #+begin_src emacs-lisp :tangle ~/.config/alacritty/alacritty.yml
+   #+begin_src sh :tangle ~/.config/alacritty/alacritty.yml
      # Colors (Doom One)
      colors:
        # Default colors
@@ -676,5 +656,37 @@
          cyan:    '0x46d9ff'
          white:   '0xbbc2cf'
    #+end_src
+* .profile and bashrc
+** Paths
+*** Default
+    #+begin_src sh :tangle ~/.profile
+      # if running bash
+      if [ -n "$BASH_VERSION" ]; then
+          # include .bashrc if it exists
+          if [ -f "$HOME/.bashrc" ]; then
+        . "$HOME/.bashrc"
+          fi
+      fi
 
+      # set PATH so it includes user's private bin if it exists
+      if [ -d "$HOME/bin" ] ; then
+          PATH="$HOME/bin:$PATH"
+      fi
 
+      # set PATH so it includes user's private bin if it exists
+      if [ -d "$HOME/.local/bin" ] ; then
+          PATH="$HOME/.local/bin:$PATH"
+      fi
+    #+end_src
+*** Alacritty
+    #+begin_src sh :tangle ~/.profile
+      export PATH=$HOME/bin/alacritty:$PATH
+    #+end_src
+*** Emacs
+    #+begin_src sh :tangle ~/.profile
+      export PATH=$HOME/bin/emacs/bin:$PATH
+    #+end_src
+*** Neovim
+    #+begin_src sh :tangle ~/.profile
+      export PATH=$HOME/bin/neovim:$PATH
+    #+end_src
