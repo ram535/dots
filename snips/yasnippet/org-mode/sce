@@ -1,7 +1,6 @@
 # -*- mode: snippet -*-
-# name: source code emacs-lisp
+# name: sce
 # key: sce
 # --
 #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-   (use-package $0)
 #+end_src
