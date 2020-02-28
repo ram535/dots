@@ -133,6 +133,7 @@
         :config
         (evil-set-initial-state 'wdired-mode 'normal)
         (evil-set-initial-state 'ebib-index-mode 'emacs)
+        (evil-set-initial-state 'exwm-mode 'emacs)
         (evil-set-initial-state 'eshell-mode 'normal)
         (evil-set-initial-state 'pdf-view-mode 'normal)
         (evil-set-initial-state 'pdf-outline-buffer-mode 'normal)
@@ -217,6 +218,9 @@
         (ivy-use-virtual-buffers t)
         (ivy-count-format "(%d/%d) ")
         :config
+        (add-to-list 'ivy-ignore-buffers "\\*Messages\\*")
+        (add-to-list 'ivy-ignore-buffers "\\*Google-chrome\\*")
+        (add-to-list 'ivy-ignore-buffers "\\*straight-process\\*")
         (ivy-mode 1))
     #+end_src
 
@@ -246,9 +250,14 @@
       (use-package doom-modeline
         :hook (after-init . doom-modeline-mode)
         :custom
+        (doom-modeline-modal-icon nil)
+        (doom-modeline-lsp t)
+        (doom-modeline-buffer-state-icon t)
+        (doom-modeline-major-mode-icon nil)
+        (doom-modeline-buffer-file-name-style 'file-name)
         ;; Whether display buffer encoding.
         (doom-modeline-buffer-encoding nil)
-        (doom-modeline-icon t))
+        (doom-modeline-icon (display-graphic-p)))
     #+end_src
 
 *** yasnippet
@@ -472,7 +481,7 @@
       (use-package org-drill)
     #+end_src
 
-*** All-the-icons
+*** all-the-icons
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package all-the-icons)
     #+end_src
@@ -488,14 +497,131 @@
     (use-package vterm-toggle)
     #+end_src
 
+*** exwm
+    #+begin_src emacs-lisp 
+      (use-package exwm
+        :config
+        ;; Set the initial number of workspaces (they can also be created later).
+        (setq exwm-workspace-number 4)
+
+        ;; All buffers created in EXWM mode are named "*EXWM*". You may want to
+        ;; change it in `exwm-update-class-hook' and `exwm-update-title-hook', which
+        ;; are run when a new X window class name or title is available.  Here's
+        ;; some advice on this topic:
+        ;; + Always use `exwm-workspace-rename-buffer` to avoid naming conflict.
+        ;; + For applications with multiple windows (e.g. GIMP), the class names of
+                                              ;    all windows are probably the same.  Using window titles for them makes
+        ;;   more sense.
+        ;; In the following example, we use class names for all windows expect for
+        ;; Java applications and GIMP.
+        (add-hook 'exwm-update-class-hook
+                  (lambda ()
+                    (unless (or (string-prefix-p "sun-awt-X11-" exwm-instance-name)
+                                (string= "gimp" exwm-instance-name))
+                      (exwm-workspace-rename-buffer exwm-class-name))))
+
+        (add-hook 'exwm-update-title-hook
+                  (lambda ()
+                    (when (or (not exwm-instance-name)
+                              (string-prefix-p "sun-awt-X11-" exwm-instance-name)
+                              (string= "gimp" exwm-instance-name))
+                      (exwm-workspace-rename-buffer exwm-title))))
+
+        ;; Global keybindings can be defined with `exwm-input-global-keys'.
+        ;; Here are a few examples:
+        (setq exwm-input-global-keys
+              `(
+                ;; Bind "s-r" to exit char-mode and fullscreen mode.
+                ([?\s-r] . exwm-reset)
+                ;; Bind "s-w" to switch workspace interactively.
+                ([?\s-w] . exwm-workspace-switch)
+                ;; Bind "s-0" to "s-9" to switch to a workspace by its index.
+                ,@(mapcar (lambda (i)
+                            `(,(kbd (format "s-%d" i)) .
+                              (lambda ()
+                                (interactive)
+                                (exwm-workspace-switch-create ,i))))
+                          (number-sequence 0 9))
+                ;; Bind "s-&" to launch applications ('M-&' also works if the output
+                ;; buffer does not bother you).
+                ([?\s-&] . (lambda (command)
+                             (interactive (list (read-shell-command "$ ")))
+                             (start-process-shell-command command nil command)))
+
+                ([?\s-d] . (lambda ()
+                             (interactive)
+                             (dired default-directory)))
+
+                ([?\s-f] . (lambda ()
+                             (interactive)
+                             (exwm-layout-toggle-mode-line)
+                             (exwm-workspace-toggle-minibuffer)))
+
+                ([?\s-b] . exwm-workspace-switch-to-buffer)
+
+                ([?\s-q] . aldama/switch-to-previous-buffer)
+
+                ([?\s-o] . (lambda ()
+                            (interactive)
+                            (start-process "" nil "google-chrome")))
+
+                ;; Bind "s-<f2>" to "slock", a simple X display locker.
+                ([s-f2] . (lambda ()
+                            (interactive)
+                            (start-process "" nil "/usr/bin/slock")))))
+
+        ;; To add a key binding only available in line-mode, simply define it in
+        ;; `exwm-mode-map'.  The following example shortens 'C-c q' to 'C-q'.
+        (define-key exwm-mode-map [?\C-q] #'exwm-input-send-next-key)
+
+        ;; The following example demonstrates how to use simulation keys to mimic
+        ;; the behavior of Emacs.  The value of `exwm-input-simulation-keys` is a
+        ;; list of cons cells (SRC . DEST), where SRC is the key sequence you press
+        ;; and DEST is what EXWM actually sends to application.  Note that both SRC
+        ;; and DEST should be key sequences (vector or string).
+        (setq exwm-input-simulation-keys
+              '(
+                ;; movement
+                ([?\C-b] . [left])
+                ([?\M-b] . [C-left])
+                ([?\C-f] . [right])
+                ([?\M-f] . [C-right])
+                ([?\C-p] . [up])
+                ([?\C-n] . [down])
+                ([?\C-a] . [home])
+                ([?\C-e] . [end])
+                ([?\M-v] . [prior])
+                ([?\C-v] . [next])
+                ([?\C-d] . [delete])
+                ([?\C-k] . [S-end delete])
+                ;; cut/paste.
+                ([?\C-w] . [?\C-x])
+                ([?\M-w] . [?\C-c])
+                ([?\C-y] . [?\C-v])
+                ;; search
+                ([?\C-s] . [?\C-f])))
+
+        ;; You can hide the minibuffer and echo area when they're not used, by
+        ;; uncommenting the following line.
+        ;; (add-hook 'exwm-mode-hook (lambda () (setq exwm-workspace-minibuffer-position 'bottom)))
+        ;; (add-hook 'exwm-mode-hook (lambda () (interactive) (exwm-layout-hide-mode-line)))
+
+
+        ;; Do not forget to enable EXWM. It will start by itself when things are
+        ;; ready.  You can put it _anywhere_ in your configuration.
+        (exwm-enable))
+    #+end_src
+
 ** Bindings
-*** Normal-mode bindings
+*** Normal and Emacs states bindings
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package aldama/normal-mode-bindings
         :straight nil
         :after general
         :no-require t
         :general
+        (:states 'emacs
+                 "C-`" 'vterm-toggle)
         (:states 'normal
                  "C-`" 'vterm-toggle
                  "M-`" 'vterm-toggle-cd
@@ -647,6 +773,7 @@
     #+end_src
 
 ** Funcions
+*** Use ~l~ to behave as expected in dired
    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
      (defun aldama/dired-open()
        (interactive)
@@ -654,24 +781,55 @@
        (setq ext (file-name-extension file))
        (cond ((string= ext "pdf")
               ;; shell-quote-argument escapes white spaces on the file name
-              (async-shell-command (concat "zathura " (shell-quote-argument file))))
+              (async-start-process "Zathura" "zathura" nil file))
              ((string= ext "epub")
-              (async-shell-command (concat "zathura " (shell-quote-argument file))))
+              (async-start-process "Zathura" "zathura" nil file))
              ((string= ext "rar")
-              (async-shell-command (concat "file-roller " (shell-quote-argument file))))
+              (async-start-process "File-rolle" "file-roller" nil file))
+             ((string= ext "mp4")
+              (async-start-process "Vlc" "vlc" nil file))
              ((string= ext "zip")
-              (async-shell-command (concat "file-roller " (shell-quote-argument file))))
+              (async-start-process "File-rolle" "file-roller" nil file))
              ;; default
              (t (dired-find-file))))
-
-     (push (list "find-file-below"
-                 (lambda (path)
-                   (if-let* ((buf (find-file-noselect path))
-                             (window (display-buffer-below-selected buf nil)))
-                       (select-window window)
-                     (message "Failed to open file: %s" path))))
-           vterm-eval-cmds)
    #+end_src
+
+*** Switch to the previous buffer
+    For some reason ~mode-line-other-buffer~ behaves odd in exwm.
+
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (defun aldama/switch-to-previous-buffer ()
+        "Switch to previously open buffer.
+      Repeated invocations toggle between the two most recently open buffers."
+        (interactive)
+        (switch-to-buffer (other-buffer (current-buffer) 1)))
+    #+end_src
+
+*** Launch apps
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (defun aldama/launch-app (arg)
+        (interactive (list (completing-read "Apps: " '("Google-chrome" "Firefox" "Rofi"))))
+        (cond ((string= arg "Google-chrome")
+               ;; shell-quote-argument escapes white spaces on the file name
+               (async-start-process "Google-chrome" "google-chrome" nil))
+              ((string= arg "Firefox")
+               (async-start-process "Firefox" "firefox" nil "-private"))
+              ((string= arg "Rofi")
+               (async-start-process "rofi" "rofi" nil "-show" "drun"))
+              ;; default
+              (t (message "Wrong option"))))
+    #+end_src
+
+*** Functions for vterm
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (push (list "find-file-below"
+                  (lambda (path)
+                    (if-let* ((buf (find-file-noselect path))
+                              (window (display-buffer-below-selected buf nil)))
+                        (select-window window)
+                      (message "Failed to open file: %s" path))))
+            vterm-eval-cmds)
+    #+end_src
 
 * Alacritty
 ** Theme
@@ -734,6 +892,10 @@
       export PATH=$HOME/bin/dart-sdk/bin:$PATH
       export PATH=$HOME/.pub-cache/bin:$PATH
     #+end_src
+*** Jdk
+    #+begin_src sh :tangle ~/.profile
+      export PATH=$HOME/bin/jdk/bin:$PATH
+    #+end_src
 *** Cmake
     #+begin_src sh :tangle ~/.profile
       export PATH=$HOME/bin/cmake/bin:$PATH
@@ -780,7 +942,6 @@
                printf "\e\\"
            fi
        }
-
      #+end_src
 
 *** open file or dired in emacs when using vterm
@@ -788,6 +949,7 @@
        op() {
            vterm_cmd find-file "$(realpath "$@")"
        }
+
      #+end_src
 
 ** fzf
@@ -864,7 +1026,7 @@
     # rofi app and window launchers
     bindsym $mod+space exec rofi -show drun -theme $rofiTheme
     bindsym $mod+Shift+space exec rofi -show run -theme $rofiTheme
-    bindsym $mod+Ctrl+space exec rofi -show window -theme $rofiTheme
+    bindsym $mod+q exec rofi -show window -theme $rofiTheme
 
     # change focus
     bindsym $mod+Left focus left
