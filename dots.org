@@ -17,10 +17,57 @@
       #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
         (setq-default indent-tabs-mode nil)
       #+end_src
+*** Don't convert tabs to white spaces in makefiles
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (add-hook 'makefile-mode-hook
+                (lambda ()
+                  (setq indent-tabs-mode t)
+                  (setq-default indent-tabs-mode t)
+                  (setq tab-width 2)))
+    #+end_src
+*** Configure compile command
+		#+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      ;; use make as default command when M-x compile
+      (setq compile-command "make")
+      ;; don't ask for confirmation to run make command
+      ;; just run it
+      (setq compilation-read-command nil)
+		#+end_src
 
 *** Make tabs to be 2 whitespaces width
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (setq-default tab-width 2)
+    #+end_src
+
+*** Delete trailing whitespace
+    This always creates unnecessary diffs in git. Just delete it upon saving.
+
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (add-hook 'before-save-hook 'delete-trailing-whitespace)
+    #+end_src
+
+*** Preserve contents of system clipboard
+    Say you copied a link from your web browser, then switched to
+    Emacs to paste it somewhere. Before you do that, you notice
+    something you want to kill. Doing that will place the last kill to
+    the clipboard, thus overriding the thing you copied earlier. We
+    can have a kill ring solution to this with the following:
+
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (setq save-interprogram-paste-before-kill t)
+    #+end_src
+
+    Now the contents of the clipboard are stored in the kill ring and can
+    be retrieved from there (e.g. with M-y).
+
+*** Auto revert mode
+    This mode ensures that the buffer is updated whenever the file
+    changes. A change can happen externally or by some other tool
+    inside of Emacs (e.g. kill a Magit diff).
+
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (setq auto-revert-verbose t)
+      (add-hook 'after-init-hook 'global-auto-revert-mode)
     #+end_src
 
 *** Does anyone type yes anymore?
@@ -58,7 +105,7 @@
       (setq inhibit-startup-message t)
       (setq initial-scratch-message "")
     #+end_src
-    
+
 *** Stop blinking cursor
     Turn off the blinking cursor
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
@@ -78,6 +125,22 @@
       (add-hook 'org-mode-hook #'hl-line-mode)
     #+end_src
 
+*** Stop asking to kill the process when exit emacs
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (setq confirm-kill-processes nil)
+    #+end_src
+
+*** Backups
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+        (setq backup-directory-alist
+              '(("." . "~/.emacs.d/backup/")))
+        (setq backup-by-copying t)
+        (setq version-control t)
+        (setq delete-old-versions t)
+        (setq kept-new-versions 6)
+        (setq kept-old-versions 2)
+        (setq create-lockfiles nil)
+    #+end_src
 ** Packages
 *** straight.el
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
@@ -95,19 +158,25 @@
             (eval-print-last-sexp)))
         (load bootstrap-file nil 'nomessage))
 
-      (setq straight-use-package-by-default t)
+       (setq straight-use-package-by-default t)
     #+end_src
 
 *** use-package
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (straight-use-package 'use-package)
     #+end_src
-    
+
+*** general.el
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package general
+        :config
+        (general-evil-setup))
+    #+end_src
 *** org-mode
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package aldama/org-config
-        :straight nil
-        :no-require t
+
+      (use-package org
+
         :custom
         (org-startup-with-inline-images t)
         ;; inline latex like $y=mx+c$ will appear in a different colour in an org-mode file to help it stand out
@@ -116,7 +185,8 @@
         ;; syntax highlight
         (org-src-fontify-natively t)
         (org-src-tab-acts-natively t)
-        (org-src-window-setup 'current-window))
+        (org-src-window-setup 'current-window)
+        )
     #+end_src
 
 *** evil
@@ -134,29 +204,12 @@
         (evil-set-initial-state 'wdired-mode 'normal)
         (evil-set-initial-state 'ebib-index-mode 'emacs)
         (evil-set-initial-state 'exwm-mode 'emacs)
+        (evil-set-initial-state 'nov-mode 'emacs)
         (evil-set-initial-state 'image-mode 'emacs)
         (evil-set-initial-state 'eshell-mode 'normal)
         (evil-set-initial-state 'pdf-view-mode 'normal)
         (evil-set-initial-state 'pdf-outline-buffer-mode 'normal)
         (evil-mode 1))
-    #+end_src
-**** evil-commentary
-     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-       (use-package evil-commentary)
-     #+end_src
-
-**** evil-surround
-     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-       (use-package evil-surround
-         :config
-         (global-evil-surround-mode 1))
-     #+end_src
-
-*** general.el
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package general
-        :config
-        (general-evil-setup))
     #+end_src
 
 *** doom themes
@@ -181,7 +234,7 @@
         ;; Corrects (and improves) org-mode's native fontification.
         (doom-themes-org-config))
     #+end_src
-    
+
 *** dired
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package dired
@@ -211,7 +264,9 @@
                         (list (car list-of-dired-switches))))
           (dired-sort-other (caar list-of-dired-switches))
           (setq mode-name (concat "Dired " (cdar list-of-dired-switches)))
-          (force-mode-line-update)))
+          (force-mode-line-update))
+
+        )
     #+end_src
 
 *** counsel, ivy and swiper
@@ -224,9 +279,9 @@
         ;; Displays the current and total number in the collection in the prompt
         (ivy-count-format "(%d/%d) ")
         :config
-        (add-to-list 'ivy-ignore-buffers "\\*Messages\\*")
-        (add-to-list 'ivy-ignore-buffers "\\*Google-chrome\\*")
-        (add-to-list 'ivy-ignore-buffers "\\*straight-process\\*")
+        (add-to-list 'ivy-ignore-buffers "\\`\\*Messages\\*")
+        (add-to-list 'ivy-ignore-buffers "\\`\\*Google-chrome\\*")
+        (add-to-list 'ivy-ignore-buffers "\\`\\*straight-process\\*")
         (ivy-mode 1))
     #+end_src
 
@@ -250,7 +305,7 @@
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
      (use-package swiper)
     #+end_src
-    
+
 *** doom-modeline
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package doom-modeline
@@ -295,8 +350,6 @@
          '(("~/Projects" . 1))))
     #+end_src
 
-*** magit-repos
-
 *** evil-magit
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package evil-magit
@@ -319,10 +372,10 @@
         (lsp-dart-sdk-dir "~/bin/dart-sdk/")
         (lsp-signature-render-documentation nil)
         (lsp-gopls-complete-unimported t)
+        (lsp-prefer-capf t)
         :config
         (add-hook 'js-mode-hook (lambda () (setq js-indent-level 2)))
-        (add-hook 'js-mode-hook (lambda () (setq tab-width 2)))
-        )
+        (add-hook 'js-mode-hook (lambda () (setq tab-width 2))))
     #+end_src
 
 *** lsp-ui
@@ -348,13 +401,6 @@
         (lsp-ui-imenu-kind-position 'top))
     #+end_src
 
-*** eglot
-    #+begin_src emacs-lisp
-      (use-package eglot
-        :config
-        (add-hook 'dart-mode-hook 'eglot-ensure))
-    #+end_src
-
 *** go-mode
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package go-mode)
@@ -372,18 +418,6 @@
         (with-eval-after-load "projectile"
           (add-to-list 'projectile-project-root-files-bottom-up "pubspec.yaml")
           (add-to-list 'projectile-project-root-files-bottom-up "BUILD")))
-    #+end_src
-
-*** dart-server
-    #+begin_src emacs-lisp 
-      (use-package dart-server
-        :custom
-        (dart-server-sdk-path "~/bin/dart-sdk/bin/")
-        (dart-server-enable-analysis-server t)
-        (dart-format-on-save t)
-        :config
-        (add-hook 'dart-server-hook 'dart-mode)
-        (add-hook 'dart-server-hook 'flycheck-mode))
     #+end_src
 
 *** flutter
@@ -409,7 +443,7 @@
     #+end_src
 
 *** company-lsp
-    #+begin_src emacs-lisp 
+    #+begin_src emacs-lisp
       (use-package company-lsp
         :config
         (push 'company-lsp company-backends))
@@ -462,9 +496,9 @@
     #+end_src
 
 *** counsel-projectile
-    #+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
       (use-package counsel-projectile)
-    #+END_SRC
+    #+end_src
 
 *** avy
     Search for character
@@ -512,136 +546,86 @@
     (use-package vterm-toggle)
     #+end_src
 
-*** exwm
-    #+begin_src emacs-lisp :tangle no
-      (use-package exwm
+*** restart-emacs
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package restart-emacs)
+    #+end_src
+
+*** nov.el (epub)
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package nov
+        :init
+        (add-to-list 'auto-mode-alist '("\\.epub\\'" . nov-mode))
+        :custom
+        (nov-text-width 80))
+    #+end_src
+
+*** expand-region
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package expand-region)
+    #+end_src
+
+*** slime
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package slime
+        :custom
+        (inferior-lisp-program "/usr/bin/sbcl")
+        (slime-contribs '(slime-fancy)))
+    #+end_src
+
+*** auctex
+    https://www.reddit.com/r/emacs/comments/a27sg9/how_can_i_set_the_pdfviewer_in_auctex/
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (use-package tex
+        :straight auctex
         :config
-        ;; Set the initial number of workspaces (they can also be created later).
-        (setq exwm-workspace-number 4)
+        ;;In order to get support for many of the LaTeX packages you will
+        ;;use in your documents, you should enable document parsing as well
+        (setq TeX-auto-save t)
+        (setq TeX-parse-self t)
 
-        ;; All buffers created in EXWM mode are named "*EXWM*". You may want to
-        ;; change it in `exwm-update-class-hook' and `exwm-update-title-hook', which
-        ;; are run when a new X window class name or title is available.  Here's
-        ;; some advice on this topic:
-        ;; + Always use `exwm-workspace-rename-buffer` to avoid naming conflict.
-        ;; + For applications with multiple windows (e.g. GIMP), the class names of
-        ;    all windows are probably the same.  Using window titles for them makes
-        ;;   more sense.
-        ;; In the following example, we use class names for all windows expect for
-        ;; Java applications and GIMP.
-        (add-hook 'exwm-update-class-hook
-                  (lambda ()
-                    (unless (or (string-prefix-p "sun-awt-X11-" exwm-instance-name)
-                                (string= "gimp" exwm-instance-name))
-                      (exwm-workspace-rename-buffer exwm-class-name))))
+        ;; This cause to sync the pdf and the tex file
+        ;; For example to click in pdf to jump to tex file
+        ;; When in zathura do C-click and it will put the cursor
+        ;; in the exact position but in the .tex file
+        (add-to-list 'TeX-view-program-list
+                     '("Zathura"
+                       ("zathura %o"
+                        (mode-io-correlate " --synctex-forward %n:0:%b -x \"emacsclient +%{line} %{input}\""))
+                       "zathura"))
+        (setq TeX-source-correlate-method 'synctex)
+        (TeX-source-correlate-mode)
+        (setq TeX-source-correlate-start-server t)
 
-        (add-hook 'exwm-update-title-hook
-                  (lambda ()
-                    (when (or (not exwm-instance-name)
-                              (string-prefix-p "sun-awt-X11-" exwm-instance-name)
-                              (string= "gimp" exwm-instance-name))
-                      (exwm-workspace-rename-buffer exwm-title))))
+        ;; Use zathura when C-c C-c or C-c C-a or C-c C-v
+        (add-to-list 'TeX-view-program-selection
+                     '(output-pdf "Zathura")))
+    #+end_src
 
-        ;; Global keybindings can be defined with `exwm-input-global-keys'.
-        ;; Here are a few examples:
-        (setq exwm-input-global-keys
-              `(
-                ;; Bind "s-r" to exit char-mode and fullscreen mode.
-                ([?\s-r] . exwm-reset)
-                ;; Bind "s-w" to switch workspace interactively.
-                ([?\s-w] . exwm-workspace-switch)
-                ;; Bind "s-0" to "s-9" to switch to a workspace by its index.
-                ,@(mapcar (lambda (i)
-                            `(,(kbd (format "s-%d" i)) .
-                              (lambda ()
-                                (interactive)
-                                (exwm-workspace-switch-create ,i))))
-                          (number-sequence 0 9))
-                ;; Bind "s-&" to launch applications ('M-&' also works if the output
-                ;; buffer does not bother you).
-                ([?\s-&] . (lambda (command)
-                             (interactive (list (read-shell-command "$ ")))
-                             (start-process-shell-command command nil command)))
-
-                ([?\s-d] . (lambda ()
-                             (interactive)
-                             (dired default-directory)))
-
-                ([?\s-f] . (lambda ()
-                             (interactive)
-                             (exwm-layout-toggle-mode-line)
-                             (exwm-workspace-toggle-minibuffer)))
-
-                ([?\s-b] . exwm-workspace-switch-to-buffer)
-
-                ([?\s-q] . aldama/switch-to-previous-buffer)
-
-                ([?\s-o] . (lambda ()
-                            (interactive)
-                            (start-process "" nil "google-chrome")))
-
-                ;; Bind "s-<f2>" to "slock", a simple X display locker.
-                ([s-f2] . (lambda ()
-                            (interactive)
-                            (start-process "" nil "/usr/bin/slock")))))
-
-        ;; To add a key binding only available in line-mode, simply define it in
-        ;; `exwm-mode-map'.  The following example shortens 'C-c q' to 'C-q'.
-        (define-key exwm-mode-map [?\C-q] #'exwm-input-send-next-key)
-
-        ;; The following example demonstrates how to use simulation keys to mimic
-        ;; the behavior of Emacs.  The value of `exwm-input-simulation-keys` is a
-        ;; list of cons cells (SRC . DEST), where SRC is the key sequence you press
-        ;; and DEST is what EXWM actually sends to application.  Note that both SRC
-        ;; and DEST should be key sequences (vector or string).
-        (setq exwm-input-simulation-keys
-              '(
-                ;; movement
-                ([?\C-b] . [left])
-                ([?\M-b] . [C-left])
-                ([?\C-f] . [right])
-                ([?\M-f] . [C-right])
-                ([?\C-p] . [up])
-                ([?\C-n] . [down])
-                ([?\C-a] . [home])
-                ([?\C-e] . [end])
-                ([?\M-v] . [prior])
-                ([?\C-v] . [next])
-                ([?\C-d] . [delete])
-                ([?\C-k] . [S-end delete])
-                ;; cut/paste.
-                ([?\C-w] . [?\C-x])
-                ([?\M-w] . [?\C-c])
-                ([?\C-y] . [?\C-v])
-                ;; search
-                ([?\C-s] . [?\C-f])))
-
-        ;; You can hide the minibuffer and echo area when they're not used, by
-        ;; uncommenting the following line.
-        ;; (add-hook 'exwm-mode-hook (lambda () (setq exwm-workspace-minibuffer-position 'bottom)))
-        ;; (add-hook 'exwm-mode-hook (lambda () (interactive) (exwm-layout-hide-mode-line)))
-
-
-        ;; Do not forget to enable EXWM. It will start by itself when things are
-        ;; ready.  You can put it _anywhere_ in your configuration.
-        (exwm-enable))
+*** flyspell
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      ;; (add-hook 'TeX-mode-hook 'flyspell-mode); Enable Flyspell mode for TeX modes such as AUCTeX. Highlights all misspelled words.
+      ;; (add-hook 'emacs-lisp-mode-hook 'flyspell-prog-mode); Enable Flyspell program mode for emacs lisp mode, which highlights all misspelled words in comments and strings.
+      ;; (setq ispell-dictionary "english"); Default dictionary. To change do M-x ispell-change-dictionary RET.
     #+end_src
 
 ** Bindings
 *** Normal and Emacs states bindings
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package aldama/normal-mode-bindings
+      (use-package normal-mode-bindings
         :straight nil
         :after general
-        :no-require t
         :general
         (:states 'emacs
+                 "C-`" 'vterm-toggle)
+        (:states 'insert
                  "C-`" 'vterm-toggle)
         (:states 'normal
                  "C-`" 'vterm-toggle
                  "M-`" 'vterm-toggle-cd
                  "f" 'avy-goto-char-2
                  "C-s" 'swiper
+                 "SPC" 'er/expand-region
                  ;; swap ; and :
                  ";" 'evil-ex
                  ":" 'evil-repeat-find-char)
@@ -652,20 +636,18 @@
 
 *** Insert-mode bindings
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package aldama/normal-mode-bindings
+      (use-package inset-mode-bindings
         :straight nil
         :after general
-        :no-require t
         :general
         (:states 'insert
                  "C-j" 'evil-normal-state))
     #+end_src
 *** =,= Normal-mode bindings
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package aldama/normal-mode-bindings
+      (use-package normal-mode-bindings
         :straight nil
         :after general
-        :no-require t
         :general
         (:states 'normal
                  :prefix ","
@@ -684,16 +666,15 @@
 
 *** Dired bindings
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package aldama/dired-mode-bindings
+      (use-package dired-mode
         :straight nil
         :after general
-        :no-require t
         :general
         (:states 'normal
                  :keymaps 'dired-mode-map
                  "j" 'dired-next-line
                  "k" 'dired-previous-line
-                 "l" 'aldama/dired-open
+                 "l" 'ram/dired-open
                  "h" 'dired-up-directory
                  "yy" 'dired-do-copy
                  "yn" 'dired-copy-filename-as-kill
@@ -726,10 +707,9 @@
 
 *** Org bindings
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package aldama/org-bindings
+      (use-package org-mode
         :straight nil
         :after general
-        :no-require t
         :general
         (:states '(normal insert emacs)
                  :keymaps 'org-mode-map
@@ -745,7 +725,7 @@
 
 *** Ivy bindings
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package aldama/ivy-mode-binding
+      (use-package ivy-mode
         :straight nil
         :after general
         :no-require t
@@ -758,10 +738,9 @@
 
 *** Programming bindings
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package aldama/prog-mode-bindings
+      (use-package prog-mode
         :straight nil
         :after general
-        :no-require t
         :general
         (:states 'normal
                  :keymaps 'prog-mode-map
@@ -782,26 +761,28 @@
                   "<f5>" '(lambda() (interactive) (async-shell-command (concat "node " (buffer-file-name)) "*javascript output*")))
         (:keymaps 'go-mode-map
                   "<f5>" '(lambda() (interactive) (async-shell-command (concat "go run " (buffer-file-name)) "*go output*")))
+        (:keymaps 'c-mode-map
+                  "<f5>" 'compile)
         (:keymaps 'lsp-ui-peek-mode-map
                   "j" 'lsp-ui-peek--select-next
                   "k" 'lsp-ui-peek--select-prev))
     #+end_src
 
 ** Funcions
-*** Use ~l~ to behave as expected in dired
+*** Make ~l~ to behave as expected in dired
    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-     (defun aldama/dired-open()
+     (defun ram/dired-open()
        (interactive)
        (setq file (dired-get-file-for-visit))
        (setq ext (file-name-extension file))
        (cond ((string= ext "pdf")
               ;; shell-quote-argument escapes white spaces on the file name
               (async-start-process "Zathura" "zathura" nil file))
-             ((string= ext "epub")
-              (async-start-process "Zathura" "zathura" nil file))
              ((string= ext "rar")
               (async-start-process "File-rolle" "file-roller" nil file))
              ((string= ext "mp4")
+              (async-start-process "Vlc" "vlc" nil file))
+             ((string= ext "mp3")
               (async-start-process "Vlc" "vlc" nil file))
              ((string= ext "torrent")
               (async-start-process "Transmission" "transmission-gtk" nil file))
@@ -815,7 +796,7 @@
     For some reason ~mode-line-other-buffer~ behaves odd in exwm.
 
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (defun aldama/switch-to-previous-buffer ()
+      (defun ram/switch-to-previous-buffer ()
         "Switch to previously open buffer.
       Repeated invocations toggle between the two most recently open buffers."
         (interactive)
@@ -824,13 +805,18 @@
 
 *** Launch apps
     #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (defun aldama/launch-app (arg)
-        (interactive (list (completing-read "Apps: " '("Google-chrome" "Firefox" "Rofi"))))
+      (defun ram/launch-app (arg)
+        (interactive (list (completing-read "Apps: "
+                                            '("Google-chrome" "Firefox" "Shutdown" "JD" "Rofi"))))
         (cond ((string= arg "Google-chrome")
                ;; shell-quote-argument escapes white spaces on the file name
                (async-start-process "Google-chrome" "google-chrome" nil))
               ((string= arg "Firefox")
                (async-start-process "Firefox" "firefox" nil "-private"))
+              ((string= arg "Shutdown")
+               (async-start-process "Shutdown" "shutdown" nil "-P" "now"))
+              ((string= arg "JD")
+               (async-start-process "JD" "~/bin/jd2/JDownloader2" nil))
               ((string= arg "Rofi")
                (async-start-process "rofi" "rofi" nil "-show" "drun"))
               ;; default
@@ -846,6 +832,18 @@
                         (select-window window)
                       (message "Failed to open file: %s" path))))
             vterm-eval-cmds)
+    #+end_src
+
+*** Hiding dired buffers in ivy
+    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      (defun ram/ignore-dired-buffers (str)
+        "Return non-nil if STR names a Dired buffer.
+      This function is intended for use with `ivy-ignore-buffers'."
+        (let ((buf (get-buffer str)))
+          (and buf (eq (buffer-local-value 'major-mode buf) 'dired-mode))))
+
+      (with-eval-after-load 'ivy
+        (add-to-list 'ivy-ignore-buffers #'ram/ignore-dired-buffers))
     #+end_src
 
 * Alacritty
@@ -874,6 +872,8 @@
 ** Paths
 *** Default
     #+begin_src sh :tangle ~/.profile
+      export _JAVA_AWT_WM_NONREPARENTING=1
+
       # if running bash
       if [ -n "$BASH_VERSION" ]; then
           # include .bashrc if it exists
@@ -895,7 +895,7 @@
 
 *** Alacritty
     #+begin_src sh :tangle ~/.profile
-      export PATH=$HOME/bin/alacritty:$PATH
+      export PATH=$HOME/bin/alarcritty:$PATH
     #+end_src
 
 *** Emacs
@@ -906,6 +906,11 @@
 *** Neovim
     #+begin_src sh :tangle ~/.profile
       export PATH=$HOME/bin/neovim:$PATH
+    #+end_src
+
+*** Node
+    #+begin_src sh :tangle ~/.profile
+      export PATH=$HOME/bin/node/bin:$PATH
     #+end_src
 
 *** Dart
@@ -995,7 +1000,8 @@
    #+end_src
 
 * Regolith
-  #+begin_src yaml :tangle ~/.config/regolith/i3/config
+   ~/.config/regolith/i3/config
+  #+begin_src yaml :tangle no
     # i3 config file for the Regolith Desktop Environment
     #
     # Please see http://i3wm.org/docs/userguide.html for a complete reference!
@@ -1159,7 +1165,7 @@
     bindsym $mod+Shift+Ctrl+9 move container to workspace number $ws19
 
     # move focused container to workspace, move to workspace
-    bindsym $mod+$alt+1 move container to workspace number $ws1; workspace number $ws1  
+    bindsym $mod+$alt+1 move container to workspace number $ws1; workspace number $ws1
     bindsym $mod+$alt+2 move container to workspace number $ws2; workspace number $ws2
     bindsym $mod+$alt+3 move container to workspace number $ws3; workspace number $ws3
     bindsym $mod+$alt+4 move container to workspace number $ws4; workspace number $ws4
@@ -1205,7 +1211,7 @@
     bindsym $mod+n exec nautilus
 
     # i3-snapshot for load/save current layout
-    # bindsym $mod+comma  exec /usr/bin/i3-snapshot -o > /tmp/i3-snapshot 
+    # bindsym $mod+comma  exec /usr/bin/i3-snapshot -o > /tmp/i3-snapshot
     # bindsym $mod+period exec /usr/bin/i3-snapshot -c < /tmp/i3-snapshot
 
     # Toggle bar visibility
@@ -1360,4 +1366,3 @@
     # Hide the mouse pointer if unused for a duration
     exec --no-startup-id /usr/bin/unclutter -b
   #+end_src
-
