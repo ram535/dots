@@ -1,24 +1,54 @@
 * Emacs
-** Basic configuration
-*** Set font
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (set-face-attribute 'default nil
-                          :family "IBM Plex Mono"
-                          :height 130
-                          :weight 'normal
-                          :width 'normal)
-    #+end_src
+  :PROPERTIES:
+  :header-args: :tangle ~/.emacs.d/init.el
+  :END:
 
+** Basic configuration
 *** Start server
-   #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+   #+begin_src emacs-lisp
       (server-start)
    #+end_src
+
+*** Set font
+    #+begin_src emacs-lisp
+      (add-to-list 'default-frame-alist
+                   '(font . "IBM Plex Mono 12"))
+      ;; (set-face-attribute 'default nil
+      ;;                     :family "IBM Plex Mono"
+      ;;                     :height 130
+      ;;                     :weight 'normal
+      ;;                     :width 'normal)
+    #+end_src
+
+*** open buffer vertically (help buffer, pdf, etc)
+    #+begin_src emacs-lisp
+      (setq split-height-threshold nil)
+      (setq split-width-threshold 0)
+    #+end_src
+
+*** Stop emacs from asking me if I want to load a large file
+    #+begin_src emacs-lisp
+      (setq large-file-warning-threshold nil)
+    #+end_src
+
 *** Convert tabs to white spaces
-      #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      #+begin_src emacs-lisp
         (setq-default indent-tabs-mode nil)
       #+end_src
+*** Make tabs to be 2 whitespaces width
+    #+begin_src emacs-lisp
+      (setq-default tab-width 2)
+    #+end_src
+
+*** Delete trailing whitespace
+    This always creates unnecessary diffs in git. Just delete it upon saving.
+
+    #+begin_src emacs-lisp
+      (add-hook 'before-save-hook 'delete-trailing-whitespace)
+    #+end_src
+
 *** Don't convert tabs to white spaces in makefiles
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp
       (add-hook 'makefile-mode-hook
                 (lambda ()
                   (setq indent-tabs-mode t)
@@ -26,25 +56,13 @@
                   (setq tab-width 2)))
     #+end_src
 *** Configure compile command
-		#+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+		#+begin_src emacs-lisp
       ;; use make as default command when M-x compile
       (setq compile-command "make")
       ;; don't ask for confirmation to run make command
       ;; just run it
       (setq compilation-read-command nil)
 		#+end_src
-
-*** Make tabs to be 2 whitespaces width
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (setq-default tab-width 2)
-    #+end_src
-
-*** Delete trailing whitespace
-    This always creates unnecessary diffs in git. Just delete it upon saving.
-
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (add-hook 'before-save-hook 'delete-trailing-whitespace)
-    #+end_src
 
 *** Preserve contents of system clipboard
     Say you copied a link from your web browser, then switched to
@@ -53,7 +71,7 @@
     the clipboard, thus overriding the thing you copied earlier. We
     can have a kill ring solution to this with the following:
 
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp
       (setq save-interprogram-paste-before-kill t)
     #+end_src
 
@@ -65,13 +83,13 @@
     changes. A change can happen externally or by some other tool
     inside of Emacs (e.g. kill a Magit diff).
 
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp
       (setq auto-revert-verbose t)
       (add-hook 'after-init-hook 'global-auto-revert-mode)
     #+end_src
 
 *** Does anyone type yes anymore?
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp
       (fset 'yes-or-no-p 'y-or-n-p)
     #+end_src
 
@@ -83,7 +101,7 @@
     #+end_src
 
 *** This plays nicely with lsp and company
-      #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+      #+begin_src emacs-lisp
         (setq read-process-output-max (* 1024 1024))
         (setq gc-cons-threshold 100000000)
       #+end_src
@@ -91,7 +109,7 @@
 *** Hiding elements
     This hide several elements like menu, too bar, etc.
     in GUI mode
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp
       (when window-system
         (menu-bar-mode -1)
         (tool-bar-mode -1)
@@ -101,49 +119,59 @@
 
 *** Start in a blank page
     This allow to start emacs in a blank page
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp
       (setq inhibit-startup-message t)
       (setq initial-scratch-message "")
     #+end_src
 
 *** Stop blinking cursor
     Turn off the blinking cursor
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp
       (blink-cursor-mode -1)
     #+end_src
 
 *** Show-paren-mode
     Highlight the the matching (){}[]
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp
       (show-paren-mode t)
     #+end_src
 
 *** Highlight current line
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp
       ;; (global-hl-line-mode t)
       (add-hook 'prog-mode-hook #'hl-line-mode)
       (add-hook 'org-mode-hook #'hl-line-mode)
     #+end_src
 
 *** Stop asking to kill the process when exit emacs
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp
       (setq confirm-kill-processes nil)
     #+end_src
 
-*** Backups
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-        (setq backup-directory-alist
-              '(("." . "~/.emacs.d/backup/")))
-        (setq backup-by-copying t)
-        (setq version-control t)
-        (setq delete-old-versions t)
-        (setq kept-new-versions 6)
-        (setq kept-old-versions 2)
-        (setq create-lockfiles nil)
+*** Open help buffers in the current window
+    #+begin_src emacs-lisp
+      (add-to-list 'display-buffer-alist
+                   '("*Help*" display-buffer-same-window))
     #+end_src
+
+*** Backups and autosaves
+    #+begin_src emacs-lisp
+      (setq backup-directory-alist
+            '(("." . "~/.emacs.d/backup/")))
+      (setq backup-by-copying t)
+      (setq version-control t)
+      (setq delete-old-versions t)
+      (setq kept-new-versions 6)
+      (setq kept-old-versions 2)
+      (setq create-lockfiles nil)
+      ;; (setq make-backup-files nil)
+      (setq auto-save-default nil)
+      (setq auto-save-list-file-prefix nil)
+    #+end_src
+
 ** Packages
 *** straight.el
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp
       (defvar bootstrap-version)
 
       (let ((bootstrap-file
@@ -162,22 +190,25 @@
     #+end_src
 
 *** use-package
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp
       (straight-use-package 'use-package)
     #+end_src
 
 *** general.el
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp
       (use-package general
         :config
         (general-evil-setup))
     #+end_src
 *** org-mode
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-
+    #+begin_src emacs-lisp
       (use-package org
-
         :custom
+        ;; open link to a file in the same buffer
+        (org-link-frame-setup
+         '((file . find-file)))
+
+        (org-agenda-files '("~/org/agenda/todo.org"))
         (org-startup-with-inline-images t)
         ;; inline latex like $y=mx+c$ will appear in a different colour in an org-mode file to help it stand out
         (org-highlight-latex-and-related '(latex))
@@ -186,11 +217,23 @@
         (org-src-fontify-natively t)
         (org-src-tab-acts-natively t)
         (org-src-window-setup 'current-window)
-        )
+
+        :config
+        (org-babel-do-load-languages
+         'org-babel-load-languages
+         '((dot . t)
+           (js . t)
+           (latex . t)
+           (calc . t)
+           (shell . t)
+           (sql . t)
+           (C . t)
+           (python . t)
+           (emacs-lisp . t))))
     #+end_src
 
 *** evil
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp
       (use-package evil
         :custom
         ;; change the color of the cursor
@@ -201,19 +244,23 @@
         (evil-disable-insert-state-bindings t)
         (evil-want-keybinding nil)
         :config
+        (evil-set-initial-state 'dired-mode 'normal)
         (evil-set-initial-state 'wdired-mode 'normal)
+        (evil-set-initial-state 'org-mode 'normal)
+        (evil-set-initial-state 'prog-mode 'normal)
         (evil-set-initial-state 'ebib-index-mode 'emacs)
         (evil-set-initial-state 'exwm-mode 'emacs)
         (evil-set-initial-state 'nov-mode 'emacs)
         (evil-set-initial-state 'image-mode 'emacs)
         (evil-set-initial-state 'eshell-mode 'normal)
-        (evil-set-initial-state 'pdf-view-mode 'normal)
-        (evil-set-initial-state 'pdf-outline-buffer-mode 'normal)
+        (evil-set-initial-state 'pdf-view-mode 'emacs)
+        (evil-set-initial-state 'pdf-annot-list-mode 'emacs)
+        (evil-set-initial-state 'pdf-outline-buffer-mode 'emacs)
+        (evil-set-initial-state 'deft-mode 'emacs)
         (evil-mode 1))
     #+end_src
-
 *** doom themes
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp
       (use-package doom-themes
         :custom
         (doom-themes-enable-bold t)    ; if nil, bold is universally disabled
@@ -236,7 +283,7 @@
     #+end_src
 
 *** dired
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp
       (use-package dired
         :straight nil
         :hook ((dired-mode . hl-line-mode)
@@ -253,6 +300,7 @@
 
         (defcustom list-of-dired-switches
           '(("-Bhl --group-directories-first -v" . "directories first")
+            ("-BhXl" . "by extension")
             ("-BhlA --group-directories-first -v" . "no . & .."))
           "List of ls switches (together with a name to display in the mode-line) for dired to cycle among.")
 
@@ -264,50 +312,11 @@
                         (list (car list-of-dired-switches))))
           (dired-sort-other (caar list-of-dired-switches))
           (setq mode-name (concat "Dired " (cdar list-of-dired-switches)))
-          (force-mode-line-update))
-
-        )
-    #+end_src
-
-*** counsel, ivy and swiper
-**** ivy
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package ivy
-        :custom
-        ;; Add recent files and bookmarks to the ivy-switch-buffer
-        (ivy-use-virtual-buffers nil)
-        ;; Displays the current and total number in the collection in the prompt
-        (ivy-count-format "(%d/%d) ")
-        :config
-        (add-to-list 'ivy-ignore-buffers "\\`\\*Messages\\*")
-        (add-to-list 'ivy-ignore-buffers "\\`\\*Google-chrome\\*")
-        (add-to-list 'ivy-ignore-buffers "\\`\\*straight-process\\*")
-        (ivy-mode 1))
-    #+end_src
-
-**** counsel
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package counsel
-        :commands (counsel-find-file councel-bookmark)
-        :custom
-        (counsel-find-file-ignore-regexp
-         (concat
-          ;; File names beginning with # or .
-          "\\(?:\\`[#.]\\)"
-          ;; File names ending with # or ~
-          "\\|\\(?:\\`.+?[#~]\\'\\)"))
-
-        (all-the-icons-ivy-file-commands
-         '(counsel-find-file counsel-file-jump counsel-recentf counsel-projectile-find-file counsel-projectile-find-dir)))
-    #+end_src
-
-**** swiper
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-     (use-package swiper)
+          (force-mode-line-update)))
     #+end_src
 
 *** doom-modeline
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp
       (use-package doom-modeline
         :hook (after-init . doom-modeline-mode)
         :custom
@@ -322,7 +331,7 @@
     #+end_src
 
 *** yasnippet
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp
       (use-package yasnippet
         :commands yas-minor-mode
         :custom
@@ -339,7 +348,7 @@
     #+end_src
 
 *** magit
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp
       (use-package magit
         :custom
         ;; When maintaining a number of projects, it sometimes is necessary
@@ -351,13 +360,13 @@
     #+end_src
 
 *** evil-magit
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp
       (use-package evil-magit
         :after (magit))
     #+end_src
 
 *** lsp-mode
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp
       (use-package lsp-mode
         :straight (lsp-mode :type git :host github :repo "emacs-lsp/lsp-mode")
         :commands (lsp lsp-deferred)
@@ -379,7 +388,7 @@
     #+end_src
 
 *** lsp-ui
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp
       (use-package lsp-ui
         :hook (lsp-mode . lsp-ui-mode)
         :custom
@@ -401,18 +410,26 @@
         (lsp-ui-imenu-kind-position 'top))
     #+end_src
 
+*** lsp-python-ms
+    #+begin_src emacs-lisp
+      (use-package lsp-python-ms
+        :hook (python-mode . (lambda ()
+                               (require 'lsp-python-ms)
+                               (lsp))))
+    #+end_src
+
 *** go-mode
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp
       (use-package go-mode)
     #+end_src
 
 *** json-mode
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp
       (use-package json-mode)
     #+end_src
 
 *** dart-mode
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp
       (use-package dart-mode
         :config
         (with-eval-after-load "projectile"
@@ -421,7 +438,7 @@
     #+end_src
 
 *** flutter
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp
       (use-package flutter
         :after dart-mode
         :custom
@@ -432,7 +449,7 @@
     #+end_src
 
 *** company
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp
       (use-package company
         :hook
         (after-init . global-company-mode))
@@ -450,7 +467,7 @@
     #+end_src
 
 *** flycheck
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp
       (use-package flycheck
         :hook
         ((go-mode . flycheck-mode)
@@ -462,52 +479,48 @@
     #+end_src
 
 *** treemacs
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp
       (use-package treemacs)
     #+end_src
 
 *** treemacs-icons-dired
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp
       (use-package treemacs-icons-dired
         :after treemacs dired
         :config )
     #+end_src
 
 *** treemacs-evil
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp
       (use-package treemacs-evil
         :after treemacs)
     #+end_src
 
 *** aggressive-indent
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp
       (use-package aggressive-indent
         :hook
         ((web-mode . aggressive-indent-mode)
          (json-mode . aggressive-indent-mode)
+         (lisp-mode . aggressive-indent-mode)
          (emacs-lisp-mode . aggressive-indent-mode)))
     #+end_src
 
 *** projectile
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp
       (use-package projectile
         :init
         (projectile-mode +1))
     #+end_src
 
-*** counsel-projectile
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package counsel-projectile)
-    #+end_src
-
 *** avy
     Search for character
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp
       (use-package avy)
     #+end_src
 
 *** smartparens
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp
       (use-package smartparens
         :config
         (require 'smartparens-config)
@@ -521,38 +534,38 @@
     #+end_src
 
 *** yaml-mode
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp
       (use-package yaml-mode)
     #+end_src
 
 *** org drill
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp
       (use-package org-drill)
     #+end_src
 
 *** all-the-icons
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp
       (use-package all-the-icons)
     #+end_src
 
 *** vterm
     Install cmake to be able to install vterm
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp
     (use-package vterm)
     #+end_src
 
 *** vterm-toggle
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp
     (use-package vterm-toggle)
     #+end_src
 
 *** restart-emacs
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp
       (use-package restart-emacs)
     #+end_src
 
 *** nov.el (epub)
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp
       (use-package nov
         :init
         (add-to-list 'auto-mode-alist '("\\.epub\\'" . nov-mode))
@@ -560,13 +573,33 @@
         (nov-text-width 80))
     #+end_src
 
+*** pdf-tools
+    #+begin_src emacs-lisp
+      ;; pdf-tools depends on this package
+      (use-package tablist)
+
+      (use-package pdf-tools
+        :config
+        ;; initialise
+        (pdf-tools-install)
+
+        ;; open pdfs scaled to fit page
+        (setq-default pdf-view-display-size 'fit-page)
+
+        ;; more fine-grained zooming
+        (setq pdf-view-resize-factor 1.1)
+
+        ;; automatically annotate highlights
+        (setq pdf-annot-activate-created-annotations t))
+    #+end_src
+
 *** expand-region
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp
       (use-package expand-region)
     #+end_src
 
 *** slime
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp
       (use-package slime
         :custom
         (inferior-lisp-program "/usr/bin/sbcl")
@@ -575,7 +608,7 @@
 
 *** auctex
     https://www.reddit.com/r/emacs/comments/a27sg9/how_can_i_set_the_pdfviewer_in_auctex/
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp
       (use-package tex
         :straight auctex
         :config
@@ -584,34 +617,161 @@
         (setq TeX-auto-save t)
         (setq TeX-parse-self t)
 
+        ;; if you often use '\include' or
+        ;; '\input', you should make AUCTeX aware of the multi-file document
+        ;; structure.  You can do this by inserting
+
+        (setq-default TeX-master nil)
+
         ;; This cause to sync the pdf and the tex file
         ;; For example to click in pdf to jump to tex file
         ;; When in zathura do C-click and it will put the cursor
         ;; in the exact position but in the .tex file
-        (add-to-list 'TeX-view-program-list
-                     '("Zathura"
-                       ("zathura %o"
-                        (mode-io-correlate " --synctex-forward %n:0:%b -x \"emacsclient +%{line} %{input}\""))
-                       "zathura"))
+        ;; (add-to-list 'TeX-view-program-list
+        ;;              '("Zathura"
+        ;;                ("zathura %o"
+        ;;                 (mode-io-correlate " --synctex-forward %n:0:%b -x \"emacsclient +%{line} %{input}\""))
+        ;;                "zathura"))
         (setq TeX-source-correlate-method 'synctex)
         (TeX-source-correlate-mode)
         (setq TeX-source-correlate-start-server t)
 
         ;; Use zathura when C-c C-c or C-c C-a or C-c C-v
-        (add-to-list 'TeX-view-program-selection
-                     '(output-pdf "Zathura")))
+        ;; (add-to-list 'TeX-view-program-selection
+        ;;              '(output-pdf "Zathura"))
+
+        (setq TeX-view-program-selection '((output-pdf "pdf-tools")))
+        (setq TeX-view-program-list '(("pdf-tools" "TeX-pdf-tools-sync-view"))))
+    #+end_src
+
+*** lispy
+    #+begin_src emacs-lisp
+      (use-package lispy)
     #+end_src
 
 *** flyspell
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      ;; (add-hook 'TeX-mode-hook 'flyspell-mode); Enable Flyspell mode for TeX modes such as AUCTeX. Highlights all misspelled words.
-      ;; (add-hook 'emacs-lisp-mode-hook 'flyspell-prog-mode); Enable Flyspell program mode for emacs lisp mode, which highlights all misspelled words in comments and strings.
-      ;; (setq ispell-dictionary "english"); Default dictionary. To change do M-x ispell-change-dictionary RET.
+    #+begin_src emacs-lisp
+      ;; Enable Flyspell mode for TeX modes such as AUCTeX. Highlights all misspelled words.
+      ;; (add-hook 'TeX-mode-hook 'flyspell-mode)
+      ;; Enable Flyspell program mode for emacs lisp mode, which highlights all misspelled words in comments and strings.
+      ;; (add-hook 'emacs-lisp-mode-hook 'flyspell-prog-mode)
+      ;; Default dictionary. To change do M-x ispell-change-dictionary RET.
+      ;; (setq ispell-dictionary "english")
+    #+end_src
+
+*** hydra
+    #+begin_src emacs-lisp
+      (use-package hydra)
+    #+end_src
+
+*** org-fc
+    sudo apt install gawk
+    #+begin_src emacs-lisp
+      (use-package org-fc
+        :straight (org-fc :type git :host github :repo "l3kn/org-fc")
+        :custom
+        (org-fc-directories '("~/org/drills"))
+        :config
+        (require 'org-fc-hydra))
+    #+end_src
+
+*** org-roam
+    #+begin_src emacs-lisp
+      (use-package org-roam
+        :hook 
+        (after-init . org-roam-mode)
+        :custom
+        (org-roam-directory "~/org/roams")
+        :bind (:map org-roam-mode-map
+                    (("C-c n l" . org-roam)
+                     ("C-c n f" . org-roam-find-file)
+                     ("C-c n g" . org-roam-show-graph))
+                    :map org-mode-map
+                    (("C-c n i" . org-roam-insert))))
+    #+end_src
+
+*** deft
+    #+begin_src emacs-lisp
+      (use-package deft
+        :after org
+        :bind
+        ("C-c n d" . deft)
+        :custom
+        (deft-recursive t)
+        (deft-use-filter-string-for-filename t)
+        (deft-default-extension "org")
+        (deft-directory "~/org/roams/"))
+    #+end_src
+
+*** pyvenv
+    #+begin_src emacs-lisp
+      (use-package pyenv-mode
+        :init
+        (add-to-list 'exec-path "~/bin/pyenv/shims")
+        :config
+        (pyenv-mode))
+    #+end_src
+
+*** selectrum
+    #+begin_src emacs-lisp
+      (use-package selectrum
+        :straight (selectrum :host github :repo "raxod502/selectrum")
+        :config
+        (selectrum-mode +1))
+
+      (use-package selectrum-prescient
+        :straight (selectrum-prescient :host github :repo "raxod502/prescient.el"
+                                       :files ("selectrum-prescient.el"))
+        :config
+        (selectrum-prescient-mode +1))
+    #+end_src
+
+*** ctrlf
+    #+begin_src emacs-lisp
+      (use-package ctrlf
+        :straight (ctrlf :host github :repo "raxod502/ctrlf")
+        :config
+        (ctrlf-mode +1))
+    #+end_src
+
+*** org-pdftools
+    #+begin_src emacs-lisp
+      (use-package org-noter
+        :commands (org-noter)
+        :config
+        ;;(require 'org-noter-pdftools)
+        (with-eval-after-load 'pdf-tools
+          (setq pdf-annot-activate-handler-functions #'org-noter-pdftools-jump-to-note))
+        (setq org-noter-notes-mode-map (make-sparse-keymap)))
+
+      (use-package org-noter-pdftools
+        :straight (org-noter-pdftools :host github :repo "fuxialexander/org-pdftools"
+                                      :files ("org-noter-pdftools.el"))
+        :after (org-noter))
+
+      (use-package org-pdftools
+        :after (org-noter)
+        :custom
+        (org-pdftools-root-dir "~/org/books")
+        (org-pdftools-search-string-separator "??")
+        :config
+        (with-eval-after-load 'org
+          (org-link-set-parameters "pdftools"
+                                   :follow #'org-pdftools-open
+                                   :complete #'org-pdftools-complete-link
+                                   :store #'org-pdftools-store-link
+                                   :export #'org-pdftools-export)
+          (add-hook 'org-store-link-functions 'org-pdftools-store-link)))
+    #+end_src
+
+*** org-cliplink
+    #+begin_src emacs-lisp
+      (use-package org-cliplink)
     #+end_src
 
 ** Bindings
 *** Normal and Emacs states bindings
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp
       (use-package normal-mode-bindings
         :straight nil
         :after general
@@ -624,7 +784,6 @@
                  "C-`" 'vterm-toggle
                  "M-`" 'vterm-toggle-cd
                  "f" 'avy-goto-char-2
-                 "C-s" 'swiper
                  "SPC" 'er/expand-region
                  ;; swap ; and :
                  ";" 'evil-ex
@@ -635,7 +794,7 @@
     #+end_src
 
 *** Insert-mode bindings
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp
       (use-package inset-mode-bindings
         :straight nil
         :after general
@@ -644,7 +803,7 @@
                  "C-j" 'evil-normal-state))
     #+end_src
 *** =,= Normal-mode bindings
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp
       (use-package normal-mode-bindings
         :straight nil
         :after general
@@ -655,17 +814,12 @@
                  "en" '(lambda() (interactive)(find-file "~/Documents/notes/notes.org"))
                  "eb" '(lambda() (interactive)(find-file "~/Documents/notes/bookmarks.org"))
                  "d" '(lambda() (interactive) (dired default-directory))
-                 "pp" 'counsel-projectile-switch-project
-                 "pb" 'counsel-projectile-switch-to-buffer
-                 "pf" 'counsel-projectile-find-file
-                 "pg" 'counsel-projectile-grep
-                 "b" 'counsel-switch-buffer
                  "s" 'magit-status
                  "q" 'mode-line-other-buffer))
     #+end_src
 
 *** Dired bindings
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp
       (use-package dired-mode
         :straight nil
         :after general
@@ -706,7 +860,7 @@
     #+end_src
 
 *** Org bindings
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp
       (use-package org-mode
         :straight nil
         :after general
@@ -718,26 +872,11 @@
         (:prefix ","
                  :states 'normal
                  :keymaps 'org-mode-map
-                 ;; "h" 'helm-org-in-buffer-headings
-                 "h" 'counsel-org-goto
                  "n" 'org-toggle-narrow-to-subtree))
     #+end_src
 
-*** Ivy bindings
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
-      (use-package ivy-mode
-        :straight nil
-        :after general
-        :no-require t
-        :general
-        (:keymaps 'ivy-minibuffer-map
-                  "C-j" 'ivy-next-line
-                  "C-u" 'counsel-up-directory
-                  "C-k" 'ivy-previous-line))
-    #+end_src
-
 *** Programming bindings
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp
       (use-package prog-mode
         :straight nil
         :after general
@@ -770,32 +909,35 @@
 
 ** Funcions
 *** Make ~l~ to behave as expected in dired
-   #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+   #+begin_src emacs-lisp
      (defun ram/dired-open()
        (interactive)
        (setq file (dired-get-file-for-visit))
        (setq ext (file-name-extension file))
-       (cond ((string= ext "pdf")
-              ;; shell-quote-argument escapes white spaces on the file name
-              (async-start-process "Zathura" "zathura" nil file))
-             ((string= ext "rar")
-              (async-start-process "File-rolle" "file-roller" nil file))
-             ((string= ext "mp4")
-              (async-start-process "Vlc" "vlc" nil file))
-             ((string= ext "mp3")
-              (async-start-process "Vlc" "vlc" nil file))
-             ((string= ext "torrent")
-              (async-start-process "Transmission" "transmission-gtk" nil file))
-             ((string= ext "zip")
-              (async-start-process "File-rolle" "file-roller" nil file))
-             ;; default
-             (t (dired-find-file))))
+       (cond 
+        ((string= ext "rar")
+         (async-start-process "File-rolle" "file-roller" nil file))
+        ((string= ext "mp4")
+         (async-start-process "Vlc" "vlc" nil file))
+        ((string= ext "mkv")
+         (async-start-process "Vlc" "vlc" nil file))
+        ((string= ext "mp3")
+         (async-start-process "Vlc" "vlc" nil file))
+        ((string= ext "torrent")
+         (async-start-process "Transmission" "transmission-gtk" nil file))
+        ((string= ext "zip")
+         (async-start-process "File-rolle" "file-roller" nil file))
+        ;;((string= ext "pdf")
+        ;; shell-quote-argument escapes white spaces on the file name
+        ;;(async-start-process "Zathura" "zathura" nil file))
+        ;; default
+        (t (dired-find-file))))
    #+end_src
 
 *** Switch to the previous buffer
     For some reason ~mode-line-other-buffer~ behaves odd in exwm.
 
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp
       (defun ram/switch-to-previous-buffer ()
         "Switch to previously open buffer.
       Repeated invocations toggle between the two most recently open buffers."
@@ -804,7 +946,7 @@
     #+end_src
 
 *** Launch apps
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp
       (defun ram/launch-app (arg)
         (interactive (list (completing-read "Apps: "
                                             '("Google-chrome" "Firefox" "Shutdown" "JD" "Rofi"))))
@@ -824,7 +966,7 @@
     #+end_src
 
 *** Functions for vterm
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp
       (push (list "find-file-below"
                   (lambda (path)
                     (if-let* ((buf (find-file-noselect path))
@@ -835,7 +977,7 @@
     #+end_src
 
 *** Hiding dired buffers in ivy
-    #+begin_src emacs-lisp :tangle ~/.emacs.d/init.el
+    #+begin_src emacs-lisp 
       (defun ram/ignore-dired-buffers (str)
         "Return non-nil if STR names a Dired buffer.
       This function is intended for use with `ivy-ignore-buffers'."
@@ -848,7 +990,7 @@
 
 * Alacritty
 ** Theme
-   #+begin_src sh :tangle ~/.config/alacritty/alacritty.yml
+   #+begin_src sh
      # Colors (Doom One)
      colors:
        # Default colors
@@ -868,12 +1010,23 @@
          white:   '0xbbc2cf'
    #+end_src
 
-* .profile and bashrc
+* .profile
+  :PROPERTIES:
+  :header-args: :tangle ~/.profile
+  :END:
+** Variables bashrc
+    #+begin_src sh
+      export _JAVA_AWT_WM_NONREPARENTING=1            # makes java application work correctly
+      export PYENV_ROOT="$HOME/bin/pyenv"
+      export POETRY_HOME="$HOME/bin/poetry"
+      export ALTERNATE_EDITOR=""
+      export EDITOR="emacsclient -c"                  # $EDITOR opens in GUI mode
+      export VISUAL="emacsclient -c -a emacs"         # $VISUAL opens in GUI mode
+    #+end_src
+
 ** Paths
 *** Default
-    #+begin_src sh :tangle ~/.profile
-      export _JAVA_AWT_WM_NONREPARENTING=1
-
+    #+begin_src sh
       # if running bash
       if [ -n "$BASH_VERSION" ]; then
           # include .bashrc if it exists
@@ -892,64 +1045,70 @@
           PATH="$HOME/.local/bin:$PATH"
       fi
     #+end_src
+*** pyenv
+    #+begin_src sh
+      export PATH=$PYENV_ROOT/bin:$PATH
+    #+end_src
+
+*** poetry
+    #+begin_src sh
+      export PATH="$HOME/bin/poetry/bin:$PATH"
+    #+end_src
 
 *** Alacritty
-    #+begin_src sh :tangle ~/.profile
+    #+begin_src sh
       export PATH=$HOME/bin/alarcritty:$PATH
     #+end_src
 
 *** Emacs
-    #+begin_src sh :tangle ~/.profile
+    #+begin_src sh
       export PATH=$HOME/bin/emacs/bin:$PATH
     #+end_src
-
+    
 *** Neovim
-    #+begin_src sh :tangle ~/.profile
+    #+begin_src sh
       export PATH=$HOME/bin/neovim:$PATH
     #+end_src
 
 *** Node
-    #+begin_src sh :tangle ~/.profile
+    #+begin_src sh
       export PATH=$HOME/bin/node/bin:$PATH
     #+end_src
 
 *** Dart
-    #+begin_src sh :tangle ~/.profile
+    #+begin_src sh
       export PATH=$HOME/bin/dart-sdk/bin:$PATH
       export PATH=$HOME/.pub-cache/bin:$PATH
     #+end_src
 
 *** Jdk
-    #+begin_src sh :tangle ~/.profile
+    #+begin_src sh
       export PATH=$HOME/bin/jdk/bin:$PATH
     #+end_src
 
 *** Cmake
-    #+begin_src sh :tangle ~/.profile
+    #+begin_src sh
       export PATH=$HOME/bin/cmake/bin:$PATH
     #+end_src
 
 *** Scripts
-    #+begin_src sh :tangle ~/.profile
+    #+begin_src sh
       export PATH=$HOME/bin/scripts:$PATH
     #+end_src
 
-** Variables bashrc
-    #+begin_src sh :tangle ~/.bashrc
-      export ALTERNATE_EDITOR=""
-      export EDITOR="emacsclient -c"                  # $EDITOR opens in GUI mode
-      export VISUAL="emacsclient -c -a emacs"         # $VISUAL opens in GUI mode
-    #+end_src
-
+* bashrc
+  :PROPERTIES:
+  :header-args: :tangle ~/.bashrc
+  :END:
 ** Prompt
    https://github.com/riobard/bash-powerline
-    #+begin_src sh :tangle ~/.bashrc
+    #+begin_src sh
       source ~/.config/bash-powerline/bash-powerline.sh
     #+end_src
 
 ** vterm
 *** Function to be able to call elisp functions in vterm
-     #+begin_src sh :tangle ~/.bashrc
+     #+begin_src sh
        vterm_cmd() {
            if [ -n "$TMUX" ]; then
                # tell tmux to pass the escape sequences through
@@ -979,390 +1138,28 @@
      #+end_src
 
 *** open file or dired in emacs when using vterm
-     #+begin_src sh :tangle ~/.bashrc
+     #+begin_src sh
        op() {
            vterm_cmd find-file "$(realpath "$@")"
        }
-
      #+end_src
 
 ** fzf
    - Install
    https://github.com/junegunn/fzf
-   #+begin_src sh
+   #+begin_src sh :tangle no
      git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
      ~/.fzf/install
    #+end_src
 
    This is add automaticly after installing fzf
-   #+begin_src sh :tangle ~/.bashrc
+   #+begin_src sh
      [ -f ~/.fzf.bash ] && source ~/.fzf.bash
    #+end_src
 
-* Regolith
-   ~/.config/regolith/i3/config
-  #+begin_src yaml :tangle no
-    # i3 config file for the Regolith Desktop Environment
-    #
-    # Please see http://i3wm.org/docs/userguide.html for a complete reference!
-
-    # This defines which key super maps to on your keyboard.
-    # Alt key is Mod1, and Windows key is Mod4
-    set $mod Mod4
-    set $alt Mod1
-
-    # i3xrocks config file. Override this for custom status indicators on the bar.
-    set $i3xrocks_config /etc/regolith/i3xrocks/config
-
-    # path to terminal. Override this to specify a custom terminal.
-    set $terminal_path ~/bin/alarcritty/alacritty
-
-    # Color values are defined in ~/.Xresources-regolith
-    # These are the labels which define each i3 workspace.
-    set_from_resource $ws1  i3-wm.workspace.01.name "1"
-    set_from_resource $ws2  i3-wm.workspace.02.name "2"
-    set_from_resource $ws3  i3-wm.workspace.03.name "3"
-    set_from_resource $ws4  i3-wm.workspace.04.name "4"
-    set_from_resource $ws5  i3-wm.workspace.05.name "5"
-    set_from_resource $ws6  i3-wm.workspace.06.name "6"
-    set_from_resource $ws7  i3-wm.workspace.07.name "7"
-    set_from_resource $ws8  i3-wm.workspace.08.name "8"
-    set_from_resource $ws9  i3-wm.workspace.09.name "9"
-    set_from_resource $ws10 i3-wm.workspace.10.name "10"
-    set_from_resource $ws11 i3-wm.workspace.11.name "11"
-    set_from_resource $ws12 i3-wm.workspace.12.name "12"
-    set_from_resource $ws13 i3-wm.workspace.13.name "13"
-    set_from_resource $ws14 i3-wm.workspace.14.name "14"
-    set_from_resource $ws15 i3-wm.workspace.15.name "15"
-    set_from_resource $ws16 i3-wm.workspace.16.name "16"
-    set_from_resource $ws17 i3-wm.workspace.17.name "17"
-    set_from_resource $ws18 i3-wm.workspace.18.name "18"
-    set_from_resource $ws19 i3-wm.workspace.19.name "19"
-
-    # Use Mouse+$mod to drag floating windows to their wanted position
-    floating_modifier $mod
-
-    hide_edge_borders smart
-
-    # start a terminal
-    bindsym $mod+Return exec $terminal_path
-
-    # start a web browser
-    bindsym $mod+Shift+Return exec /usr/bin/google-chrome
-
-    # open emacs
-    bindsym $mod+m exec emacsclient -c -a="emacs"
-
-    # kill focused window
-    bindsym $mod+Shift+q kill
-
-    set_from_resource $rofiTheme rofi.theme "regolith-theme"
-
-    # rofi app and window launchers
-    # bindsym $mod+space exec rofi -show drun -theme $rofiTheme
-    bindsym $mod+space exec ~/bin/scripts/build/rofi_bangs
-    bindsym $mod+Shift+space exec rofi -show run -theme $rofiTheme
-    bindsym $mod+q exec rofi -show window -theme $rofiTheme
-
-    # change focus
-    bindsym $mod+Left focus left
-    bindsym $mod+Down focus down
-    bindsym $mod+Up focus up
-    bindsym $mod+Right focus right
-
-    bindsym $mod+h focus left
-    bindsym $mod+j focus down
-    bindsym $mod+k focus up
-    bindsym $mod+l focus right
-
-    # move windows in workspaces
-    bindsym $mod+Shift+Left move left
-    bindsym $mod+Shift+Down move down
-    bindsym $mod+Shift+Up move up
-    bindsym $mod+Shift+Right move right
-
-    bindsym $mod+Shift+h move left
-    bindsym $mod+Shift+j move down
-    bindsym $mod+Shift+k move up
-    bindsym $mod+Shift+l move right
-
-    # move workspaces to outputs
-    bindsym $mod+Ctrl+Shift+Left move workspace to output left
-    bindsym $mod+Ctrl+Shift+Down move workspace to output down
-    bindsym $mod+Ctrl+Shift+Up move workspace to output up
-    bindsym $mod+Ctrl+Shift+Right move workspace to output right
-
-    # toggle split orientation
-    bindsym $mod+BackSpace split toggle
-
-    # tab mode
-    bindsym $mod+w layout tabbed
-
-    # toggle split
-    bindsym $mod+e layout toggle split
-
-    # enter fullscreen mode for the focused container
-    bindsym $mod+f fullscreen toggle
-
-    # show/hide keybindings
-    bindsym $mod+Shift+question exec --no-startup-id /usr/bin/remontoire-toggle
-
-    # toggle tiling / floating
-    bindsym $mod+Shift+f floating toggle
-    bindsym $mod+Shift+comma move to scratchpad
-    bindsym $mod+comma scratchpad show
-
-    # change focus between tiling / floating windows
-    bindsym $mod+Shift+t focus mode_toggle
-
-    # toggle tabbed mode
-    bindsym $mod+t layout toggle tabbed splith splitv
-
-    # switch to workspace
-    bindsym $mod+1 workspace number $ws1
-    bindsym $mod+2 workspace number $ws2
-    bindsym $mod+3 workspace number $ws3
-    bindsym $mod+4 workspace number $ws4
-    bindsym $mod+5 workspace number $ws5
-    bindsym $mod+6 workspace number $ws6
-    bindsym $mod+7 workspace number $ws7
-    bindsym $mod+8 workspace number $ws8
-    bindsym $mod+9 workspace number $ws9
-    bindsym $mod+0 workspace number $ws10
-    bindsym $mod+Ctrl+1 workspace number $ws11
-    bindsym $mod+Ctrl+2 workspace number $ws12
-    bindsym $mod+Ctrl+3 workspace number $ws13
-    bindsym $mod+Ctrl+4 workspace number $ws14
-    bindsym $mod+Ctrl+5 workspace number $ws15
-    bindsym $mod+Ctrl+6 workspace number $ws16
-    bindsym $mod+Ctrl+7 workspace number $ws17
-    bindsym $mod+Ctrl+8 workspace number $ws18
-    bindsym $mod+Ctrl+9 workspace number $ws19
-
-    # cycle across workspaces
-    bindsym $mod+Tab workspace next
-    bindsym $mod+Shift+Tab workspace prev
-
-    # move focused container to workspace
-    bindsym $mod+Shift+1 move container to workspace number $ws1
-    bindsym $mod+Shift+2 move container to workspace number $ws2
-    bindsym $mod+Shift+3 move container to workspace number $ws3
-    bindsym $mod+Shift+4 move container to workspace number $ws4
-    bindsym $mod+Shift+5 move container to workspace number $ws5
-    bindsym $mod+Shift+6 move container to workspace number $ws6
-    bindsym $mod+Shift+7 move container to workspace number $ws7
-    bindsym $mod+Shift+8 move container to workspace number $ws8
-    bindsym $mod+Shift+9 move container to workspace number $ws9
-    bindsym $mod+Shift+0 move container to workspace number $ws10
-    bindsym $mod+Shift+Ctrl+1 move container to workspace number $ws11
-    bindsym $mod+Shift+Ctrl+2 move container to workspace number $ws12
-    bindsym $mod+Shift+Ctrl+3 move container to workspace number $ws13
-    bindsym $mod+Shift+Ctrl+4 move container to workspace number $ws14
-    bindsym $mod+Shift+Ctrl+5 move container to workspace number $ws15
-    bindsym $mod+Shift+Ctrl+6 move container to workspace number $ws16
-    bindsym $mod+Shift+Ctrl+7 move container to workspace number $ws17
-    bindsym $mod+Shift+Ctrl+8 move container to workspace number $ws18
-    bindsym $mod+Shift+Ctrl+9 move container to workspace number $ws19
-
-    # move focused container to workspace, move to workspace
-    bindsym $mod+$alt+1 move container to workspace number $ws1; workspace number $ws1
-    bindsym $mod+$alt+2 move container to workspace number $ws2; workspace number $ws2
-    bindsym $mod+$alt+3 move container to workspace number $ws3; workspace number $ws3
-    bindsym $mod+$alt+4 move container to workspace number $ws4; workspace number $ws4
-    bindsym $mod+$alt+5 move container to workspace number $ws5; workspace number $ws5
-    bindsym $mod+$alt+6 move container to workspace number $ws6; workspace number $ws6
-    bindsym $mod+$alt+7 move container to workspace number $ws7; workspace number $ws7
-    bindsym $mod+$alt+8 move container to workspace number $ws8; workspace number $ws8
-    bindsym $mod+$alt+9 move container to workspace number $ws9; workspace number $ws9
-    bindsym $mod+$alt+0 move container to workspace number $ws10; workspace number $ws10
-    bindsym $mod+$alt+Ctrl+1 move container to workspace number $ws11; workspace number $ws11
-    bindsym $mod+$alt+Ctrl+2 move container to workspace number $ws12; workspace number $ws12
-    bindsym $mod+$alt+Ctrl+3 move container to workspace number $ws13; workspace number $ws13
-    bindsym $mod+$alt+Ctrl+4 move container to workspace number $ws14; workspace number $ws14
-    bindsym $mod+$alt+Ctrl+5 move container to workspace number $ws15; workspace number $ws15
-    bindsym $mod+$alt+Ctrl+6 move container to workspace number $ws16; workspace number $ws16
-    bindsym $mod+$alt+Ctrl+7 move container to workspace number $ws17; workspace number $ws17
-    bindsym $mod+$alt+Ctrl+8 move container to workspace number $ws18; workspace number $ws18
-    bindsym $mod+$alt+Ctrl+9 move container to workspace number $ws19; workspace number $ws19
-
-    # reload the configuration file
-    bindsym $mod+Shift+c reload
-
-    # restart i3 inplace (preserves your layout/session, can be used to upgrade i3)
-    bindsym $mod+Shift+r restart
-
-    # Logout of session
-    bindsym $mod+Shift+e exec /usr/bin/gnome-session-quit --logout
-
-    # Reboot computer
-    bindsym $mod+Shift+b exec /usr/bin/gnome-session-quit --reboot
-
-    # Power off computer
-    bindsym $mod+Shift+p exec /usr/bin/gnome-session-quit --power-off
-
-    # lock the screen
-    bindsym $mod+Escape exec gnome-screensaver-command --lock
-
-    # put the system to sleep
-    bindsym $mod+Shift+s exec systemctl suspend
-
-    # shortcuts for common system configuration tasks
-    bindsym $mod+c exec gnome-control-center
-    bindsym $mod+n exec nautilus
-
-    # i3-snapshot for load/save current layout
-    # bindsym $mod+comma  exec /usr/bin/i3-snapshot -o > /tmp/i3-snapshot
-    # bindsym $mod+period exec /usr/bin/i3-snapshot -c < /tmp/i3-snapshot
-
-    # Toggle bar visibility
-    bindsym $mod+i bar mode toggle
-
-    # Cause Settings app to float above tiled windows
-    floating_maximum_size -1 x -1
-    for_window [class="Gnome-control-center"] floating enable
-
-    # resize window (you can also use the mouse for that)
-    mode "Resize Mode" {
-            # These bindings trigger as soon as you enter the resize mode
-            bindsym Left resize shrink width 6 px or 6 ppt
-            bindsym Down resize grow height 6 px or 6 ppt
-            bindsym Up resize shrink height 6 px or 6 ppt
-            bindsym Right resize grow width 6 px or 6 ppt
-
-            bindsym Shift+Left resize shrink width 12 px or 12 ppt
-            bindsym Shift+Down resize grow height 12 px or 12 ppt
-            bindsym Shift+Up resize shrink height 12 px or 12 ppt
-            bindsym Shift+Right resize grow width 12 px or 12 ppt
-
-            bindsym h resize shrink width 6 px or 6 ppt
-            bindsym k resize grow height 6 px or 6 ppt
-            bindsym j resize shrink height 6 px or 6 ppt
-            bindsym l resize grow width 6 px or 6 ppt
-
-            bindsym Shift+h resize shrink width 12 px or 12 ppt
-            bindsym Shift+k resize grow height 12 px or 12 ppt
-            bindsym Shift+j resize shrink height 12 px or 12 ppt
-            bindsym Shift+l resize grow width 12 px or 12 ppt
-
-            # change gaps interactively
-            bindsym minus gaps inner current minus 6
-            bindsym plus gaps inner current plus 6
-            bindsym Shift+minus gaps inner current minus 12
-            bindsym Shift+plus gaps inner current plus 12
-
-            # back to normal: Enter or Escape
-            bindsym Return mode "default"
-            bindsym Escape mode "default"
-            bindsym $mod+r mode "default"
-    }
-    bindsym $mod+r mode "Resize Mode"
-
-    # Disable titlebar
-    new_window pixel 1
-    new_float pixel 1
-
-    # Specify the distance between windows in pixels. (i3-gaps)
-    gaps inner 5
-    gaps outer 0
-
-    # Only enable gaps on a workspace when there is at least one container
-    smart_gaps on
-
-    # Create variables from Xresources for i3's look.
-    set_from_resource $focused.color.border i3-wm.client.focused.color.border "#002b36"
-    set_from_resource $focused.color.background i3-wm.client.focused.color.background "#586e75"
-    set_from_resource $focused.color.text i3-wm.client.focused.color.text "#fdf6e3"
-    set_from_resource $focused.color.indicator i3-wm.client.focused.color.indicator "#268bd2"
-    set_from_resource $focused.color.child_border i3-wm.client.focused.color.child_border
-
-    set_from_resource $focused_inactive.color.border i3-wm.client.focused_inactive.color.border "#002b36"
-    set_from_resource $focused_inactive.color.background i3-wm.client.focused_inactive.color.background "#073642"
-    set_from_resource $focused_inactive.color.text i3-wm.client.focused_inactive.color.text "#839496"
-    set_from_resource $focused_inactive.color.indicator i3-wm.client.focused_inactive.color.indicator "#073642"
-    set_from_resource $focused_inactive.color.child_border i3-wm.client.focused_inactive.color.child_border
-
-    set_from_resource $unfocused.color.border i3-wm.client.unfocused.color.border "#002b36"
-    set_from_resource $unfocused.color.background i3-wm.client.unfocused.color.background "#073642"
-    set_from_resource $unfocused.color.text i3-wm.client.unfocused.color.text "#839496"
-    set_from_resource $unfocused.color.indicator i3-wm.client.unfocused.color.indicator "#073642"
-    set_from_resource $unfocused.color.child_border i3-wm.client.unfocused.color.child_border
-
-    set_from_resource $urgent.color.border i3-wm.client.urgent.color.border "#002b36"
-    set_from_resource $urgent.color.background i3-wm.client.urgent.color.background "#dc322f"
-    set_from_resource $urgent.color.text i3-wm.client.urgent.color.text "#fdf6e3"
-    set_from_resource $urgent.color.indicator i3-wm.client.urgent.color.indicator "#002b36"
-    set_from_resource $urgent.color.child_border i3-wm.client.urgent.color.child_border
-
-
-    # Window Border color
-    # class                 border                             background                         text                               indicator                          child_border
-    client.focused          $focused.color.border              $focused.color.background          $focused.color.text                $focused.color.indicator           $focused.color.child_border
-    client.focused_inactive $focused_inactive.color.border     $focused_inactive.color.background $focused_inactive.color.text       $focused_inactive.color.indicator  $focused_inactive.color.child_border
-    client.unfocused        $unfocused.color.border            $unfocused.color.background        $unfocused.color.text              $unfocused.color.indicator         $unfocused.color.child_border
-    client.urgent           $urgent.color.border               $urgent.color.background           $urgent.color.text                 $urgent.color.indicator            $urgent.color.child_border
-
-    # Enable popup during fullscreen
-    popup_during_fullscreen smart
-
-    # window focus follows your mouse movements as the mouse crosses window borders
-    focus_follows_mouse no
-
-    # Create variables from Xresources for i3bars's look.
-    set_from_resource $i3-wm.bar.background.color i3-wm.bar.background.color "#002b36"
-    set_from_resource $i3-wm.bar.statusline.color i3-wm.bar.statusline.color "#93a1a1"
-    set_from_resource $i3-wm.bar.separator.color i3-wm.bar.separator.color "#268bd2"
-
-    set_from_resource $i3-wm.bar.workspace.focused.border.color i3-wm.bar.workspace.focused.border.color "#073642"
-    set_from_resource $i3-wm.bar.workspace.focused.background.color i3-wm.bar.workspace.focused.background.color "#073642"
-    set_from_resource $i3-wm.bar.workspace.focused.text.color i3-wm.bar.workspace.focused.text.color "#eee8d5"
-
-    set_from_resource $i3-wm.bar.workspace.active.border.color i3-wm.bar.workspace.active.border.color "#073642"
-    set_from_resource $i3-wm.bar.workspace.active.background.color i3-wm.bar.workspace.active.background.color "#073642"
-    set_from_resource $i3-wm.bar.workspace.active.text.color i3-wm.bar.workspace.active.text.color "#586e75"
-
-    set_from_resource $i3-wm.bar.workspace.inactive.border.color i3-wm.bar.workspace.inactive.border.color "#002b36"
-    set_from_resource $i3-wm.bar.workspace.inactive.background.color i3-wm.bar.workspace.inactive.background.color "#002b36"
-    set_from_resource $i3-wm.bar.workspace.inactive.text.color i3-wm.bar.workspace.inactive.text.color "#586e75"
-
-    set_from_resource $i3-wm.bar.workspace.urgent.border.color i3-wm.bar.workspace.urgent.border.color "#dc322f"
-    set_from_resource $i3-wm.bar.workspace.urgent.background.color i3-wm.bar.workspace.urgent.background.color "#dc322f"
-    set_from_resource $i3-wm.bar.workspace.urgent.text.color i3-wm.bar.workspace.urgent.text.color "#fdf6e3"
-
-    set_from_resource $i3-wm.bar.font i3-wm.bar.font "pango:Source Code Pro Medium 13, FontAwesome 13"
-    font $i3-wm.bar.font
-
-    # The bar configuration
-    bar {
-      font $i3-wm.bar.font
-      separator_symbol " "
-      status_command i3xrocks -c $i3xrocks_config
-      tray_output none
-      strip_workspace_numbers yes
-
-      colors {
-          background $i3-wm.bar.background.color
-          statusline $i3-wm.bar.statusline.color
-          separator  $i3-wm.bar.separator.color
-
-    #                        BORDER  BACKGROUND TEXT
-          focused_workspace  $i3-wm.bar.workspace.focused.border.color      $i3-wm.bar.workspace.focused.background.color   $i3-wm.bar.workspace.focused.text.color
-          active_workspace   $i3-wm.bar.workspace.active.border.color       $i3-wm.bar.workspace.active.background.color    $i3-wm.bar.workspace.active.text.color
-          inactive_workspace $i3-wm.bar.workspace.inactive.border.color     $i3-wm.bar.workspace.inactive.background.color  $i3-wm.bar.workspace.inactive.text.color
-          urgent_workspace   $i3-wm.bar.workspace.urgent.border.color       $i3-wm.bar.workspace.urgent.background.color    $i3-wm.bar.workspace.urgent.text.color
-      }
-    }
-
-    # The following exec calls run programs in the background when i3 starts.
-
-    # Start the installed regolith-compositor
-    exec --no-startup-id /usr/share/regolith-compositor/init
-
-    # Start Rofication for notifications
-    exec --no-startup-id /usr/share/rofication/rofication-daemon.py
-
-    # Launch first time user experience script
-    exec --no-startup-id /usr/bin/regolith-ftue
-
-    # Hide the mouse pointer if unused for a duration
-    exec --no-startup-id /usr/bin/unclutter -b
-  #+end_src
+** pyenv
+   #+begin_src sh
+     if command -v pyenv 1>/dev/null 2>&1; then
+       eval "$(pyenv init -)"
+     fi
+   #+end_src
