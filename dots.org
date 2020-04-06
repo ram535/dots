@@ -217,7 +217,8 @@
         (org-src-fontify-natively t)
         (org-src-tab-acts-natively t)
         (org-src-window-setup 'current-window)
-
+        (org-edit-src-content-indentation 0)
+        (org-src-preserve-indentation nil)
         :config
         (org-babel-do-load-languages
          'org-babel-load-languages
@@ -810,9 +811,6 @@
         :general
         (:states 'normal
                  :prefix ","
-                 "ed" '(lambda() (interactive) (find-file "~/Projects/dots/dots.org"))
-                 "en" '(lambda() (interactive)(find-file "~/Documents/notes/notes.org"))
-                 "eb" '(lambda() (interactive)(find-file "~/Documents/notes/bookmarks.org"))
                  "d" '(lambda() (interactive) (dired default-directory))
                  "s" 'magit-status
                  "q" 'mode-line-other-buffer))
@@ -910,83 +908,105 @@
 ** Funcions
 *** Make ~l~ to behave as expected in dired
    #+begin_src emacs-lisp
-     (defun ram/dired-open()
-       (interactive)
-       (setq file (dired-get-file-for-visit))
-       (setq ext (file-name-extension file))
-       (cond 
-        ((string= ext "rar")
-         (async-start-process "File-rolle" "file-roller" nil file))
-        ((string= ext "mp4")
-         (async-start-process "Vlc" "vlc" nil file))
-        ((string= ext "mkv")
-         (async-start-process "Vlc" "vlc" nil file))
-        ((string= ext "mp3")
-         (async-start-process "Vlc" "vlc" nil file))
-        ((string= ext "torrent")
-         (async-start-process "Transmission" "transmission-gtk" nil file))
-        ((string= ext "zip")
-         (async-start-process "File-rolle" "file-roller" nil file))
-        ;;((string= ext "pdf")
-        ;; shell-quote-argument escapes white spaces on the file name
-        ;;(async-start-process "Zathura" "zathura" nil file))
-        ;; default
-        (t (dired-find-file))))
+   (defun ram/dired-open()
+     (interactive)
+     (setq file (dired-get-file-for-visit))
+     (setq ext (file-name-extension file))
+     (cond 
+      ((string= ext "rar")
+       (async-start-process "File-rolle" "file-roller" nil file))
+      ((string= ext "mp4")
+       (async-start-process "Vlc" "vlc" nil file))
+      ((string= ext "mkv")
+       (async-start-process "Vlc" "vlc" nil file))
+      ((string= ext "mp3")
+       (async-start-process "Vlc" "vlc" nil file))
+      ((string= ext "torrent")
+       (async-start-process "Transmission" "transmission-gtk" nil file))
+      ((string= ext "zip")
+       (async-start-process "File-rolle" "file-roller" nil file))
+      ;;((string= ext "pdf")
+      ;; shell-quote-argument escapes white spaces on the file name
+      ;;(async-start-process "Zathura" "zathura" nil file))
+      ;; default
+      (t (dired-find-file))))
    #+end_src
 
 *** Switch to the previous buffer
     For some reason ~mode-line-other-buffer~ behaves odd in exwm.
 
     #+begin_src emacs-lisp
-      (defun ram/switch-to-previous-buffer ()
-        "Switch to previously open buffer.
-      Repeated invocations toggle between the two most recently open buffers."
-        (interactive)
-        (switch-to-buffer (other-buffer (current-buffer) 1)))
+    (defun ram/switch-to-previous-buffer ()
+      "Switch to previously open buffer.
+    Repeated invocations toggle between the two most recently open buffers."
+      (interactive)
+      (switch-to-buffer (other-buffer (current-buffer) 1)))
     #+end_src
 
 *** Launch apps
     #+begin_src emacs-lisp
-      (defun ram/launch-app (arg)
-        (interactive (list (completing-read "Apps: "
-                                            '("Google-chrome" "Firefox" "Shutdown" "JD" "Rofi"))))
-        (cond ((string= arg "Google-chrome")
-               ;; shell-quote-argument escapes white spaces on the file name
-               (async-start-process "Google-chrome" "google-chrome" nil))
-              ((string= arg "Firefox")
-               (async-start-process "Firefox" "firefox" nil "-private"))
-              ((string= arg "Shutdown")
-               (async-start-process "Shutdown" "shutdown" nil "-P" "now"))
-              ((string= arg "JD")
-               (async-start-process "JD" "~/bin/jd2/JDownloader2" nil))
-              ((string= arg "Rofi")
-               (async-start-process "rofi" "rofi" nil "-show" "drun"))
-              ;; default
-              (t (message "Wrong option"))))
+    (defun ram/launch-app (arg)
+      (interactive (list (completing-read "Apps: "
+                                          '("Google-chrome" "Firefox" "Shutdown" "JD" "Rofi"))))
+      (cond ((string= arg "Google-chrome")
+             ;; shell-quote-argument escapes white spaces on the file name
+             (async-start-process "Google-chrome" "google-chrome" nil))
+            ((string= arg "Firefox")
+             (async-start-process "Firefox" "firefox" nil "-private"))
+            ((string= arg "Shutdown")
+             (async-start-process "Shutdown" "shutdown" nil "-P" "now"))
+            ((string= arg "JD")
+             (async-start-process "JD" "~/bin/jd2/JDownloader2" nil))
+            ((string= arg "Rofi")
+             (async-start-process "rofi" "rofi" nil "-show" "drun"))
+            ;; default
+            (t (message "Wrong option"))))
     #+end_src
 
 *** Functions for vterm
     #+begin_src emacs-lisp
-      (push (list "find-file-below"
-                  (lambda (path)
-                    (if-let* ((buf (find-file-noselect path))
-                              (window (display-buffer-below-selected buf nil)))
-                        (select-window window)
-                      (message "Failed to open file: %s" path))))
-            vterm-eval-cmds)
+    (push (list "find-file-below"
+                (lambda (path)
+                  (if-let* ((buf (find-file-noselect path))
+                            (window (display-buffer-below-selected buf nil)))
+                      (select-window window)
+                    (message "Failed to open file: %s" path))))
+          vterm-eval-cmds)
     #+end_src
 
 *** Hiding dired buffers in ivy
-    #+begin_src emacs-lisp 
-      (defun ram/ignore-dired-buffers (str)
-        "Return non-nil if STR names a Dired buffer.
-      This function is intended for use with `ivy-ignore-buffers'."
-        (let ((buf (get-buffer str)))
-          (and buf (eq (buffer-local-value 'major-mode buf) 'dired-mode))))
+    #+begin_src emacs-lisp :tangle no
+    (defun ram/ignore-dired-buffers (str)
+      "Return non-nil if STR names a Dired buffer.
+    This function is intended for use with `ivy-ignore-buffers'."
+      (let ((buf (get-buffer str)))
+        (and buf (eq (buffer-local-value 'major-mode buf) 'dired-mode))))
 
-      (with-eval-after-load 'ivy
-        (add-to-list 'ivy-ignore-buffers #'ram/ignore-dired-buffers))
+    (with-eval-after-load 'ivy
+      (add-to-list 'ivy-ignore-buffers #'ram/ignore-dired-buffers))
     #+end_src
+
+*** Open dots.org
+    #+begin_src emacs-lisp
+    (defun ram/open-dots()
+      (interactive)
+      (find-file "~/Projects/dots/dots.org"))
+    #+end_src
+
+*** Open the list
+    #+begin_src emacs-lisp
+    (defun ram/open-the-list()
+      (interactive)
+      (find-file "~/Documents/notes/list.org"))
+    #+end_src
+
+*** Open bookmarks
+    #+begin_src emacs-lisp
+    (defun ram/open-bookmarks()
+      (interactive)
+      (find-file "~/Documents/notes/bookmarks.org"))
+    #+end_src
+
 
 * Alacritty
 ** Theme

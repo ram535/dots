@@ -3,5 +3,4 @@
 # key: up
 # --
 (use-package ${1:NAME-PACKAGE}
-:ensure t
 $0)
