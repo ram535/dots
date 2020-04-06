@@ -715,16 +715,19 @@
 
 *** selectrum
     #+begin_src emacs-lisp
-      (use-package selectrum
-        :straight (selectrum :host github :repo "raxod502/selectrum")
-        :config
-        (selectrum-mode +1))
+    (use-package selectrum
+      :straight (selectrum :host github :repo "raxod502/selectrum")
+      :config
+      (selectrum-mode +1))
 
-      (use-package selectrum-prescient
-        :straight (selectrum-prescient :host github :repo "raxod502/prescient.el"
-                                       :files ("selectrum-prescient.el"))
-        :config
-        (selectrum-prescient-mode +1))
+    (use-package selectrum-prescient
+      :straight (selectrum-prescient :host github :repo "raxod502/prescient.el"
+                                     :files ("selectrum-prescient.el"))
+      :config
+      (selectrum-prescient-mode +1)
+      ;; to save your command history on disk, so the sorting gets more
+      ;; intelligent over time
+      (prescient-persist-mode +1))
     #+end_src
 
 *** ctrlf
@@ -1006,7 +1009,6 @@
       (interactive)
       (find-file "~/Documents/notes/bookmarks.org"))
     #+end_src
-
 
 * Alacritty
 ** Theme
