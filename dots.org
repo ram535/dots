@@ -201,36 +201,40 @@
         (general-evil-setup))
     #+end_src
 *** org-mode
-    #+begin_src emacs-lisp
-      (use-package org
-        :custom
-        ;; open link to a file in the same buffer
-        (org-link-frame-setup
-         '((file . find-file)))
+#+begin_src emacs-lisp
+(use-package org
+  :custom
+  ;; open link to a file in the same buffer
+  (org-link-frame-setup
+   '((file . find-file)))
 
-        (org-agenda-files '("~/org/agenda/todo.org"))
-        (org-startup-with-inline-images t)
-        ;; inline latex like $y=mx+c$ will appear in a different colour in an org-mode file to help it stand out
-        (org-highlight-latex-and-related '(latex))
-        (org-ellipsis "…")
-        ;; syntax highlight
-        (org-src-fontify-natively t)
-        (org-src-tab-acts-natively t)
-        (org-src-window-setup 'current-window)
-        (org-edit-src-content-indentation 0)
-        (org-src-preserve-indentation nil)
-        :config
-        (org-babel-do-load-languages
-         'org-babel-load-languages
-         '((dot . t)
-           (js . t)
-           (latex . t)
-           (calc . t)
-           (shell . t)
-           (sql . t)
-           (C . t)
-           (python . t)
-           (emacs-lisp . t))))
+  (org-agenda-files '("~/org/agenda/todo.org"))
+  (org-startup-with-inline-images t)
+  ;; inline latex like $y=mx+c$ will appear in a different colour in
+  ;; an org-mode file to help it stand out
+  (org-highlight-latex-and-related '(latex))
+  (org-ellipsis "…")
+  ;; syntax highlight
+  (org-src-fontify-natively t)
+  (org-src-tab-acts-natively t)
+  (org-src-window-setup 'current-window)
+  (org-edit-src-content-indentation 0)
+  (org-src-preserve-indentation nil)
+  :config
+  ;; puts the cursor in the right position
+  ;; when hitting enter
+  (add-hook 'org-mode-hook 'org-indent-mode)
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((dot . t)
+     (js . t)
+     (latex . t)
+     (calc . t)
+     (shell . t)
+     (sql . t)
+     (C . t)
+     (python . t)
+     (emacs-lisp . t))))
     #+end_src
 
 *** evil
