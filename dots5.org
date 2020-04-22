@@ -178,6 +178,7 @@ Highlight the the matching (){}[]
 (setq auto-save-default nil)
 (setq auto-save-list-file-prefix nil)
 #+end_src
+
 ** Packages
 *** straight.el
 #+begin_src emacs-lisp
@@ -233,7 +234,7 @@ Highlight the the matching (){}[]
   (org-src-window-setup 'current-window)
   (org-edit-src-content-indentation 0)
   (org-src-preserve-indentation nil)
-
+  
   :config
 
   ;; puts the cursor in the right position
@@ -250,16 +251,7 @@ Highlight the the matching (){}[]
      (sql . t)
      (C . t)
      (python . t)
-     (emacs-lisp . t)))
-  :general
-  (:states '(normal insert emacs)
-           :keymaps 'org-mode-map
-           "M-l" 'org-metaright
-           "M-h" 'org-metaleft)
-  (:prefix ","
-           :states 'normal
-           :keymaps 'org-mode-map
-           "n" 'org-toggle-narrow-to-subtree))
+     (emacs-lisp . t))))
 #+end_src
 
 *** evil
@@ -288,29 +280,7 @@ Highlight the the matching (){}[]
   (evil-set-initial-state 'pdf-annot-list-mode 'emacs)
   (evil-set-initial-state 'pdf-outline-buffer-mode 'emacs)
   (evil-set-initial-state 'deft-mode 'emacs)
-  (evil-mode 1)
-  :general
-  (:states 'emacs
-           "C-`" 'vterm-toggle)
-  (:states 'insert
-           "C-`" 'vterm-toggle)
-  (:states 'normal
-           "C-`" 'vterm-toggle
-           "M-`" 'vterm-toggle-cd
-           "f" 'avy-goto-char-2
-           "SPC" 'er/expand-region
-           ;; swap ; and :
-           ";" 'evil-ex
-           ":" 'evil-repeat-find-char)
-  (:states 'normal
-           :prefix ","
-           "d" '(lambda() (interactive) (dired default-directory))
-           "s" 'magit-status
-           "q" 'mode-line-other-buffer)
-  (:states 'normal
-           :keymaps 'company-active-map
-           "C-j" 'company-select-next
-           "C-k" 'company-select-previous))
+  (evil-mode 1))
 #+end_src
 
 *** evil-commentary
@@ -348,21 +318,6 @@ Highlight the the matching (){}[]
   (doom-themes-org-config))
 #+end_src
 
-*** doom-modeline
-#+begin_src emacs-lisp
-(use-package doom-modeline
-  :hook (after-init . doom-modeline-mode)
-  :custom
-  (doom-modeline-modal-icon nil)
-  (doom-modeline-lsp t)
-  (doom-modeline-buffer-state-icon t)
-  (doom-modeline-major-mode-icon nil)
-  (doom-modeline-buffer-file-name-style 'file-name)
-  ;; Whether display buffer encoding.
-  (doom-modeline-buffer-encoding nil)
-  (doom-modeline-icon (display-graphic-p)))
-#+end_src
-
 *** dired
 #+begin_src emacs-lisp
 (use-package dired
@@ -393,79 +348,41 @@ Highlight the the matching (){}[]
                   (list (car list-of-dired-switches))))
     (dired-sort-other (caar list-of-dired-switches))
     (setq mode-name (concat "Dired " (cdar list-of-dired-switches)))
-    (force-mode-line-update))
-    :general
-  (:states 'normal
-           :keymaps 'dired-mode-map
-           "j" 'dired-next-line
-           "k" 'dired-previous-line
-           "l" 'ram/dired-open
-           "h" 'dired-up-directory
-           "yy" 'dired-do-copy
-           "yn" 'dired-copy-filename-as-kill
-           "yp" '(lambda() (interactive) (dired-copy-filename-as-kill 0))
-           "gk" '(lambda() (interactive) (dired "~/Documents"))
-           "gn" '(lambda() (interactive) (dired "~/Documents/notes"))
-           "gd" '(lambda() (interactive) (dired "~/Downloads"))
-           "gp" '(lambda() (interactive) (dired "~/Projects"))
-           "ge" '(lambda() (interactive) (dired "~/.emacs.d"))
-           "gc" '(lambda() (interactive) (dired "~/.config"))
-           "gy" '(lambda() (interactive) (dired "~/Projects/playground"))
-           "gb" '(lambda() (interactive) (dired "~/bin"))
-           "gm" '(lambda() (interactive) (dired "/media"))
-           "gh" '(lambda() (interactive) (dired "~"))
-           "m" 'dired-mark
-           "u" 'dired-unmark
-           "cw" 'dired-do-rename
-           "r" 'revert-buffer
-           "nd" 'dired-create-directory
-           "nf" 'dired-create-empty-file
-           "s" 'dired-do-async-shell-command
-           "q" 'quit-window
-           "w" 'dired-toggle-read-only
-           "W" 'wdired-finish-edit
-           "x" 'dired-do-compress
-           "za" 'cycle-dired-switches
-           "zd" 'dired-hide-details-mode
-           "d" 'dired-do-delete))
+    (force-mode-line-update)))
 #+end_src
-*** selectrum
+
+*** doom-modeline
 #+begin_src emacs-lisp
-(use-package selectrum
-  :straight (selectrum :host github :repo "raxod502/selectrum")
+(use-package doom-modeline
+  :hook (after-init . doom-modeline-mode)
+  :custom
+  (doom-modeline-modal-icon nil)
+  (doom-modeline-lsp t)
+  (doom-modeline-buffer-state-icon t)
+  (doom-modeline-major-mode-icon nil)
+  (doom-modeline-buffer-file-name-style 'file-name)
+  ;; Whether display buffer encoding.
+  (doom-modeline-buffer-encoding nil)
+  (doom-modeline-icon (display-graphic-p)))
+#+end_src
+
+*** yasnippet
+#+begin_src emacs-lisp
+(use-package yasnippet
+  :commands yas-minor-mode
+  :custom
+  (yas-snippet-dirs
+   '("~/Projects/dots/snips/yasnippet"))
+  :hook
+  ((go-mode . yas-minor-mode)
+   (org-mode . yas-minor-mode)
+   (js-mode . yas-minor-mode)
+   (dart-mode . yas-minor-mode)
+   (python-mode . yas-minor-mode)))
+#+end_src
+
   :config
-  (selectrum-mode +1))
-
-(use-package selectrum-prescient
-  :straight (selectrum-prescient :host github :repo "raxod502/prescient.el"
-                                 :files ("selectrum-prescient.el"))
-  :config
-  (selectrum-prescient-mode +1)
-  ;; to save your command history on disk, so the sorting gets more
-  ;; intelligent over time
-  (prescient-persist-mode +1))
-#+end_src
-
-*** vterm
-Install cmake to be able to install vterm
-#+begin_src emacs-lisp
-(use-package vterm)
-#+end_src
-
-#+RESULTS:
-
-*** vterm-toggle
-#+begin_src emacs-lisp
-(use-package vterm-toggle)
-#+end_src
-
-*** projectile
-#+begin_src emacs-lisp
-(use-package projectile
-  :init
-  (projectile-mode +1))
-#+end_src
-
+  (yas-reload-all))
 *** magit
 #+begin_src emacs-lisp
 (use-package magit
@@ -483,30 +400,6 @@ Install cmake to be able to install vterm
 #+begin_src emacs-lisp
 (use-package evil-magit
   :after (magit))
-#+end_src
-
-*** yaml-mode
-#+begin_src emacs-lisp
-(use-package yaml-mode)
-#+end_src
-
-*** go-mode
-#+begin_src emacs-lisp
-(use-package go-mode)
-#+end_src
-
-*** json-mode
-#+begin_src emacs-lisp
-(use-package json-mode)
-#+end_src
-
-*** dart-mode
-#+begin_src emacs-lisp
-(use-package dart-mode
-  :config
-  (with-eval-after-load "projectile"
-    (add-to-list 'projectile-project-root-files-bottom-up "pubspec.yaml")
-    (add-to-list 'projectile-project-root-files-bottom-up "BUILD")))
 #+end_src
 
 *** lsp-mode
@@ -556,8 +449,8 @@ Install cmake to be able to install vterm
 #+end_src
 
 *** lsp-dart
-#+begin_src emacs-lisp 
-(use-package lsp-dart
+#+begin_src emacs-lisp
+(use-package lsp-dart 
   :straight (lsp-dart :type git :host github :repo "emacs-lsp/lsp-dart")
   :custom
   (lsp-dart-sdk-dir "~/bin/flutter/bin/cache/dart-sdk/")
@@ -572,26 +465,64 @@ Install cmake to be able to install vterm
                          (lsp))))
 #+end_src
 
-*** treemacs
+*** go-mode
 #+begin_src emacs-lisp
-(use-package treemacs)
+(use-package go-mode)
 #+end_src
 
-*** lsp-treemacs
-#+begin_src emacs-lisp 
-(use-package lsp-treemacs
-  :after lsp-mode
-  :config
-  (lsp-treemacs-sync-mode 1))
+*** json-mode
+#+begin_src emacs-lisp
+(use-package json-mode)
 #+end_src
 
-*** pyvenv
+*** dart-mode
 #+begin_src emacs-lisp
-(use-package pyenv-mode
-  :init
-  (add-to-list 'exec-path "~/bin/pyenv/shims")
+(use-package dart-mode
   :config
-  (pyenv-mode))
+  (with-eval-after-load "projectile"
+    (add-to-list 'projectile-project-root-files-bottom-up "pubspec.yaml")
+    (add-to-list 'projectile-project-root-files-bottom-up "BUILD")))
+#+end_src
+
+*** flutter
+#+begin_src emacs-lisp
+(use-package flutter
+  :after dart-mode
+  :custom
+  (flutter-sdk-path "~/bin/flutter/")
+  :bind
+  (:map dart-mode-map
+        ("C-M-x" . #'flutter-run-or-hot-reload)))
+#+end_src
+
+*** hover.el
+#+begin_src emacs-lisp
+(use-package hover
+  :after dart-mode)
+#+end_src
+
+*** company
+#+begin_src emacs-lisp
+(use-package company
+  :hook
+  (after-init . global-company-mode)
+  :config
+  (setq company-capf t)
+  (push 'company-capf company-backends)
+)
+
+;; :config
+;; Use tab key to cycle through suggestions.
+;; ('tng' means 'tab and go')
+;;(company-tng-configure-default)
+#+end_src
+
+*** company-capf
+#+begin_src emacs-lisp :tangle no
+(use-package company-capf
+  :straight nil
+  :config
+  (push 'company-capf company-backends))
 #+end_src
 
 *** flycheck
@@ -606,6 +537,31 @@ Install cmake to be able to install vterm
   (lsp-prefer-flymake nil))
 #+end_src
 
+*** treemacs
+#+begin_src emacs-lisp
+(use-package treemacs)
+#+end_src
+
+*** lsp-treemacs
+#+begin_src emacs-lisp 
+(use-package lsp-treemacs
+  :config
+  (lsp-treemacs-sync-mode 1))
+#+end_src
+
+*** treemacs-icons-dired
+#+begin_src emacs-lisp
+(use-package treemacs-icons-dired
+  :after treemacs dired
+  :config )
+#+end_src
+
+*** treemacs-evil
+#+begin_src emacs-lisp
+(use-package treemacs-evil
+  :after treemacs)
+#+end_src
+
 *** aggressive-indent
 #+begin_src emacs-lisp
 (use-package aggressive-indent
@@ -614,6 +570,13 @@ Install cmake to be able to install vterm
    (json-mode . aggressive-indent-mode)
    (lisp-mode . aggressive-indent-mode)
    (emacs-lisp-mode . aggressive-indent-mode)))
+#+end_src
+
+*** projectile
+#+begin_src emacs-lisp
+(use-package projectile
+  :init
+  (projectile-mode +1))
 #+end_src
 
 *** avy
@@ -636,12 +599,32 @@ Search for character
   (smartparens-global-mode t))
 #+end_src
 
-*** ctrlf
+*** yaml-mode
 #+begin_src emacs-lisp
-(use-package ctrlf
-  :straight (ctrlf :host github :repo "raxod502/ctrlf")
-  :config
-  (ctrlf-mode +1))
+(use-package yaml-mode)
+#+end_src
+
+*** all-the-icons
+#+begin_src emacs-lisp
+(use-package all-the-icons)
+#+end_src
+
+*** vterm
+Install cmake to be able to install vterm
+#+begin_src emacs-lisp
+(use-package vterm)
+#+end_src
+
+#+RESULTS:
+
+*** vterm-toggle
+#+begin_src emacs-lisp
+(use-package vterm-toggle)
+#+end_src
+
+*** restart-emacs
+#+begin_src emacs-lisp
+(use-package restart-emacs)
 #+end_src
 
 *** nov.el (epub)
@@ -711,7 +694,7 @@ by pdf-tools
 
 *** auctex
 https://www.reddit.com/r/emacs/comments/a27sg9/how_can_i_set_the_pdfviewer_in_auctex/
-#+begin_src emacs-lisp 
+#+begin_src emacs-lisp
 (use-package tex
   :straight auctex
   :config
@@ -750,6 +733,41 @@ https://www.reddit.com/r/emacs/comments/a27sg9/how_can_i_set_the_pdfviewer_in_au
 *** lispy
 #+begin_src emacs-lisp
 (use-package lispy)
+#+end_src
+
+*** flyspell
+#+begin_src emacs-lisp
+;; Default dictionary. To change do M-x ispell-change-dictionary RET.
+;; (setq ispell-dictionary "english")
+
+(use-package flyspell
+  :custom
+  (ispell-program-name "aspell")
+  ;; Default dictionary. To change do M-x ispell-change-dictionary RET.
+  (aspell-dictionary "en_GB-ise-wo_accents")
+  (aspell-program-name "/usr/bin/aspell")
+  (ispell-dictionary "en_GB-ise-wo_accents")
+  (ispell-program-name "/usr/bin/aspell")
+  :config
+  (define-key flyspell-mode-map [down-mouse-3] 'flyspell-correct-word)
+  (add-hook 'org-mode-hook 'flyspell-mode)
+  ;; Enable Flyspell mode for TeX modes such as AUCTeX. Highlights all misspelled words.
+  (add-hook 'TeX-mode-hook 'flyspell-mode)
+  ;; Enable Flyspell program mode for emacs lisp mode, which highlights all misspelled words in comments and strings.
+  (add-hook 'emacs-lisp-mode-hook 'flyspell-prog-mode))
+
+(use-package flyspell-correct
+  :bind ("C-;" . flyspell-correct-wrapper))
+#+end_src
+
+*** LanguageTool
+#+begin_src emacs-lisp
+(use-package langtool
+  :custom
+  (langtool-language-tool-jar "~/bin/LanguageTool/languagetool-commandline.jar")
+  (langtool-language-tool-server-jar "~/bin/LanguageTool/languagetool-server.jar")
+  (langtool-server-user-arguments '("-p" "8082"))
+  (langtool-default-language "en-US"))
 #+end_src
 
 *** hydra
@@ -800,37 +818,120 @@ sudo apt install gawk
    "<down-mouse-2>" 'my/org-open-at-point))
 #+end_src
 
+*** deft
+#+begin_src emacs-lisp
+(use-package deft
+  :after org
+  :bind
+  ("C-c n d" . deft)
+  :custom
+  (deft-recursive t)
+  (deft-use-filter-string-for-filename t)
+  (deft-default-extension "org")
+  (deft-current-sort-method 'title)
+  (deft-directory "~/org/roams/"))
+#+end_src
+
+*** pyvenv
+#+begin_src emacs-lisp
+(use-package pyenv-mode
+  :init
+  (add-to-list 'exec-path "~/bin/pyenv/shims")
+  :config
+  (pyenv-mode))
+#+end_src
+
+*** selectrum
+#+begin_src emacs-lisp
+(use-package selectrum
+  :straight (selectrum :host github :repo "raxod502/selectrum")
+  :config
+  (selectrum-mode +1))
+
+(use-package selectrum-prescient
+  :straight (selectrum-prescient :host github :repo "raxod502/prescient.el"
+                                 :files ("selectrum-prescient.el"))
+  :config
+  (selectrum-prescient-mode +1)
+  ;; to save your command history on disk, so the sorting gets more
+  ;; intelligent over time
+  (prescient-persist-mode +1))
+#+end_src
+
+*** ctrlf
+#+begin_src emacs-lisp
+(use-package ctrlf
+  :straight (ctrlf :host github :repo "raxod502/ctrlf")
+  :config
+  (ctrlf-mode +1))
+#+end_src
+
+*** org-pdftools
+#+begin_src emacs-lisp
+(use-package org-noter
+  :commands (org-noter)
+  :config
+  ;;(require 'org-noter-pdftools)
+  (with-eval-after-load 'pdf-tools
+    (setq pdf-annot-activate-handler-functions #'org-noter-pdftools-jump-to-note))
+  (setq org-noter-notes-mode-map (make-sparse-keymap)))
+
+(use-package org-noter-pdftools
+  :straight (org-noter-pdftools :host github :repo "fuxialexander/org-pdftools"
+                                :files ("org-noter-pdftools.el"))
+  :after (org-noter))
+
+(use-package org-pdftools
+  :after (org-mode)
+  :custom
+  (org-pdftools-root-dir "~/org/books")
+  (org-pdftools-search-string-separator "??")
+  :config
+  (with-eval-after-load 'org
+    (org-link-set-parameters "pdftools"
+                             :follow #'org-pdftools-open
+                             :complete #'org-pdftools-complete-link
+                             :store #'org-pdftools-store-link
+                             :export #'org-pdftools-export)
+    (add-hook 'org-store-link-functions 'org-pdftools-store-link)))
+#+end_src
+
+*** org-cliplink
+#+begin_src emacs-lisp
+(use-package org-cliplink)
+#+end_src
+
 *** biblio
 org-ref depends on this package
 #+begin_src elisp
 (use-package biblio)  
 #+end_src
 
-*** rg
-#+begin_src elisp
-(use-package rg
+*** org-ref
+#+begin_src emacs-lisp
+(use-package org-ref
+  :after (biblio)
+  :custom
+  (reftex-default-bibliography '("~/org/roams/references.bib"))
+  (org-ref-bibliography-notes "~/org/notes.org")
+  (org-ref-default-bibliography '("~/org/roams/references.bib"))
+  (org-ref-pdf-directory "~/org/books") ;; keep the final slash off
+  ;; process the bibliography using bibtex or biblatex
+  ;; when exporting from org to pdf
+  (org-latex-pdf-process '("pdflatex %f" "bibtex %b" "pdflatex %f" "pdflatex %f"))
+
   :config
-  (rg-define-search ram/search-everything-at-roams
-    :query ask
-    :format regexp
-    :dir "/home/last/org/roams/"
-    :files "*.org"
-    :confirm prefix)
-
-  (rg-define-search ram/grep-vc-or-dir
-    :query ask
-    :format regexp
-    :files "everything"
-    :dir (let ((vc (vc-root-dir)))
-           (if vc
-               vc                         ; search root project dir
-             default-directory))          ; or from the current dir
-    :confirm prefix
-    :flags ("--hidden -g !.git"))
-
-
-  :bind (("M-s g" . ram/grep-vc-or-dir)
-         ("M-s r" . ram/search-everything-at-roams)))
+  (defun ram/org-ref-open-pdf-at-point ()
+    "Open the pdf for bibtex key under point if it exists."
+    (interactive)
+    (let* ((results (org-ref-get-bibtex-key-and-file))
+           (key (car results))
+           (pdf-file (concat org-ref-pdf-directory
+                             (org-ref-get-pdf-filename
+                              (org-ref-get-mendeley-filename key)))))
+      (if (file-exists-p pdf-file)
+          (find-file pdf-file)
+        (message "no pdf found for %s" pdf-file)))))
 #+end_src
 
 *** org-bullets
@@ -860,122 +961,169 @@ org-ref depends on this package
   (add-hook 'nov-mode-hook 'shrface-mode))
 #+end_src
 
-*** yasnippet
+*** rg
+#+begin_src elisp
+(use-package rg
+  :config
+  (rg-define-search ram/search-everything-at-roams
+    :query ask
+    :format regexp
+    :dir "/home/last/org/roams/"
+    :files "*.org"
+    :confirm prefix)
+
+  (rg-define-search ram/grep-vc-or-dir
+    :query ask
+    :format regexp
+    :files "everything"
+    :dir (let ((vc (vc-root-dir)))
+           (if vc
+               vc                         ; search root project dir
+             default-directory))          ; or from the current dir
+    :confirm prefix
+    :flags ("--hidden -g !.git"))
+
+
+  :bind (("M-s g" . ram/grep-vc-or-dir)
+         ("M-s r" . ram/search-everything-at-roams)))
+#+end_src
+
+** Bindings
+*** Normal and Emacs states bindings
 #+begin_src emacs-lisp
-(use-package yasnippet
-  :commands (yas-reload-all)
-  :custom
-  (yas-snippet-dirs
-   '("~/Projects/dots/snips/yasnippet"))
-  :hook
-  ((go-mode . yas-minor-mode)
-   (org-mode . yas-minor-mode)
-   (js-mode . yas-minor-mode)
-   (dart-mode . yas-minor-mode)
-   (python-mode . yas-minor-mode)))
+(use-package normal-mode-bindings
+  :straight nil
+  :after general
+  :general
+  (:states 'emacs
+           "C-`" 'vterm-toggle)
+  (:states 'insert
+           "C-`" 'vterm-toggle)
+  (:states 'normal
+           "C-`" 'vterm-toggle
+           "M-`" 'vterm-toggle-cd
+           "f" 'avy-goto-char-2
+           "SPC" 'er/expand-region
+           ;; swap ; and :
+           ";" 'evil-ex
+           ":" 'evil-repeat-find-char)
+  (:keymaps 'company-active-map
+            "C-j" 'company-select-next
+            "C-k" 'company-select-previous))
 #+end_src
 
-*** all-the-icons
+*** Insert-mode bindings
 #+begin_src emacs-lisp
-(use-package all-the-icons)
+(use-package inset-mode-bindings
+  :straight nil
+  :after general
+  :general
+  (:states 'insert
+           "C-j" 'evil-normal-state))
+#+end_src
+*** =,= Normal-mode bindings
+#+begin_src emacs-lisp
+(use-package normal-mode-bindings
+  :straight nil
+  :after general
+  :general
+  (:states 'normal
+           :prefix ","
+           "d" '(lambda() (interactive) (dired default-directory))
+           "s" 'magit-status
+           "q" 'mode-line-other-buffer))
 #+end_src
 
-*** org-ref
-#+begin_src emacs-lisp :tangle no
-(use-package org-ref
-  :after (biblio)
-  :custom
-  (reftex-default-bibliography '("~/org/roams/references.bib"))
-  (org-ref-bibliography-notes "~/org/notes.org")
-  (org-ref-default-bibliography '("~/org/roams/references.bib"))
-  (org-ref-pdf-directory "~/org/books") ;; keep the final slash off
-  ;; process the bibliography using bibtex or biblatex
-  ;; when exporting from org to pdf
-  (org-latex-pdf-process '("pdflatex %f" "bibtex %b" "pdflatex %f" "pdflatex %f"))
-
-  :config
-  (defun ram/org-ref-open-pdf-at-point ()
-    "Open the pdf for bibtex key under point if it exists."
-    (interactive)
-    (let* ((results (org-ref-get-bibtex-key-and-file))
-           (key (car results))
-           (pdf-file (concat org-ref-pdf-directory
-                             (org-ref-get-pdf-filename
-                              (org-ref-get-mendeley-filename key)))))
-      (if (file-exists-p pdf-file)
-          (find-file pdf-file)
-        (message "no pdf found for %s" pdf-file)))))
+*** Dired bindings
+#+begin_src emacs-lisp
+(use-package dired-mode
+  :straight nil
+  :after general
+  :general
+  (:states 'normal
+           :keymaps 'dired-mode-map
+           "j" 'dired-next-line
+           "k" 'dired-previous-line
+           "l" 'ram/dired-open
+           "h" 'dired-up-directory
+           "yy" 'dired-do-copy
+           "yn" 'dired-copy-filename-as-kill
+           "yp" '(lambda() (interactive) (dired-copy-filename-as-kill 0))
+           "gk" '(lambda() (interactive) (dired "~/Documents"))
+           "gn" '(lambda() (interactive) (dired "~/Documents/notes"))
+           "gd" '(lambda() (interactive) (dired "~/Downloads"))
+           "gp" '(lambda() (interactive) (dired "~/Projects"))
+           "ge" '(lambda() (interactive) (dired "~/.emacs.d"))
+           "gc" '(lambda() (interactive) (dired "~/.config"))
+           "gy" '(lambda() (interactive) (dired "~/Projects/playground"))
+           "gb" '(lambda() (interactive) (dired "~/bin"))
+           "gm" '(lambda() (interactive) (dired "/media"))
+           "gh" '(lambda() (interactive) (dired "~"))
+           "m" 'dired-mark
+           "u" 'dired-unmark
+           "cw" 'dired-do-rename
+           "r" 'revert-buffer
+           "nd" 'dired-create-directory
+           "nf" 'dired-create-empty-file
+           "s" 'dired-do-async-shell-command
+           "q" 'quit-window
+           "w" 'dired-toggle-read-only
+           "W" 'wdired-finish-edit
+           "x" 'dired-do-compress
+           "za" 'cycle-dired-switches
+           "zd" 'dired-hide-details-mode
+           "d" 'dired-do-delete))
 #+end_src
 
-*** org-cliplink
-#+begin_src emacs-lisp :tangle no
-(use-package org-cliplink)
+*** Org bindings
+#+begin_src emacs-lisp
+(use-package org-mode
+  :straight nil
+  :after general
+  :general
+  (:states '(normal insert emacs)
+           :keymaps 'org-mode-map
+           "M-l" 'org-metaright
+           "M-h" 'org-metaleft)
+  (:prefix ","
+           :states 'normal
+           :keymaps 'org-mode-map
+           "n" 'org-toggle-narrow-to-subtree))
 #+end_src
 
-*** flyspell
-#+begin_src emacs-lisp :tangle no
-;; Default dictionary. To change do M-x ispell-change-dictionary RET.
-;; (setq ispell-dictionary "english")
-
-(use-package flyspell
-  :commands (flyspell-correct-wrapper)
-  :custom
-  (ispell-program-name "aspell")
-  ;; Default dictionary. To change do M-x ispell-change-dictionary RET.
-  (aspell-dictionary "en_GB-ise-wo_accents")
-  (aspell-program-name "/usr/bin/aspell")
-  (ispell-dictionary "en_GB-ise-wo_accents")
-  (ispell-program-name "/usr/bin/aspell")
-  :config
-  (define-key flyspell-mode-map [down-mouse-3] 'flyspell-correct-word)
-  (add-hook 'org-mode-hook 'flyspell-mode)
-  ;; Enable Flyspell mode for TeX modes such as AUCTeX. Highlights all misspelled words.
-  (add-hook 'TeX-mode-hook 'flyspell-mode)
-  ;; Enable Flyspell program mode for emacs lisp mode, which highlights all misspelled words in comments and strings.
-  (add-hook 'emacs-lisp-mode-hook 'flyspell-prog-mode))
-
-(use-package flyspell-correct
-  :bind ("C-;" . flyspell-correct-wrapper))
-#+end_src
-
-*** LanguageTool
-#+begin_src emacs-lisp :tangle no
-(use-package langtool
-  :custom
-  (langtool-language-tool-jar "~/bin/LanguageTool/languagetool-commandline.jar")
-  (langtool-language-tool-server-jar "~/bin/LanguageTool/languagetool-server.jar")
-  (langtool-server-user-arguments '("-p" "8082"))
-  (langtool-default-language "en-US"))
-#+end_src
-
-*** org-pdftools
-#+begin_src emacs-lisp :tangle no
-(use-package org-noter
-  :commands (org-noter)
-  :config
-  ;;(require 'org-noter-pdftools)
-  (with-eval-after-load 'pdf-tools
-    (setq pdf-annot-activate-handler-functions #'org-noter-pdftools-jump-to-note))
-  (setq org-noter-notes-mode-map (make-sparse-keymap)))
-
-(use-package org-noter-pdftools
-  :straight (org-noter-pdftools :host github :repo "fuxialexander/org-pdftools"
-                                :files ("org-noter-pdftools.el"))
-  :after (org-noter))
-
-(use-package org-pdftools
-  :after (org-mode)
-  :custom
-  (org-pdftools-root-dir "~/org/books")
-  (org-pdftools-search-string-separator "??")
-  :config
-  (with-eval-after-load 'org
-    (org-link-set-parameters "pdftools"
-                             :follow #'org-pdftools-open
-                             :complete #'org-pdftools-complete-link
-                             :store #'org-pdftools-store-link
-                             :export #'org-pdftools-export)
-    (add-hook 'org-store-link-functions 'org-pdftools-store-link)))
+*** Programming bindings
+#+begin_src emacs-lisp
+(use-package prog-mode
+  :straight nil
+  :after general
+  :general
+  (:states 'normal
+           :keymaps 'prog-mode-map
+           "TAB" 'company-indent-or-complete-common
+           "<f6>" 'async-shell-command
+           "<f9>" 'lsp-ui-imenu
+           "gd" 'lsp-find-definition
+           "gp" 'lsp-ui-peek-find-references
+           "ge" 'treemacs
+           "K" 'lsp-ui-doc-mode
+           "gc" 'evil-commentary
+           "gb" 'evil-jump-backward)
+  (:keymaps 'python-mode-map
+            "<f5>" '(lambda() (interactive) (async-shell-command (concat "python " (buffer-file-name)) "*python output*")))
+  (:keymaps 'dart-mode-map
+            "<f5>" '(lambda() (interactive) (async-shell-command (concat "dart " (buffer-file-name)) "*dart output*")))
+  (:keymaps 'js-mode-map
+            "<f5>" '(lambda() (interactive) (async-shell-command (concat "node " (buffer-file-name)) "*javascript output*")))
+  (:keymaps 'go-mode-map
+            "<f5>" '(lambda() (interactive) (async-shell-command (concat "go run " (buffer-file-name)) "*go output*")))
+  (:keymaps 'c-mode-map
+            "<f5>" '(lambda() (interactive) (async-shell-command (concat "gcc " (buffer-file-name) " && ./a.out") "*c output*")))
+  (:keymaps 'c++-mode-map
+            "<f5>" '(lambda() (interactive) (async-shell-command (concat "clang++ --std=c++2a " (buffer-file-name) " && ./a.out") "*c output*")))
+  ;; (:keymaps 'c-mode-map "<f5>" 'compile)
+  (:keymaps 'lsp-ui-peek-mode-map
+            "j" 'lsp-ui-peek--select-next
+            "k" 'lsp-ui-peek--select-prev))
 #+end_src
 
 ** Functions
@@ -985,7 +1133,7 @@ org-ref depends on this package
   (interactive)
   (setq file (dired-get-file-for-visit))
   (setq ext (file-name-extension file))
-  (cond
+  (cond 
    ((string= ext "rar")
     (async-start-process "File-rolle" "file-roller" nil file))
    ((string= ext "bz2")
@@ -1064,7 +1212,7 @@ This function is intended for use with `ivy-ignore-buffers'."
 #+end_src
 
 *** Open dots.org
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (defun ram/open-dots()
   (interactive)
   (find-file "~/Projects/dots/dots.org"))
@@ -1077,6 +1225,7 @@ This function is intended for use with `ivy-ignore-buffers'."
                                       (directory-files "~/org/books" nil directory-files-no-dot-files-regexp))))
   (find-file (concat "~/org/books/" arg)))
 #+end_src
+
 * Alacritty
 ** Theme
    #+begin_src sh
@@ -1179,7 +1328,7 @@ export PATH=$HOME/bin/node/bin:$PATH
 
 *** Dart
 #+begin_src sh
-export PATH=$HOME/bin/flutter/bin/cache/dart-sdk/bin:$PATH
+export PATH=$HOME/bin/dart-sdk/bin:$PATH
 export PATH=$HOME/.pub-cache/bin:$PATH
 #+end_src
 
