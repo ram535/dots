@@ -203,6 +203,44 @@ Highlight the the matching (){}[]
 (straight-use-package 'use-package)
 #+end_src
 
+*** doom-modeline
+#+begin_src emacs-lisp
+(use-package doom-modeline
+  :hook (after-init . doom-modeline-mode)
+  :custom
+  (doom-modeline-modal-icon nil)
+  (doom-modeline-lsp t)
+  (doom-modeline-buffer-state-icon t)
+  (doom-modeline-major-mode-icon nil)
+  (doom-modeline-buffer-file-name-style 'file-name)
+  ;; Whether display buffer encoding.
+  (doom-modeline-buffer-encoding nil)
+  (doom-modeline-icon (display-graphic-p)))
+#+end_src
+
+*** doom themes
+#+begin_src emacs-lisp
+(use-package doom-themes
+  :custom
+  (doom-themes-enable-bold t)    ; if nil, bold is universally disabled
+  (doom-themes-enable-italic t)  ; if nil, italics is universally disabled
+  (doom-themes-treemacs-theme "doom-colors") ; use the colorful treemacs theme
+  :config
+  ;; Load the theme (doom-one, doom-molokai, etc); keep in mind that each theme
+  ;; may have their own settings.
+  (load-theme 'doom-one t)
+  ;; (load-theme 'doom-solarized-dark t)
+
+  ;; Enable flashing mode-line on errors
+  (doom-themes-visual-bell-config)
+
+  ;; or for treemacs users
+  (doom-themes-treemacs-config)
+
+  ;; Corrects (and improves) org-mode's native fontification.
+  (doom-themes-org-config))
+#+end_src
+
 *** general.el
 #+begin_src emacs-lisp
 (use-package general
@@ -325,48 +363,10 @@ Highlight the the matching (){}[]
   (global-evil-surround-mode 1))
 #+end_src
 
-*** doom themes
-#+begin_src emacs-lisp
-(use-package doom-themes
-  :custom
-  (doom-themes-enable-bold t)    ; if nil, bold is universally disabled
-  (doom-themes-enable-italic t)  ; if nil, italics is universally disabled
-  (doom-themes-treemacs-theme "doom-colors") ; use the colorful treemacs theme
-  :config
-  ;; Load the theme (doom-one, doom-molokai, etc); keep in mind that each theme
-  ;; may have their own settings.
-  (load-theme 'doom-one t)
-  ;; (load-theme 'doom-solarized-dark t)
-
-  ;; Enable flashing mode-line on errors
-  (doom-themes-visual-bell-config)
-
-  ;; or for treemacs users
-  (doom-themes-treemacs-config)
-
-  ;; Corrects (and improves) org-mode's native fontification.
-  (doom-themes-org-config))
-#+end_src
-
-*** doom-modeline
-#+begin_src emacs-lisp
-(use-package doom-modeline
-  :hook (after-init . doom-modeline-mode)
-  :custom
-  (doom-modeline-modal-icon nil)
-  (doom-modeline-lsp t)
-  (doom-modeline-buffer-state-icon t)
-  (doom-modeline-major-mode-icon nil)
-  (doom-modeline-buffer-file-name-style 'file-name)
-  ;; Whether display buffer encoding.
-  (doom-modeline-buffer-encoding nil)
-  (doom-modeline-icon (display-graphic-p)))
-#+end_src
-
 *** dired
 #+begin_src emacs-lisp
 (use-package dired
-  :straight nil
+  :straight (:type built-in)
   :hook ((dired-mode . hl-line-mode)
          (dired-mode . dired-hide-details-mode))
   :custom
@@ -490,6 +490,41 @@ Install cmake to be able to install vterm
 (use-package yaml-mode)
 #+end_src
 
+*** prog-mode
+#+begin_src emacs-lisp
+(use-package prog-mode
+  :straight nil
+  :after general
+  :general
+  (:states 'normal
+           :keymaps 'prog-mode-map
+           "TAB" 'company-indent-or-complete-common
+           "<f6>" 'async-shell-command
+           "<f9>" 'lsp-ui-imenu
+           "gd" 'lsp-find-definition
+           "gp" 'lsp-ui-peek-find-references
+           "ge" 'treemacs
+           "K" 'lsp-ui-doc-mode
+           "gc" 'evil-commentary
+           "gb" 'evil-jump-backward)
+  (:keymaps 'python-mode-map
+            "<f5>" '(lambda() (interactive) (async-shell-command (concat "python " (buffer-file-name)) "*python output*")))
+  (:keymaps 'dart-mode-map
+            "<f5>" '(lambda() (interactive) (async-shell-command (concat "dart " (buffer-file-name)) "*dart output*")))
+  (:keymaps 'js-mode-map
+            "<f5>" '(lambda() (interactive) (async-shell-command (concat "node " (buffer-file-name)) "*javascript output*")))
+  (:keymaps 'go-mode-map
+            "<f5>" '(lambda() (interactive) (async-shell-command (concat "go run " (buffer-file-name)) "*go output*")))
+  (:keymaps 'c-mode-map
+            "<f5>" '(lambda() (interactive) (async-shell-command (concat "gcc " (buffer-file-name) " && ./a.out") "*c output*")))
+  (:keymaps 'c++-mode-map
+            "<f5>" '(lambda() (interactive) (async-shell-command (concat "clang++ --std=c++2a " (buffer-file-name) " && ./a.out") "*c output*")))
+  ;; (:keymaps 'c-mode-map "<f5>" 'compile)
+  (:keymaps 'lsp-ui-peek-mode-map
+            "j" 'lsp-ui-peek--select-next
+            "k" 'lsp-ui-peek--select-prev))
+#+end_src
+
 *** go-mode
 #+begin_src emacs-lisp
 (use-package go-mode)
@@ -583,6 +618,12 @@ Install cmake to be able to install vterm
   :after lsp-mode
   :config
   (lsp-treemacs-sync-mode 1))
+#+end_src
+
+*** hover.el
+#+begin_src emacs-lisp
+(use-package hover
+  :after dart-mode)
 #+end_src
 
 *** pyvenv
@@ -1263,6 +1304,22 @@ fdr() {
 #+end_src
 
 ** vterm
+*** Enable the shell to send information to vterm via properly escaped sequences
+#+begin_src sh
+function vterm_printf(){
+    if [ -n "$TMUX" ]; then
+        # Tell tmux to pass the escape sequences through
+        # (Source: http://permalink.gmane.org/gmane.comp.terminal-emulators.tmux.user/1324)
+        printf "\ePtmux;\e\e]%s\007\e\\" "$1"
+    elif [ "${TERM%%-*}" = "screen" ]; then
+        # GNU screen (screen, screen-256color, screen-256color-bce)
+        printf "\eP\e]%s\007\e\\" "$1"
+    else
+        printf "\e]%s\e\\" "$1"
+    fi
+}  
+#+end_src
+
 *** Function to be able to call elisp functions in vterm
 #+begin_src sh
 vterm_cmd() {
@@ -1292,7 +1349,6 @@ vterm_cmd() {
     fi
 }
 #+end_src
-
 *** open file or dired in emacs when using vterm
 #+begin_src sh
 op() {
@@ -1319,3 +1375,12 @@ if command -v pyenv 1>/dev/null 2>&1; then
     eval "$(pyenv init -)"
 fi
 #+end_src
+
+** Directory tracking and Prompt tracking
+#+begin_src sh
+vterm_prompt_end(){
+    vterm_printf "51;A$(whoami):$(pwd)"
+}
+PS1=$PS1'\[$(vterm_prompt_end)\]'  
+#+end_src
+
