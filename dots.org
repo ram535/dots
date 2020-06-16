@@ -178,6 +178,22 @@ Highlight the the matching (){}[]
 (setq auto-save-default nil)
 (setq auto-save-list-file-prefix nil)
 #+end_src
+
+*** Mode line
+#+begin_src emacs-lisp :tangle no
+(setq-default mode-line-format
+              (list
+               ;; value of current buffer name
+               "%b "
+               ;; spaces to align right
+               '(:eval (propertize
+                        " " 'display
+                        `((space :align-to (- (+ right right-fringe right-margin)
+                                              ,(+ 3 (string-width mode-name)))))))
+               ;; value of `mode-name'
+               "%m "))
+#+end_src
+
 ** Packages
 *** straight.el
 #+begin_src emacs-lisp
@@ -201,6 +217,11 @@ Highlight the the matching (){}[]
 *** use-package
 #+begin_src emacs-lisp
 (straight-use-package 'use-package)
+#+end_src
+
+*** all-the-icons
+#+begin_src emacs-lisp
+(use-package all-the-icons)
 #+end_src
 
 *** doom-modeline
@@ -258,8 +279,9 @@ Highlight the the matching (){}[]
                           (file . find-file)
                           (wl . wl-other-frame)))
 
-  (org-hide-emphasis-markers t)
-  (org-agenda-files '("~/org/agenda/todo.org"))
+  (org-startup-folded t)
+  ;; (org-hide-emphasis-markers t)
+  (org-agenda-files '("~/org/tasks.org"))
   (org-startup-with-inline-images t)
   ;; inline latex like $y=mx+c$ will appear in a different colour in
   ;; an org-mode file to help it stand out
@@ -315,6 +337,7 @@ Highlight the the matching (){}[]
   (evil-set-initial-state 'dired-mode 'normal)
   (evil-set-initial-state 'wdired-mode 'normal)
   (evil-set-initial-state 'org-mode 'normal)
+  (evil-set-initial-state 'vterm-mode 'insert)
   (evil-set-initial-state 'prog-mode 'normal)
   (evil-set-initial-state 'ebib-index-mode 'emacs)
   (evil-set-initial-state 'exwm-mode 'emacs)
@@ -381,8 +404,9 @@ Highlight the the matching (){}[]
 
   (defcustom list-of-dired-switches
     '(("-Bhl --group-directories-first -v" . "directories first")
-      ("-BhXl" . "by extension")
-      ("-BhlA --group-directories-first -v" . "no . & .."))
+      ("-BhXL" . "by extension")
+      ("-la" . "everything")
+      ("-BhlAL --group-directories-first -v" . "no . & .."))
     "List of ls switches (together with a name to display in the mode-line) for dired to cycle among.")
 
   (defun cycle-dired-switches ()
@@ -394,7 +418,7 @@ Highlight the the matching (){}[]
     (dired-sort-other (caar list-of-dired-switches))
     (setq mode-name (concat "Dired " (cdar list-of-dired-switches)))
     (force-mode-line-update))
-    :general
+  :general
   (:states 'normal
            :keymaps 'dired-mode-map
            "j" 'dired-next-line
@@ -434,6 +458,8 @@ Highlight the the matching (){}[]
 (use-package selectrum
   :straight (selectrum :host github :repo "raxod502/selectrum")
   :config
+  ;; Completing variable names from `M-:`
+  (setq enable-recursive-minibuffers t)
   (selectrum-mode +1))
 
 (use-package selectrum-prescient
@@ -459,11 +485,74 @@ Install cmake to be able to install vterm
 (use-package vterm-toggle)
 #+end_src
 
+*** company
+#+begin_src emacs-lisp
+(use-package company
+  :hook
+  (after-init . global-company-mode)
+  :config
+  (setq company-capf t)
+  (push 'company-capf company-backends))
+#+end_src
+
 *** projectile
 #+begin_src emacs-lisp
 (use-package projectile
   :init
-  (projectile-mode +1))
+  (projectile-mode +1)
+  :custom
+  ;; selectrum
+  (projectile-completion-system 'default)
+  :config
+  (add-to-list 'projectile-project-root-files-bottom-up "pubspec.yaml")
+
+  (projectile-register-project-type 'dart '("pubspec.yaml")
+	                                  :compile "pub get"
+	                                  :test "pub run test"
+	                                  :run "pub run bin/main.dart"
+	                                  :test-suffix "_test.dart")
+  (defun ram/dart-test ()
+    (interactive)
+    (projectile-run-vterm)
+    (vterm-clear)
+    (vterm-send-string "pub run test")
+    (vterm-send-return))
+
+  :general
+  (:prefix "C-c p"
+           :states 'normal
+           "f" 'projectile-find-file
+           "d" 'projectile-dired
+           "r" 'projectile-run-project
+           "c" 'projectile-compile-project
+           "t" 'projectile-test-project
+           "g" 'projectile-ripgrep
+           "p" 'projectile-switch-project
+           "b" 'projectile-switch-to-buffer
+           "v" 'projectile-run-vterm))
+#+end_src
+
+*** ansi-color
+This fix the problem with the compilation buffer.
+The poblem was that when doing projectile-test-project
+the compilation buffer add many characters making it
+difficult to read.
+#+begin_src emacs-lisp
+(use-package ansi-color
+  :config
+  (add-hook 'compilation-filter-hook 'ansi-color-for-comint-mode-on)
+
+  ;; (defun my-colorize-compilation-buffer ()
+  ;;   (when (eq major-mode 'compilation-mode)
+  ;;     (ansi-color-apply-on-region compilation-filter-start (point))))
+  (defun my-colorize-compilation-buffer ()
+  (toggle-read-only)
+  (ansi-color-apply-on-region (point-min) (point-max))
+  (toggle-read-only))
+  ;; (defun my-colorize-compilation-buffer ()
+  ;;   (when (eq major-mode 'compilation-mode)
+  ;;     (ansi-color-apply-on-region compilation-filter-start (point-max))))
+  :hook (compilation-filter . my-colorize-compilation-buffer))
 #+end_src
 
 *** magit
@@ -537,11 +626,7 @@ Install cmake to be able to install vterm
 
 *** dart-mode
 #+begin_src emacs-lisp
-(use-package dart-mode
-  :config
-  (with-eval-after-load "projectile"
-    (add-to-list 'projectile-project-root-files-bottom-up "pubspec.yaml")
-    (add-to-list 'projectile-project-root-files-bottom-up "BUILD")))
+(use-package dart-mode)
 #+end_src
 
 *** lsp-mode
@@ -557,12 +642,14 @@ Install cmake to be able to install vterm
    (before-save . lsp-format-buffer)
    (before-save . lsp-organize-imports))
   :custom
-  (lsp-signature-auto-activate t)
+  (lsp-auto-guess-root t)                ;; auto guess root
+  (lsp-signature-auto-activate nil)
   (lsp-signature-doc-lines 1)
-  (lsp-signature-render-documentation t)
+  (lsp-signature-render-documentation nil)
   (lsp-gopls-complete-unimported t)
-  (lsp-prefer-capf t)
+  (lsp-prefer-capf t)                    ;; using `company-capf' by default
   :config
+  (setq lsp-semantic-highlighting 'immediate)
   (add-hook 'js-mode-hook (lambda () (setq js-indent-level 2)))
   (add-hook 'js-mode-hook (lambda () (setq tab-width 2))))
 #+end_src
@@ -591,7 +678,7 @@ Install cmake to be able to install vterm
 #+end_src
 
 *** lsp-dart
-#+begin_src emacs-lisp 
+#+begin_src emacs-lisp
 (use-package lsp-dart
   :straight (lsp-dart :type git :host github :repo "emacs-lsp/lsp-dart")
   :custom
@@ -600,7 +687,7 @@ Install cmake to be able to install vterm
 #+end_src
 
 *** lsp-python-ms
-#+begin_src emacs-lisp 
+#+begin_src emacs-lisp
 (use-package lsp-python-ms
   :hook (python-mode . (lambda ()
                          (require 'lsp-python-ms)
@@ -613,7 +700,7 @@ Install cmake to be able to install vterm
 #+end_src
 
 *** lsp-treemacs
-#+begin_src emacs-lisp 
+#+begin_src emacs-lisp
 (use-package lsp-treemacs
   :after lsp-mode
   :config
@@ -673,6 +760,11 @@ Search for character
     (sp-with-modes
         '(c++-mode dart-mode go-mode js-mode)
       (sp-local-pair "{" nil :post-handlers '(:add ("||\n[i]" "RET")))))
+
+  (with-eval-after-load 'smartparens
+    (sp-with-modes
+        '(c++-mode dart-mode go-mode js-mode)
+      (sp-local-pair "(" nil :post-handlers '(:add ("||\n[i]" "RET")))))
 
   (smartparens-global-mode t))
 #+end_src
@@ -752,7 +844,7 @@ by pdf-tools
 
 *** auctex
 https://www.reddit.com/r/emacs/comments/a27sg9/how_can_i_set_the_pdfviewer_in_auctex/
-#+begin_src emacs-lisp 
+#+begin_src emacs-lisp
 (use-package tex
   :straight auctex
   :config
@@ -810,41 +902,54 @@ sudo apt install gawk
   (require 'org-fc-hydra))
 #+end_src
 
-*** org-roam
+*** org-protocol
 #+begin_src emacs-lisp
+(use-package org-protocol
+  :straight (:type built-in))
+#+end_src
+
+*** org-roam
+#+begin_src elisp 
 (use-package org-roam
-  :hook 
+  :hook
   (after-init . org-roam-mode)
   :custom
   (org-roam-directory "~/org/roams")
   (org-roam-buffer-no-delete-other-windows t)
+  :custom-face
+  (org-roam-link ((t (:inherit org-link :foreground "orange"))))
   :bind (:map org-roam-mode-map
               (("C-c n l" . org-roam)
                ("C-c n f" . org-roam-find-file)
+               ("C-c n b" . org-roam-switch-to-buffer)
                ("C-c n g" . org-roam-show-graph))
               :map org-mode-map
               (("C-c n i" . org-roam-insert)))
   :config
+  (require 'org-roam-protocol)
+  (setq org-roam-capture-templates
+        '(("d" "default" plain
+           (function org-roam-capture--get-point)
+           "%?"
+           :file-name "%<%Y%m%d%H%M%S>-${slug}"
+           :head "#+TITLE: ${title}\n#+CREATED: %U\n#+LAST_MODIFIED: %U\n\n"
+           :unnarrowed t))
 
-  (defun zp/org-link-set-local-find-file-current-window ()
-    "Make org-link open file in the same window locally."
-    (let* ((default (copy-alist org-link-frame-setup))
-           (modified (progn
-                       (setf (alist-get 'file default) 'find-file)
-                       default)))
-      (setq-local org-link-frame-setup modified)))
+        org-roam-ref-capture-templates
+        '(("r" "ref" plain
+           (function org-roam-capture--get-point)
+           "%?"
+           :file-name "websites/${slug}"
+           :head "#+TITLE: ${title}\n#+ROAM_KEY: ${ref}"
+           :unnarrowed t)))
 
-  (general-define-key
-   :definer 'minor-mode
-   :keymaps 'org-roam-mode
-   :states '(normal insert emacs)
-   "<down-mouse-2>" 'my/org-open-at-point))
+  (setq org-roam-title-include-subdirs t))
 #+end_src
 
 *** biblio
 org-ref depends on this package
 #+begin_src elisp
-(use-package biblio)  
+(use-package biblio)
 #+end_src
 
 *** rg
@@ -902,9 +1007,8 @@ org-ref depends on this package
 #+end_src
 
 *** yasnippet
-#+begin_src emacs-lisp
+#+begin_src elisp
 (use-package yasnippet
-  :commands (yas-reload-all)
   :custom
   (yas-snippet-dirs
    '("~/Projects/dots/snips/yasnippet"))
@@ -916,9 +1020,19 @@ org-ref depends on this package
    (python-mode . yas-minor-mode)))
 #+end_src
 
-*** all-the-icons
-#+begin_src emacs-lisp
-(use-package all-the-icons)
+*** spell-fu
+#+begin_src elisp :tangle no
+(use-package spell-fu
+  :config
+  (add-hook 'org-mode-hook
+            (lambda ()
+              (setq spell-fu-faces-exclude '(org-meta-line org-link org-code))
+              (spell-fu-mode))))
+#+end_src
+
+*** anki-editor
+#+begin_src elisp
+(use-package anki-editor)
 #+end_src
 
 *** org-ref
@@ -949,7 +1063,7 @@ org-ref depends on this package
 #+end_src
 
 *** org-cliplink
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
 (use-package org-cliplink)
 #+end_src
 
@@ -1031,6 +1145,8 @@ org-ref depends on this package
     (async-start-process "File-rolle" "file-roller" nil file))
    ((string= ext "bz2")
     (async-start-process "File-rolle" "file-roller" nil file))
+   ((string= ext "7z")
+    (async-start-process "File-rolle" "file-roller" nil file))
    ((string= ext "xz")
     (async-start-process "File-rolle" "file-roller" nil file))
    ((string= ext "mp4")
@@ -1048,6 +1164,26 @@ org-ref depends on this package
    ;;(async-start-process "Zathura" "zathura" nil file))
    ;; default
    (t (dired-find-file))))
+#+end_src
+*** org-toggle-hide-emphasis-markers
+#+begin_src elisp
+(defun ram/org-toggle-hide-emphasis-markers (&optional arg)
+  "Toggle the value of `org-hide-emphasis-markers'.
+If ARG is non-nil, the effect is global.
+Otherwise, the effect is buffer-local."
+  (interactive "P")
+  (let* ((current-value org-hide-emphasis-markers)
+         (toggled (not current-value))
+         (status (concat "org-hide-emphasis set to " (format "%s" toggled))))
+    (if arg
+        (progn
+          (setq org-hide-emphasis-markers toggled)
+          (setq status (concat status " globally")))
+      (setq-local org-hide-emphasis-markers toggled)
+      (setq status (concat status " in buffer " (buffer-name))))
+    (font-lock-flush)
+    (font-lock-ensure)
+    (message "%s" status)))
 #+end_src
 
 *** Switch to the previous buffer
@@ -1079,6 +1215,13 @@ Repeated invocations toggle between the two most recently open buffers."
          (async-start-process "rofi" "rofi" nil "-show" "drun"))
         ;; default
         (t (message "Wrong option"))))
+#+end_src
+
+*** Mount drive
+#+begin_src emacs-lisp
+(defun ram/mount-drive ()
+  (interactive)
+  (async-start-process "udisksctl" "udisksctl" nil "mount" "-b" "/dev/sdb1"))
 #+end_src
 
 *** Functions for vterm
@@ -1177,7 +1320,7 @@ if [ -d "$HOME/.local/bin" ] ; then
     PATH="$HOME/.local/bin:$PATH"
 fi
 #+end_src
-*** Clang 
+*** Clang
 #+begin_src sh
 export PATH="$HOME/bin/clang/bin:$PATH"
 #+end_src
@@ -1191,6 +1334,11 @@ export PATH="$GOPATH/bin:$PATH"
 *** Pyenv
 #+begin_src sh
 export PATH=$PYENV_ROOT/bin:$PATH
+#+end_src
+
+*** Anki
+#+begin_src sh
+export PATH="$HOME/bin/anki/bin:$PATH"
 #+end_src
 
 *** Poetry
@@ -1207,7 +1355,7 @@ export PATH=$HOME/bin/alarcritty:$PATH
 #+begin_src sh
 export PATH=$HOME/bin/emacs/bin:$PATH
 #+end_src
-    
+
 *** Neovim
 #+begin_src sh
 export PATH=$HOME/bin/neovim:$PATH
@@ -1248,6 +1396,11 @@ export PATH=$HOME/bin/android/cmdline-tools/latest/bin:$PATH
 *** Jdk
 #+begin_src sh
 export PATH=$HOME/bin/jdk/bin:$PATH
+#+end_src
+
+*** Sqlite
+#+begin_src sh
+export PATH=$HOME/bin/sqlite:$PATH
 #+end_src
 
 *** Cmake
@@ -1317,7 +1470,7 @@ function vterm_printf(){
     else
         printf "\e]%s\e\\" "$1"
     fi
-}  
+}
 #+end_src
 
 *** Function to be able to call elisp functions in vterm
@@ -1381,6 +1534,5 @@ fi
 vterm_prompt_end(){
     vterm_printf "51;A$(whoami):$(pwd)"
 }
-PS1=$PS1'\[$(vterm_prompt_end)\]'  
+PS1=$PS1'\[$(vterm_prompt_end)\]'
 #+end_src
-
