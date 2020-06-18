@@ -501,9 +501,8 @@ Install cmake to be able to install vterm
   :init
   (projectile-mode +1)
   :custom
-  ;; selectrum
-  (projectile-completion-system 'default)
   :config
+  (projectile-completion-system 'default)
   (add-to-list 'projectile-project-root-files-bottom-up "pubspec.yaml")
 
   (projectile-register-project-type 'dart '("pubspec.yaml")
