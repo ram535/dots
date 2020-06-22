@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: test
+# key: test
+# --
+$(yas-completing-read "Prompt: " '("--" "node" "grid" "rectangle") nil nil nil nil "--")

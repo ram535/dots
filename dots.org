@@ -55,6 +55,7 @@ This always creates unnecessary diffs in git. Just delete it upon saving.
 
 #+begin_src emacs-lisp
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
+(add-hook 'before-save-hook 'whitespace-cleanup)
 #+end_src
 
 *** Don't convert tabs to white spaces in makefiles
@@ -325,12 +326,14 @@ Highlight the the matching (){}[]
 *** evil
 #+begin_src emacs-lisp
 (use-package evil
+  :hook (after-init . evil-mode)
   :custom
   ;; change the color of the cursor
   (evil-normal-state-cursor '("gray" box))
   (evil-visual-state-cursor '("orange" box))
   (evil-insert-state-cursor '("dodger blue" bar))
   (evil-replace-state-cursor '("red" bar))
+  ;; use emacs bindings in insert-mode
   (evil-disable-insert-state-bindings t)
   (evil-want-keybinding nil)
   :config
@@ -348,8 +351,7 @@ Highlight the the matching (){}[]
   (evil-set-initial-state 'pdf-view-mode 'emacs)
   (evil-set-initial-state 'pdf-annot-list-mode 'emacs)
   (evil-set-initial-state 'pdf-outline-buffer-mode 'emacs)
-  (evil-set-initial-state 'deft-mode 'emacs)
-  (evil-mode 1)
+  ;; (evil-mode 1)
   :general
   (:states 'emacs
            "C-`" 'vterm-toggle)
@@ -501,25 +503,22 @@ Install cmake to be able to install vterm
   :init
   (projectile-mode +1)
   :custom
-  :config
   (projectile-completion-system 'default)
+  (projectile-create-missing-test-files t)
+  :config
   (add-to-list 'projectile-project-root-files-bottom-up "pubspec.yaml")
 
   (projectile-register-project-type 'dart '("pubspec.yaml")
-	                                  :compile "pub get"
 	                                  :test "pub run test"
-	                                  :run "pub run bin/main.dart"
+                                    :configure 'ram/projectile-run-project
+	                                  :run "webdev serve"
 	                                  :test-suffix "_test.dart")
-  (defun ram/dart-test ()
-    (interactive)
-    (projectile-run-vterm)
-    (vterm-clear)
-    (vterm-send-string "pub run test")
-    (vterm-send-return))
 
   :general
+  (:states '(normal insert emacs motion)
+           "<f7>" 'projectile-configure-project)
   (:prefix "C-c p"
-           :states 'normal
+           :states '(normal insert emacs motion)
            "f" 'projectile-find-file
            "d" 'projectile-dired
            "r" 'projectile-run-project
@@ -595,6 +594,7 @@ difficult to read.
            "K" 'lsp-ui-doc-mode
            "gc" 'evil-commentary
            "gb" 'evil-jump-backward)
+  (:keymaps 'dart-mode-map "<f8>" 'ram/dart)
   (:keymaps 'python-mode-map
             "<f5>" '(lambda() (interactive) (async-shell-command (concat "python " (buffer-file-name)) "*python output*")))
   (:keymaps 'dart-mode-map
@@ -1019,6 +1019,23 @@ org-ref depends on this package
    (python-mode . yas-minor-mode)))
 #+end_src
 
+*** web-mode
+#+begin_src emacs-lisp
+(use-package web-mode
+  :custom
+  (web-mode-enable-auto-expanding t)
+  (web-mode-markup-indent-offset 2)
+  (web-mode-css-indent-offset 2)
+  (web-mode-code-indent-offset 2)
+  (web-mode-enable-auto-pairing t)
+  (web-mode-enable-css-colorization t)
+  (web-mode-enable-current-element-highlight t)
+  :config
+  (set-face-background 'web-mode-current-element-highlight-face "#ff6c6b")
+  (add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode))
+  (add-to-list 'auto-mode-alist '("\\.css?\\'" . web-mode)))
+#+end_src
+
 *** spell-fu
 #+begin_src elisp :tangle no
 (use-package spell-fu
@@ -1132,6 +1149,17 @@ org-ref depends on this package
     (add-hook 'org-store-link-functions 'org-pdftools-store-link)))
 #+end_src
 
+*** mouse-whell
+By default, the scrolling is way too fast to be precise and helpful,
+let’s tune it down a little bit.
+#+begin_src emacs-lisp
+(use-package mwheel
+  :straight (:type built-in)
+  :custom
+  (mouse-wheel-scroll-amount '(2 ((shift) . 1)))
+  (mouse-wheel-progressive-speed nil))
+#+end_src
+
 ** Functions
 *** Make ~l~ to behave as expected in dired
 #+begin_src emacs-lisp
@@ -1164,6 +1192,44 @@ org-ref depends on this package
    ;; default
    (t (dired-find-file))))
 #+end_src
+*** Projectile functions
+#+begin_src emacs-lisp
+;; (defun ram/projectile-run-project ()
+;;   (completing-read "Choose: "
+;;                    '("pub get"
+;;                      "webdev serve")))
+
+(defun ram/dart (arg)
+  (interactive (list (completing-read "Choose: "
+                                      '("pub get" "webdev serve" "pub run test"))))
+  (cond ((string= arg "pub get")
+         (ram/dart-pub-get))
+        ((string= arg "webdev serve")
+         (ram/dart-webdev-serve))
+        ((string= arg "pub run test")
+         (ram/dart-test))
+        ;; default
+        (t (message "Wrong option"))))
+
+(defun ram/dart-test ()
+  (projectile-run-vterm)
+  (vterm-clear)
+  (vterm-send-string "pub run test")
+  (vterm-send-return))
+
+(defun ram/dart-pub-get ()
+  (projectile-run-vterm)
+  (vterm-clear)
+  (vterm-send-string "pub get")
+  (vterm-send-return))
+
+(defun ram/dart-webdev-serve ()
+  (projectile-run-vterm)
+  (vterm-clear)
+  (vterm-send-string "webdev serve")
+  (vterm-send-return))
+#+end_src
+
 *** org-toggle-hide-emphasis-markers
 #+begin_src elisp
 (defun ram/org-toggle-hide-emphasis-markers (&optional arg)
