@@ -296,6 +296,11 @@ Highlight the the matching (){}[]
   (org-src-preserve-indentation nil)
 
   :config
+  (add-hook 'org-mode-hook '(lambda () (setq fill-column 80)))
+  ;; This break the line but only when editing
+  (add-hook 'org-mode-hook 'auto-fill-mode)
+  ;; Visualy break the line of the frame size
+  (add-hook 'org-mode-hook 'visual-line-mode)
 
   ;; puts the cursor in the right position
   ;; when hitting enter
@@ -352,14 +357,26 @@ Highlight the the matching (){}[]
   (evil-set-initial-state 'pdf-annot-list-mode 'emacs)
   (evil-set-initial-state 'pdf-outline-buffer-mode 'emacs)
   ;; (evil-mode 1)
+
+  ;; (evil-define-minor-mode-key '(normal insert emacs) 'org-fc-review-flip-mode
+  ;;   (kbd "RET") 'org-fc-review-flip
+  ;;   (kbd "n") 'org-fc-review-flip
+  ;;   (kbd "s") 'org-fc-review-suspend-card
+  ;;   (kbd "q") 'org-fc-review-quit)
+
+  ;; (evil-define-minor-mode-key '(normal insert emacs) 'org-fc-review-rate-mode
+  ;;   (kbd "a") 'org-fc-review-rate-again
+  ;;   (kbd "h") 'org-fc-review-rate-hard
+  ;;   (kbd "g") 'org-fc-review-rate-good
+  ;;   (kbd "e") 'org-fc-review-rate-easy
+  ;;   (kbd "s") 'org-fc-review-suspend-card
+  ;;   (kbd "q") 'org-fc-review-quit)
   :general
-  (:states 'emacs
-           "C-`" 'vterm-toggle)
-  (:states 'insert
-           "C-`" 'vterm-toggle)
+  (:states '(emacs normal insert)
+           "C-`" 'ram/toggle-vterm)
   (:states 'normal
-           "C-`" 'vterm-toggle
-           "M-`" 'vterm-toggle-cd
+           "j" 'evil-next-visual-line
+           "k" 'evil-previous-visual-line
            "f" 'avy-goto-char-2
            "SPC" 'er/expand-region
            ;; swap ; and :
@@ -378,14 +395,18 @@ Highlight the the matching (){}[]
 
 *** evil-commentary
 #+begin_src emacs-lisp
-(use-package evil-commentary)
+(use-package evil-commentary
+  :after evil)
 #+end_src
 
 *** evil-surround
 #+begin_src emacs-lisp
 (use-package evil-surround
-  :config
-  (global-evil-surround-mode 1))
+  :after evil
+  :hook (after-init . global-evil-surround-mode))
+
+  ;; :config
+  ;; (global-evil-surround-mode 1))
 #+end_src
 
 *** dired
@@ -455,6 +476,7 @@ Highlight the the matching (){}[]
            "zd" 'dired-hide-details-mode
            "d" 'dired-do-delete))
 #+end_src
+
 *** selectrum
 #+begin_src emacs-lisp
 (use-package selectrum
@@ -642,9 +664,11 @@ difficult to read.
    (before-save . lsp-organize-imports))
   :custom
   (lsp-auto-guess-root t)                ;; auto guess root
-  (lsp-signature-auto-activate nil)
-  (lsp-signature-doc-lines 1)
-  (lsp-signature-render-documentation nil)
+  ;; disable showing documentation in the minibuffer
+  (lsp-eldoc-hook nil)
+  ;; (lsp-signature-auto-activate nil)
+  ;; (lsp-signature-doc-lines 1)
+  ;; (lsp-signature-render-documentation nil)
   (lsp-gopls-complete-unimported t)
   (lsp-prefer-capf t)                    ;; using `company-capf' by default
   :config
@@ -893,12 +917,15 @@ https://www.reddit.com/r/emacs/comments/a27sg9/how_can_i_set_the_pdfviewer_in_au
 sudo apt install gawk
 #+begin_src emacs-lisp
 (use-package org-fc
-  :straight (org-fc :type git :host github :repo "l3kn/org-fc")
+  :straight
+  (org-fc
+   :type git :host github :repo "l3kn/org-fc"
+   :files (:defaults "awk" "demo.org"))
   :custom
-  (org-fc-source-path "~/.emacs.d/straight/repos/org-fc/")
-  (org-fc-directories '("~/org/roams"))
+  (org-fc-directories '("~/org/"))
   :config
-  (require 'org-fc-hydra))
+  (require 'org-fc-hydra)
+  (require 'org-fc-keymap-hint))
 #+end_src
 
 *** org-protocol
@@ -1011,12 +1038,8 @@ org-ref depends on this package
   :custom
   (yas-snippet-dirs
    '("~/Projects/dots/snips/yasnippet"))
-  :hook
-  ((go-mode . yas-minor-mode)
-   (org-mode . yas-minor-mode)
-   (js-mode . yas-minor-mode)
-   (dart-mode . yas-minor-mode)
-   (python-mode . yas-minor-mode)))
+  :config
+  (yas-global-mode +1))
 #+end_src
 
 *** web-mode
@@ -1160,6 +1183,20 @@ let’s tune it down a little bit.
   (mouse-wheel-progressive-speed nil))
 #+end_src
 
+*** browse-kill-ring
+#+begin_src emacs-lisp
+(use-package browse-kill-ring
+  :config
+  (browse-kill-ring-default-keybindings)
+  :custom
+  (browse-kill-ring-display-duplicates nil))
+#+end_src
+
+*** org-web-tools
+#+begin_src emacs-lisp
+(use-package org-web-tools)
+#+end_src
+
 ** Functions
 *** Make ~l~ to behave as expected in dired
 #+begin_src emacs-lisp
@@ -1167,7 +1204,11 @@ let’s tune it down a little bit.
   (interactive)
   (setq file (dired-get-file-for-visit))
   (setq ext (file-name-extension file))
+
   (cond
+   ((string= ext "pdf")
+    ;; shell-quote-argument escapes white spaces on the file name
+    (async-start-process "Zathura" "zathura" nil file))
    ((string= ext "rar")
     (async-start-process "File-rolle" "file-roller" nil file))
    ((string= ext "bz2")
@@ -1192,6 +1233,32 @@ let’s tune it down a little bit.
    ;; default
    (t (dired-find-file))))
 #+end_src
+*** realign existing contents of buffer on column-width
+#+begin_src emacs-lisp
+(defun ram/fill-buffer ()
+  (interactive)
+  (save-excursion
+    (save-restriction
+      (widen)
+      (fill-region (point-min) (point-max)))))
+#+end_src
+
+*** Cycle in the kill-ring reverse direction
+#+begin_src emacs-lisp
+(defun ram/yank-pop-forwards (arg)
+      (interactive "p")
+      (yank-pop (- arg)))
+#+end_src
+
+*** Toggle and change directory to current working directory
+#+begin_src emacs-lisp
+(defun ram/toggle-vterm ()
+  (interactive)
+  (vterm-toggle)
+  (vterm-toggle-insert-cd)
+  (vterm-clear))
+#+end_src
+
 *** Projectile functions
 #+begin_src emacs-lisp
 ;; (defun ram/projectile-run-project ()
@@ -1201,7 +1268,9 @@ let’s tune it down a little bit.
 
 (defun ram/dart (arg)
   (interactive (list (completing-read "Choose: "
-                                      '("pub get" "webdev serve" "pub run test"))))
+                                      '("pub get"
+                                        "webdev serve"
+                                        "pub run test"))))
   (cond ((string= arg "pub get")
          (ram/dart-pub-get))
         ((string= arg "webdev serve")
@@ -1362,6 +1431,7 @@ export POETRY_HOME="$HOME/bin/poetry"
 export ALTERNATE_EDITOR=""
 export EDITOR="emacsclient -c"                  # $EDITOR opens in GUI mode
 export VISUAL="emacsclient -c -a emacs"         # $VISUAL opens in GUI mode
+export MANPAGER=cat
 #+end_src
 
 ** Paths
@@ -1385,6 +1455,11 @@ if [ -d "$HOME/.local/bin" ] ; then
     PATH="$HOME/.local/bin:$PATH"
 fi
 #+end_src
+*** awk
+#+begin_src sh
+export PATH="$HOME/bin/awk/bin:$PATH"
+#+end_src
+
 *** Clang
 #+begin_src sh
 export PATH="$HOME/bin/clang/bin:$PATH"
@@ -1492,7 +1567,7 @@ https://github.com/riobard/bash-powerline
 source ~/.config/bash-powerline/bash-powerline.sh
 #+end_src
 ** functions
-#+begin_src sh
+#+begin_src sh :tangle no
 # fd - cd to selected directory
 ff() {
   local dir
@@ -1541,30 +1616,13 @@ function vterm_printf(){
 *** Function to be able to call elisp functions in vterm
 #+begin_src sh
 vterm_cmd() {
-    if [ -n "$TMUX" ]; then
-        # tell tmux to pass the escape sequences through
-        # (Source: http://permalink.gmane.org/gmane.comp.terminal-emulators.tmux.user/1324)
-        printf "\ePtmux;\e\e]51;E"
-    elif [ "${TERM%%-*}" = "screen" ]; then
-        # GNU screen (screen, screen-256color, screen-256color-bce)
-        printf "\eP\e]51;E"
-    else
-        printf "\e]51;E"
-    fi
+    local vterm_elisp
+    vterm_elisp=""
     while [ $# -gt 0 ]; do
-        printf '"%s" ' "$(printf "%s" "$1" | sed -e 's|\\|\\\\|g' -e 's|"|\\"|g')"
+        vterm_elisp="$vterm_elisp""$(printf '"%s" ' "$(printf "%s" "$1" | sed -e 's|\\|\\\\|g' -e 's|"|\\"|g')")"
         shift
     done
-    if [ -n "$TMUX" ]; then
-        # tell tmux to pass the escape sequences through
-        # (Source: http://permalink.gmane.org/gmane.comp.terminal-emulators.tmux.user/1324)
-        printf "\007\e\\"
-    elif [ "${TERM%%-*}" = "screen" ]; then
-        # GNU screen (screen, screen-256color, screen-256color-bce)
-        printf "\007\e\\"
-    else
-        printf "\e\\"
-    fi
+    vterm_printf "51;E$vterm_elisp"
 }
 #+end_src
 *** open file or dired in emacs when using vterm
