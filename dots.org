@@ -1731,7 +1731,6 @@ window configurations are applied."
          (yank-pop n) (insert-for-yank text)))))
 #+end_src
 
-
 * Alacritty
 ** Theme
    #+begin_src sh
