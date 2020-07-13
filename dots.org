@@ -348,6 +348,7 @@ Highlight the the matching (){}[]
   (evil-set-initial-state 'vterm-mode 'insert)
   (evil-set-initial-state 'prog-mode 'normal)
   (evil-set-initial-state 'ebib-index-mode 'emacs)
+  (evil-set-initial-state 'calibredb-search-mode 'emacs)
   (evil-set-initial-state 'exwm-mode 'emacs)
   (evil-set-initial-state 'rg-mode 'emacs)
   ;; (evil-set-initial-state 'nov-mode 'emacs)
@@ -373,7 +374,7 @@ Highlight the the matching (){}[]
   ;;   (kbd "q") 'org-fc-review-quit)
   :general
   (:states '(emacs normal insert)
-           "C-`" 'ram/toggle-vterm)
+           "M-`" 'ram/toggle-vterm)
   (:states 'normal
            "j" 'evil-next-visual-line
            "k" 'evil-previous-visual-line
@@ -501,8 +502,6 @@ Install cmake to be able to install vterm
 #+begin_src emacs-lisp
 (use-package vterm)
 #+end_src
-
-#+RESULTS:
 
 *** vterm-toggle
 #+begin_src emacs-lisp
@@ -1107,7 +1106,7 @@ org-ref depends on this package
 #+end_src
 
 *** flyspell
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp 
 ;; Default dictionary. To change do M-x ispell-change-dictionary RET.
 ;; (setq ispell-dictionary "english")
 
@@ -1197,6 +1196,32 @@ let’s tune it down a little bit.
 (use-package org-web-tools)
 #+end_src
 
+*** calibredb.el
+#+begin_src emacs-lisp
+(use-package calibredb
+  :custom
+  (calibredb-author-width 0)
+  (calibredb-id-width 0)
+  (calibredb-comment-width 0)
+  (sql-sqlite-program "~/bin/sqlite/sqlite3")
+  (calibredb-root-dir "~/Documents/articles")
+  (calibredb-db-dir (expand-file-name "metadata.db" calibredb-root-dir))
+  (calibredb-program "/usr/bin/calibredb")
+  (calibredb-library-alist '(("~/Documents/books")
+                                  ("~/Documents/articles"))))
+#+end_src
+
+*** elfeed
+#+begin_src emacs-lisp
+(use-package elfeed
+  :custom
+  (elfeed-feeds
+   '("http://nullprogram.com/feed/"
+     "http://planet.emacsen.org/atom.xml"
+     "https://mangaplus.shueisha.co.jp/titles/100034"
+     )))
+#+end_src
+
 ** Functions
 *** Make ~l~ to behave as expected in dired
 #+begin_src emacs-lisp
@@ -1209,6 +1234,9 @@ let’s tune it down a little bit.
    ((string= ext "pdf")
     ;; shell-quote-argument escapes white spaces on the file name
     (async-start-process "Zathura" "zathura" nil file))
+   ((string= ext "epub")
+    ;; shell-quote-argument escapes white spaces on the file name
+    (async-start-process "Calibre" "ebook-viewer" nil file))
    ((string= ext "rar")
     (async-start-process "File-rolle" "file-roller" nil file))
    ((string= ext "bz2")
@@ -1250,13 +1278,13 @@ let’s tune it down a little bit.
       (yank-pop (- arg)))
 #+end_src
 
-*** Toggle and change directory to current working directory
+*** Toggle and change directory to current working directory vterm
 #+begin_src emacs-lisp
 (defun ram/toggle-vterm ()
   (interactive)
   (vterm-toggle)
   (vterm-toggle-insert-cd)
-  (vterm-clear))
+  (delete-other-windows))
 #+end_src
 
 *** Projectile functions
@@ -1395,6 +1423,315 @@ This function is intended for use with `ivy-ignore-buffers'."
                                       (directory-files "~/org/books" nil directory-files-no-dot-files-regexp))))
   (find-file (concat "~/org/books/" arg)))
 #+end_src
+
+*** selectrum-registers
+#+begin_src emacs-lisp
+(require 'kmacro)
+(require 'frameset)
+(require 'register)
+
+(defun selectrum-registers ()
+  "Use a register, such as jumping to a buffer location or inserting text.
+
+Each kind of register is prefixed with it's type, so that types are also
+searchable.  Displayed type names are:
+
+- \"File\": file names
+- \"Frame configuration\": configurations of framesets
+- \"Keyboard macro\": keyboard macros
+- \"Position\": buffer makers and files queries (positions in closed files)
+- \"Number\": numbers
+- \"Rectangle\": rectangles of text
+
+Basic text, rectangle of text, and numbers are inserted into the
+current buffer at point.  Positions are moved to.  Frame and
+window configurations are applied."
+
+  (interactive)
+  (let* ((selectrum-should-sort-p nil)
+         (formatted-registers
+          ;; Want to combine formatting and action function, so that we only have to check
+          ;; the type of the register contents once.
+          (mapcar (lambda (reg)
+                    (append (let ((val (cdr reg)))
+                              ;; Many of these description strings are copied from their
+                              ;; respective Emacs library.
+                              (pcase val
+                                ;; File Names
+                                (`(file . ,file-name)
+                                 (list (concat "File: " file-name)
+                                       #'jump-to-register))
+
+                                ;; File Queries
+                                ;; Registered markers of file buffers are turned into
+                                ;; file queries after their respective buffer is closed.
+                                (`(file-query ,file-name ,position)
+                                 (list (concat "Position: " file-name
+                                               " at " (number-to-string position))
+                                       #'jump-to-register))
+
+                                ;; Frame Configurations or Frame Set
+                                ((pred frameset-register-p)
+                                 (list (let* ((fs (frameset-register-frameset val))
+                                              (ns (length (frameset-states fs))))
+                                         (format "Frame configuration: %d frame%s, saved on %s."
+                                                 ns
+                                                 (if (= 1 ns) "" "s")
+                                                 (format-time-string "%c" (frameset-timestamp fs))))
+                                  #'jump-to-register))
+
+                                ;; Keyboard Macros
+                                ((pred kmacro-register-p)
+                                 (list (concat "Keyboard macro: "
+                                               (condition-case nil
+                                                   (format-kbd-macro (kmacro-register-macro val) 1)
+                                                 ;; Recover from error from `edmacro-fix-menu-commands'.
+                                                 ;; In Emacs 27, it looks like mouse events are silently skipped over.
+                                                 (error "Warning: Cannot display macros containing mouse clicks")))
+                                       #'jump-to-register))
+
+                                ;; Markers
+                                ((pred markerp)
+                                 (list (concat "Position: "
+                                               (if-let ((buf (marker-buffer val)))
+                                                   (concat (buffer-name buf)
+                                                           " at "
+                                                           (number-to-string (marker-position val)))
+                                                 "Buffer no longer exists."))
+                                       #'jump-to-register))
+
+                                ;; Numbers
+                                ((pred numberp)
+                                 (list (concat "Number: " (number-to-string val))
+                                       #'insert-register))
+
+                                ;; Rectangles
+                                ((and `(,elem1 . ,_)
+                                      (guard (stringp elem1)))
+                                 ;; NOTE: You'll need to adjust the indentation given your
+                                 ;;       Selectrum settings.
+                                 (list (concat "Rectangle: "
+                                               (string-join
+                                                val
+                                                "\n                "))
+                                       #'insert-register))
+
+                                ;; Strings
+                                ((pred stringp)
+                                 (list (concat "Text: " val)
+                                       ;; Could also do the following to flatten text.
+                                       ;; (concat "Text: "
+                                       ;;   (replace-regexp-in-string
+                                       ;;    "\n"
+                                       ;;    (propertize "^J" 'face 'escape-glyph)
+                                       ;;    ;; (substring-no-properties val)
+                                       ;;    val))
+                                       #'insert-register))
+
+                                ;; Window Configurations
+                                ((and `(,window-config ,_)
+                                      (guard (window-configuration-p window-config)))
+                                 (list
+                                  (let* ((stored-window-config window-config)
+                                         (window-config-frame (window-configuration-frame stored-window-config))
+                                         (current-frame (selected-frame)))
+                                    ;; These mostly copied from register.el.
+                                    (format "Window configuration: %s."
+                                            (if (frame-live-p window-config-frame)
+                                                (with-selected-frame window-config-frame
+                                                  (save-window-excursion
+                                                    (set-window-configuration stored-window-config)
+                                                    (concat
+                                                     (mapconcat (lambda (w) (buffer-name (window-buffer w)))
+                                                                (window-list (selected-frame)) ", ")
+                                                     (unless (eq current-frame window-config-frame)
+                                                       " in another frame"))))
+                                              "dead frame")))
+                                  #'jump-to-register))
+
+                                ;; For anything else, just mark it as garbage.
+                                (_ '(garbage))))
+                            ;; The register key.
+                            (list (car reg))))
+                  ;; Destructively sort a copy of the alist by ordering the keys.
+                  (seq-sort-by #'car #'< (copy-sequence register-alist))))
+         ;; Remove anything marked as garbage.
+         (filtered-choices (seq-remove (lambda (choice) (eq (car choice) 'garbage))
+                                       formatted-registers))
+
+         ;; Create candidates as a list of strings.
+         (actual-candidates (mapcar (lambda (choice)
+                                      (propertize (car choice)
+                                                  'selectrum-candidate-display-prefix
+                                                  (concat (single-key-description (caddr choice))
+                                                          ": ")))
+                                    filtered-choices))
+
+         ;; Use the selected string to match the desired register.
+         (chosen-register (assoc (completing-read "Select register: " actual-candidates nil t)
+                                 filtered-choices)))
+
+    ;; Apply the correct action function to the register key.
+    (funcall (cadr chosen-register) (caddr chosen-register))))
+#+end_src
+
+*** selectrum jump to outline headings
+#+begin_src emacs-lisp
+(defvar selectrum-outline-history nil "History of chosen headings for `selectrum-outline'.")
+(defun selectrum-outline ()
+  "Jump to a heading.  Regexps are pre-defined.  Obeys narrowing."
+  (interactive)
+  (let ((selectrum-should-sort-p nil)) ; Headings should stay in order of appearance.
+    ;; Just use Org's built-in features when applicable.
+    (if (eq major-mode 'org-mode)
+        (let ((org-outline-path-complete-in-steps)
+              (org-goto-interface 'outline-path-completion))
+          (org-goto))
+
+      ;; Otherwise, have to find and format headings manually.
+      (let* ((heading-regexp
+              (cl-case major-mode
+                ;; Groups: (1) level determinant, (2) heading text.
+                ;; The top level is 0, for a zero-length determinant.
+                (emacs-lisp-mode "^;;;\\(?1:;*\\)[[:blank:]]*\\(?2:[[:alnum:]][^z-a]*\\)\\'")
+                (python-mode "^##\\(?1:\\**\\|#*\\)[[:blank:]]*\\(?2:[[:alnum:]][^z-a]*\\)\\'")
+                (t (user-error "No headings defined for mode: %s" major-mode))))
+
+             ;; Get the basic information of each heading in the accessible portion of the buffer.
+             (buffer-contents (split-string (buffer-string) "\n"))
+             (headings
+              (cl-loop for txt in buffer-contents
+                       for num from 1 to (1- (length buffer-contents))
+                       ;; Only get the heading lines.
+                       when (string-match heading-regexp txt)
+                       ;; Heading text, Outline level, Line number
+                       collect (list (match-string-no-properties 2 txt)
+                                     (length (match-string-no-properties 1 txt))
+                                     num)))
+
+             ;; Create the prefix headings ("H1", "H1/h2", etc.)
+             (formatted-headings
+              (cl-loop
+               ;; Variables for keeping track of heading "path".
+               with prefix-list = '()   ; List of parent headings.
+               with prev-heading-level = 0
+               with prev-heading-text = nil
+               ;; Heading titles can be repeated, so we include line numbers for context.
+               with number-format = (format "L%%0%dd: " (length (number-to-string (length buffer-contents))))
+               for (heading-text heading-level line-num) in headings
+               collect (progn
+                         ;; Check if we've moved to a different level.
+                         (when (/= heading-level prev-heading-level)
+                           ;; Update the prefix-list appropriately.
+                           (setq prefix-list (if (> heading-level prev-heading-level)
+                                                 (append prefix-list (list prev-heading-text))
+                                               (cl-subseq prefix-list 0 heading-level)))
+                           ;; Update prev-heading-level to current.
+                           (setq prev-heading-level heading-level))
+
+                         ;; Always update the previous heading.
+                         (setq prev-heading-text heading-text)
+
+                         (concat (format number-format line-num)
+                                 (concat (string-join prefix-list "/")
+                                         (and prefix-list "/") heading-text)))))
+
+             ;; Get the desired heading.
+             (chosen-heading (completing-read "Jump to heading: " formatted-headings
+                                              nil t nil
+                                              'selectrum-outline-history))
+             ;; Stop at the ":". It is followed by one " ".
+             (line-number-prefix (seq-take-while (lambda (char)
+                                                   (not (char-equal ?: char)))
+                                                 chosen-heading))
+             ;; Get the line number for that heading, skipping the "L" in
+             ;; line-number-prefix.
+             (chosen-line-number (string-to-number (substring line-number-prefix 1)))
+             ;; Get the current line number to determine the travel distance.
+             (current-line-number (line-number-at-pos (point))))
+
+        ;; Now do the actual movement, but first push mark.
+        (push-mark (point) t)
+        ;; Manually edit history to remove line numbers.
+        (setcar selectrum-outline-history (substring chosen-heading
+                                                    ;; Want after line-prefix followed by ": ".
+                                                    (+ (length line-number-prefix) 2)))
+        ;; Using `goto-line' isn't recommended for non-interactive use.
+        (forward-line (- chosen-line-number current-line-number))
+        (beginning-of-line-text 1)))))
+#+end_src
+
+#+RESULTS:
+: selectrum-outline
+
+*** selectrum swiper-like Jumping to Matching Lines
+#+begin_src emacs-lisp
+(defvar selectrum-swiper-history nil "Submission history for `selectrum-swiper'.")
+(defun selectrum-swiper ()
+  "Search for a matching line and jump to the beginning of its text.  Obeys narrowing."
+  (interactive)
+  (let* ((selectrum-should-sort-p nil)
+         (line-choices (cl-loop
+                        with minimum-line-number = (line-number-at-pos (point-min) t)
+                        with buffer-text-lines = (split-string (buffer-string) "\n")
+                        with number-format = (format "L%%0%dd: " (length (number-to-string (length buffer-text-lines))))
+                        for txt in buffer-text-lines
+                        for num from minimum-line-number to (+ minimum-line-number
+                                                               (1- (length buffer-text-lines)))
+                        unless (string-empty-p txt) ; Just skip empty lines.
+                        collect (concat (format number-format num) txt)))
+         ;; Get the matching line.
+         (chosen-line (completing-read "Jump to matching line: " line-choices
+                                       nil t nil 'selectrum-swiper-history))
+         ;; Stop at the ":". It is followed by one " ".
+         (line-number-prefix (seq-take-while (lambda (char)
+                                               (not (char-equal ?: char)))
+                                             chosen-line))
+         ;; Get the corresponding line number, skipping the "L" in line-number-prefix.
+         (chosen-line-number (string-to-number (substring line-number-prefix 1)))
+         ;; Get the current line number for determining the travel distance.
+         (current-line-number (line-number-at-pos (point) t)))
+
+    (push-mark (point) t)
+    ;; Manually edit history to remove line numbers.
+    (setcar selectrum-swiper-history (substring chosen-line
+                                                ;; Want after line-prefix followed by ": ".
+                                                (+ (length line-number-prefix) 2)))
+    (forward-line (- chosen-line-number current-line-number))
+    (beginning-of-line-text 1)))
+#+end_src
+
+#+RESULTS:
+: selectrum-swiper
+
+*** 
+#+begin_src emacs-lisp
+(defun yank-pop+ (&optional arg)
+ "Call `yank-pop' with ARG when appropriate, or offer completion."
+ (interactive "*P")
+ (if arg (yank-pop arg)
+   (let* ((old-last-command last-command)
+          (selectrum-should-sort-p nil)
+          (enable-recursive-minibuffers t)
+          (text (completing-read
+                 "Yank: "
+                 (cl-remove-duplicates
+                  kill-ring :test #'string= :from-end t)
+                 nil t nil nil))
+          ;; Find `text' in `kill-ring'.
+          (pos (cl-position text kill-ring :test #'string=))
+          ;; Translate relative to `kill-ring-yank-pointer'.
+          (n (+ pos (length kill-ring-yank-pointer))))
+     (unless (string= text (current-kill n t))
+       (error "Could not setup for `current-kill'"))
+     ;; Restore `last-command' over Selectrum commands.
+     (setq last-command old-last-command)
+     ;; Delegate to `yank-pop' if appropriate or just insert.
+     (if (eq last-command 'yank)
+         (yank-pop n) (insert-for-yank text)))))
+#+end_src
+
+
 * Alacritty
 ** Theme
    #+begin_src sh
@@ -1506,6 +1843,11 @@ export PATH=$HOME/bin/neovim:$PATH
 export PATH=$HOME/bin/node/bin:$PATH
 #+end_src
 
+*** Ninja
+#+begin_src sh
+export PATH=$HOME/bin/ninja:$PATH
+#+end_src
+
 *** Dart
 #+begin_src sh
 export PATH=$HOME/bin/flutter/bin/cache/dart-sdk/bin:$PATH
@@ -1565,6 +1907,15 @@ export PATH=$HOME/bin/ripgrep:$PATH
 https://github.com/riobard/bash-powerline
 #+begin_src sh
 source ~/.config/bash-powerline/bash-powerline.sh
+,#+end_#+begin_src 
+
+#+end_src
+
+** alias
+#+begin_src sh
+alias dd="~/bin/dart-sdk/bin/dart --enable-experiment=non-nullable"
+alias dp="~/bin/dart-sdk/bin/pub"
+alias dn="~/bin/dart-sdk/bin/dart2native"
 #+end_src
 ** functions
 #+begin_src sh :tangle no
@@ -1659,3 +2010,45 @@ vterm_prompt_end(){
 }
 PS1=$PS1'\[$(vterm_prompt_end)\]'
 #+end_src
+* zathura
+:PROPERTIES:
+:header-args: :tangle ~/.config/zathura/zathurarc
+:END:
+#+begin_src sh
+# Open document in fit-width mode by default
+set adjust-open "width"
+
+set smooth-scroll true
+set statusbar-basename true
+set selection-clipboard clipboard
+#+end_src
+* bspwm
+:PROPERTIES:
+:header-args: :tangle ~/.config/bspwm/bspwmrc
+:END:
+#+begin_src sh
+#! /bin/sh
+
+sxhkd &
+
+bspc monitor -d I II III IV V VI VII VIII IX X
+
+# bspc config border_width         0
+# bspc config window_gap          12
+
+bspc config split_ratio          0.52
+bspc config borderless_monocle   true
+bspc config gapless_monocle      true
+
+# Use monocle layout on desktop 1
+bspc desktop '^1' --layout monocle
+bspc desktop '^2' --layout monocle
+bspc desktop '^3' --layout monocle
+bspc desktop '^4' --layout monocle
+
+bspc rule --add Emacs state=tiled
+bspc rule --add Zathura state=tiled
+bspc rule --add Google-chrome state=tiled
+bspc rule --add File-roller state=tiled
+#+end_src
+
