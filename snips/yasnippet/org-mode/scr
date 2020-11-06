@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: scr
+# key: scr
+# --
+#+begin_src ${1: $(yas-completing-read "Prompt: " '("awk" "c++" "calc" "css" "dart" "ditaa" "emacs-lisp" "gnuplot" "go" "guile" "js" "latex" "lisp" "plantuml" "python" "rust" "sass" "sql" "sqlite") nil nil "--")}
+$0
+#+end_src
