@@ -1,7 +1,0 @@
-# -*- mode: snippet -*-
-# name: scc
-# key: scc
-# --
-#+begin_src cpp
-$0
-#+end_src

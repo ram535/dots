@@ -30,6 +30,11 @@
       auto-window-vscroll nil)
 #+end_src
 
+*** Hide tabs
+#+begin_src emacs-lisp
+(setq tab-bar-show nil)
+#+end_src
+
 *** open buffer vertically (help buffer, pdf, etc)
 #+begin_src emacs-lisp
 (setq split-height-threshold nil)
@@ -54,7 +59,7 @@
 This always creates unnecessary diffs in git. Just delete it upon saving.
 
 #+begin_src emacs-lisp
-(add-hook 'before-save-hook 'delete-trailing-whitespace)
+(add-hook 'before-save-hook #'delete-trailing-whitespace)
 (add-hook 'before-save-hook 'whitespace-cleanup)
 #+end_src
 
@@ -64,7 +69,7 @@ This always creates unnecessary diffs in git. Just delete it upon saving.
           (lambda ()
             (setq indent-tabs-mode t)
             (setq-default indent-tabs-mode t)
-            (setq tab-width 2)))
+            (setq tab-width 8)))
 #+end_src
 *** Configure compile command
 #+begin_src emacs-lisp
@@ -180,6 +185,12 @@ Highlight the the matching (){}[]
 (setq auto-save-list-file-prefix nil)
 #+end_src
 
+*** Show trailing white spaces and empty lines
+#+begin_src emacs-lisp
+(setq-default show-trailing-whitespace nil)
+(setq-default indicate-empty-lines t)
+#+end_src
+
 *** Mode line
 #+begin_src emacs-lisp :tangle no
 (setq-default mode-line-format
@@ -195,11 +206,41 @@ Highlight the the matching (){}[]
                "%m "))
 #+end_src
 
+*** Set position register
+#+begin_src emacs-lisp
+(set-register ?d '(file . "~/Projects/dots/dots.org"))
+#+end_src
+
+*** Prettify Symbols
+#+begin_src emacs-lisp
+(global-prettify-symbols-mode 1)
+(defun add-pretty-lambda ()
+  "Make some word or string show as pretty Unicode symbols.  See https://unicodelookup.com for more."
+  (setq prettify-symbols-alist
+        '(
+          ("lambda" . 955)
+          ("delta" . 120517)
+          ("epsilon" . 120518)
+          ("->" . 8594)
+          ("<=" . 8804)
+          (">=" . 8805)
+          )))
+(add-hook 'prog-mode-hook 'add-pretty-lambda)
+(add-hook 'org-mode-hook 'add-pretty-lambda)
+#+end_src
+
+*** Set env variables
+#+begin_src emacs-lisp 
+(setq myHome (getenv "HOME"))
+(setenv "LD_LIBRARY_PATH" (format "%s/bin/gcc-10.2.0/lib;%s/bin/gcc-10.2.0/lib64" myHome myHome))
+;;(setenv "LD_LIBRARY_PATH" (format "%s/bin/clang/lib" myHome))
+#+end_src
+
 ** Packages
 *** straight.el
 #+begin_src emacs-lisp
 (defvar bootstrap-version)
-(setq straight-repository-branch "develop")
+;;(setq straight-repository-branch "develop")
 (let ((bootstrap-file
        (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
       (bootstrap-version 5))
@@ -223,6 +264,14 @@ Highlight the the matching (){}[]
 *** all-the-icons
 #+begin_src emacs-lisp
 (use-package all-the-icons)
+#+end_src
+
+*** exec-path-from-shell
+It did not work as expected
+#+begin_src emacs-lisp :tangle no
+(use-package exec-path-from-shell
+  :config
+  (exec-path-from-shell-initialize))
 #+end_src
 
 *** doom-modeline
@@ -294,8 +343,20 @@ Highlight the the matching (){}[]
   (org-src-window-setup 'current-window)
   (org-edit-src-content-indentation 0)
   (org-src-preserve-indentation nil)
-
+  (org-imenu-depth 7)
+  ;; Don't ask for confirm when evaluating a source block
+  (org-confirm-babel-evaluate nil)
   :config
+  ;; open org-links with a specific program.
+  ;; in this case open pdf files with zathura
+ ;; (add-hook 'org-mode-hook
+ ;;           '(lambda ()
+ ;;              (setq org-file-apps
+ ;;                    '((auto-mode . emacs)
+ ;;                      ("\\.pdf::\\([0-9]+\\)?\\'" . "zathura %s -P %1")
+ ;;                      ("\\.pdf\\'" . "zathura %s")
+ ;;                      (directory . emacs)))))
+
   (add-hook 'org-mode-hook '(lambda () (setq fill-column 80)))
   ;; This break the line but only when editing
   (add-hook 'org-mode-hook 'auto-fill-mode)
@@ -325,6 +386,7 @@ Highlight the the matching (){}[]
   (:prefix ","
            :states 'normal
            :keymaps 'org-mode-map
+           "h" 'selectrum-outline
            "n" 'org-toggle-narrow-to-subtree))
 #+end_src
 
@@ -348,6 +410,12 @@ Highlight the the matching (){}[]
   (evil-set-initial-state 'vterm-mode 'insert)
   (evil-set-initial-state 'prog-mode 'normal)
   (evil-set-initial-state 'ebib-index-mode 'emacs)
+  (evil-set-initial-state 'org-fc-dashboard-mode 'emacs)
+  (evil-set-initial-state 'org-fc-flip-mode 'emacs)
+  (evil-set-initial-state 'org-fc-rate-mode 'emacs)
+  (evil-set-initial-state 'Info-mode 'emacs)
+  (evil-set-initial-state 'org-fc-review-rate-mode 'emacs)
+  (evil-set-initial-state 'org-fc-review-flip 'emacs)
   (evil-set-initial-state 'calibredb-search-mode 'emacs)
   (evil-set-initial-state 'exwm-mode 'emacs)
   (evil-set-initial-state 'rg-mode 'emacs)
@@ -358,37 +426,32 @@ Highlight the the matching (){}[]
   (evil-set-initial-state 'pdf-annot-list-mode 'emacs)
   (evil-set-initial-state 'pdf-outline-buffer-mode 'emacs)
   ;; (evil-mode 1)
-
-  ;; (evil-define-minor-mode-key '(normal insert emacs) 'org-fc-review-flip-mode
-  ;;   (kbd "RET") 'org-fc-review-flip
-  ;;   (kbd "n") 'org-fc-review-flip
-  ;;   (kbd "s") 'org-fc-review-suspend-card
-  ;;   (kbd "q") 'org-fc-review-quit)
-
-  ;; (evil-define-minor-mode-key '(normal insert emacs) 'org-fc-review-rate-mode
-  ;;   (kbd "a") 'org-fc-review-rate-again
-  ;;   (kbd "h") 'org-fc-review-rate-hard
-  ;;   (kbd "g") 'org-fc-review-rate-good
-  ;;   (kbd "e") 'org-fc-review-rate-easy
-  ;;   (kbd "s") 'org-fc-review-suspend-card
-  ;;   (kbd "q") 'org-fc-review-quit)
   :general
-  (:states '(emacs normal insert)
+  (:states '(emacs normal insert visual)
+           "C-<tab>" 'tab-next
+           "M-k" 'ram/backward-kill-line
+           "M-a" 'evil-end-of-visual-line
            "M-`" 'ram/toggle-vterm)
   (:states 'normal
            "j" 'evil-next-visual-line
            "k" 'evil-previous-visual-line
            "f" 'avy-goto-char-2
+           "m" 'point-to-register
+           "'" 'jump-to-register
            "SPC" 'er/expand-region
            ;; swap ; and :
            ";" 'evil-ex
-           ":" 'evil-repeat-find-char)
+           ":" 'evil-repeat-find-char
+           "C-<tab>" 'tab-next)
   (:states 'normal
            :prefix ","
            "d" '(lambda() (interactive) (dired default-directory))
            "s" 'magit-status
            "q" 'mode-line-other-buffer)
-  (:states 'normal
+  (:states 'visual
+           :prefix ","
+           "y" 'yas-insert-snippet)
+  (:states 'insert
            :keymaps 'company-active-map
            "C-j" 'company-select-next
            "C-k" 'company-select-previous))
@@ -420,18 +483,27 @@ Highlight the the matching (){}[]
   (dired-recursive-copies 'always)
   (dired-recursive-deletes 'always)
   (dired-dwim-target t) ;;use to copy to the next buffer visible
+  ;; Auto refresh Dired, but be quiet about it
+  (global-auto-revert-non-file-buffers t)
+  (auto-revert-verbose nil)
   :config
+  ;; Enable global auto-revert
+  (global-auto-revert-mode t)
+  ;; Reuse same dired buffer, to prevent numerous buffers while navigating in dired
+  (put 'dired-find-alternate-file 'disabled nil)
+
   (setq dired-listing-switches "-Bhl --group-directories-first -v")
   (set-face-attribute 'dired-header nil
                       :foreground "#282c34"
                       :weight 'bold)
 
   (defcustom list-of-dired-switches
-    '(("-Bhl --group-directories-first -v" . "directories first")
-      ("-BhXL" . "by extension")
-      ("-la" . "everything")
-      ("-BhlAL --group-directories-first -v" . "no . & .."))
+    '(("-Bhl --group-directories-first -v" . "")
+      ("-ahl -v --group-directories-first -v" . "everything")
+      ;; ("-BhlAL --group-directories-first -v" . "no . & ..")
+      )
     "List of ls switches (together with a name to display in the mode-line) for dired to cycle among.")
+
 
   (defun cycle-dired-switches ()
     "Cycle through the list `list-of-dired-switches' of switches for ls"
@@ -442,6 +514,14 @@ Highlight the the matching (){}[]
     (dired-sort-other (caar list-of-dired-switches))
     (setq mode-name (concat "Dired " (cdar list-of-dired-switches)))
     (force-mode-line-update))
+
+  ;; remove buffers before delete the file
+  (defun ram/dired-kill-before-delete (file &rest rest)
+                (when-let ((buf (get-file-buffer file)))
+                  (kill-buffer buf)))
+
+  (advice-add 'dired-delete-file :before 'ram/dired-kill-before-delete)
+
   :general
   (:states 'normal
            :keymaps 'dired-mode-map
@@ -464,6 +544,7 @@ Highlight the the matching (){}[]
            "gh" '(lambda() (interactive) (dired "~"))
            "m" 'dired-mark
            "u" 'dired-unmark
+           "t" 'dired-toggle-marks
            "cw" 'dired-do-rename
            "r" 'revert-buffer
            "nd" 'dired-create-directory
@@ -475,7 +556,34 @@ Highlight the the matching (){}[]
            "x" 'dired-do-compress
            "za" 'cycle-dired-switches
            "zd" 'dired-hide-details-mode
-           "d" 'dired-do-delete))
+           "M" 'point-to-register
+           "'" 'jump-to-register
+           "fz" 'dired-narrow-fuzzy
+           "fe" 'dired-filter-by-extension
+           "fc" 'dired-filter-pop-all
+           "ff" 'dired-narrow-regexp
+           "d" 'dired-hide-details-mode
+           "D" 'dired-do-delete))
+#+end_src
+
+*** dired-hacks-utils
+#+begin_src emacs-lisp
+(use-package dired-hacks-utils)
+#+end_src
+
+*** dired-narrow
+#+begin_src emacs-lisp
+(use-package dired-narrow)
+#+end_src
+
+*** dired-filter
+#+begin_src emacs-lisp
+(use-package dired-filter)
+#+end_src
+
+*** dired-avfs
+#+begin_src emacs-lisp
+(use-package dired-avfs)
 #+end_src
 
 *** selectrum
@@ -485,6 +593,9 @@ Highlight the the matching (){}[]
   :config
   ;; Completing variable names from `M-:`
   (setq enable-recursive-minibuffers t)
+
+  (setq selectrum-refine-candidates-function #'orderless-filter)
+  (setq selectrum-highlight-candidates-function #'orderless-highlight-matches)
   (selectrum-mode +1))
 
 (use-package selectrum-prescient
@@ -495,6 +606,14 @@ Highlight the the matching (){}[]
   ;; to save your command history on disk, so the sorting gets more
   ;; intelligent over time
   (prescient-persist-mode +1))
+#+end_src
+
+*** orderless
+#+begin_src emacs-lisp
+(use-package orderless
+  :init (icomplete-mode) ; optional but recommended!
+  :custom
+  (completion-styles '(orderless)))
 #+end_src
 
 *** vterm
@@ -513,6 +632,8 @@ Install cmake to be able to install vterm
 (use-package company
   :hook
   (after-init . global-company-mode)
+  :custom
+  (company-idle-delay 0)
   :config
   (setq company-capf t)
   (push 'company-capf company-backends))
@@ -530,10 +651,10 @@ Install cmake to be able to install vterm
   (add-to-list 'projectile-project-root-files-bottom-up "pubspec.yaml")
 
   (projectile-register-project-type 'dart '("pubspec.yaml")
-	                                  :test "pub run test"
+                                    :test "pub run test"
                                     :configure 'ram/projectile-run-project
-	                                  :run "webdev serve"
-	                                  :test-suffix "_test.dart")
+                                    :run "webdev serve"
+                                    :test-suffix "_test.dart")
 
   :general
   (:states '(normal insert emacs motion)
@@ -601,42 +722,101 @@ difficult to read.
 *** prog-mode
 #+begin_src emacs-lisp
 (use-package prog-mode
-  :straight nil
-  :after general
+  :straight (:type built-in)
+  ;; :straight nil
   :general
   (:states 'normal
-           :keymaps 'prog-mode-map
-           "TAB" 'company-indent-or-complete-common
-           "<f6>" 'async-shell-command
-           "<f9>" 'lsp-ui-imenu
-           "gd" 'lsp-find-definition
-           "gp" 'lsp-ui-peek-find-references
-           "ge" 'treemacs
-           "K" 'lsp-ui-doc-mode
-           "gc" 'evil-commentary
-           "gb" 'evil-jump-backward)
-  (:keymaps 'dart-mode-map "<f8>" 'ram/dart)
-  (:keymaps 'python-mode-map
-            "<f5>" '(lambda() (interactive) (async-shell-command (concat "python " (buffer-file-name)) "*python output*")))
-  (:keymaps 'dart-mode-map
-            "<f5>" '(lambda() (interactive) (async-shell-command (concat "dart " (buffer-file-name)) "*dart output*")))
-  (:keymaps 'js-mode-map
-            "<f5>" '(lambda() (interactive) (async-shell-command (concat "node " (buffer-file-name)) "*javascript output*")))
-  (:keymaps 'go-mode-map
-            "<f5>" '(lambda() (interactive) (async-shell-command (concat "go run " (buffer-file-name)) "*go output*")))
-  (:keymaps 'c-mode-map
-            "<f5>" '(lambda() (interactive) (async-shell-command (concat "gcc " (buffer-file-name) " && ./a.out") "*c output*")))
-  (:keymaps 'c++-mode-map
-            "<f5>" '(lambda() (interactive) (async-shell-command (concat "clang++ --std=c++2a " (buffer-file-name) " && ./a.out") "*c output*")))
-  ;; (:keymaps 'c-mode-map "<f5>" 'compile)
-  (:keymaps 'lsp-ui-peek-mode-map
-            "j" 'lsp-ui-peek--select-next
-            "k" 'lsp-ui-peek--select-prev))
+         :keymaps 'prog-mode-map
+         "TAB" 'company-indent-or-complete-common
+         "<f6>" 'async-shell-command
+         "<f9>" 'lsp-ui-imenu
+         "gd" 'lsp-find-definition
+         "gp" 'lsp-ui-peek-find-references
+         "ge" 'treemacs
+         "K" 'lsp-ui-doc-mode
+         "gc" 'evil-commentary
+         "gb" 'evil-jump-backward))
+;; (:keymaps 'c-mode-map "<f5>" 'compile)
+;;  (:keymaps 'lsp-ui-peek-mode-map
+;;          "j" 'lsp-ui-peek--select-next
+;;          "k" 'lsp-ui-peek--select-prev)
+#+end_src
+
+*** c-mode
+#+begin_src emacs-lisp
+(general-define-key
+ :states '(emacs normal insert visual)
+ :keymaps 'c-mode-map
+ "<f5>" '(lambda()
+           (interactive)
+           (async-shell-command
+            (concat "gcc " (buffer-file-name) " && ./a.out") "*c output*"))
+ "C-;" 'ram/insertSemicolon)
+#+end_src
+
+*** c++-mode
+#+begin_src emacs-lisp
+(general-define-key
+ :states '(emacs normal insert visual)
+ :keymaps 'c++-mode-map
+ "<f5>" '(lambda()
+           (interactive)
+           (async-shell-command
+            (concat "g++ "
+                    (shell-quote-argument (buffer-name))
+                    " --std=c++2a -lfmt -g && ./a.out")
+            "*c output*"))
+ "C-;" 'ram/insertSemicolon)
+#+end_src
+
+*** js-mode
+#+begin_src emacs-lisp
+(add-hook 'js-mode-hook (lambda () (setq js-indent-level 2
+                                         tab-width 2)))
+(general-define-key
+ :states '(emacs normal insert visual)
+ :keymaps 'js-mode-map
+ "<f5>" '(lambda()
+           (interactive)
+           (async-shell-command
+            (concat "node " (buffer-file-name)) "*javascript output*"))
+ "C-;" 'ram/insertSemicolon)
+#+end_src
+
+*** python-mode
+#+begin_src emacs-lisp
+(general-define-key
+ :states 'normal
+ :keymaps 'python-mode-map
+ "<f5>" '(lambda()
+           (interactive)
+           (async-shell-command
+            (concat "python " (buffer-file-name)) "*python output*")))
+#+end_src
+
+*** lisp-interaction-mode
+#+begin_src emacs-lisp
+(use-package prog-mode
+  :straight nil
+  :general
+  (:states 'normal
+           :keymaps 'lisp-interaction-mode-map
+           "gr" 'eval-defun
+           ;; "gr" 'eval-print-last-sexp
+           ))
 #+end_src
 
 *** go-mode
 #+begin_src emacs-lisp
-(use-package go-mode)
+(use-package go-mode
+  :general
+  (:states 'normal
+           :keymaps 'go-mode-map
+           "<f8>" 'ram/dart
+           "<f5>" '(lambda()
+                     (interactive)
+                     (async-shell-command
+                      (concat "go run " (buffer-file-name)) "*go output*"))))
 #+end_src
 
 *** json-mode
@@ -646,7 +826,50 @@ difficult to read.
 
 *** dart-mode
 #+begin_src emacs-lisp
-(use-package dart-mode)
+(use-package dart-mode
+  :general
+  :states '(emacs normal insert visual)
+  :keymaps 'dart-mode-map
+  "<f5>" '(lambda()
+            (interactive)
+            (async-shell-command
+             (concat "dart --enable-experiment=non-nullable " (buffer-file-name)) "*dart output*"))
+  "C-;" 'ram/insertSemicolon)
+#+end_src
+
+*** haskell-mode
+#+begin_src emacs-lisp
+(use-package haskell-mode)
+#+end_src
+
+*** typescript-mode
+#+begin_src emacs-lisp
+(use-package typescript-mode)
+#+end_src
+
+*** sly (common-lisp)
+#+begin_src emacs-lisp
+(use-package sly
+  :straight (sly :type git :host github :repo "joaotavora/sly")
+  :custom (inferior-lisp-program "~/bin/sbcl/bin/sbcl")
+  :config
+  (add-hook 'sly-mode-hook
+          (lambda ()
+            (unless (sly-connected-p)
+              (save-excursion (sly))))))
+#+end_src
+
+*** geiser (guile)
+#+begin_src emacs-lisp
+(use-package geiser)
+
+(general-define-key
+ :states 'normal
+ :keymaps 'scheme-mode-map
+ "<f5>" '(lambda()
+           (interactive)
+           (async-shell-command
+            (concat "guile " (buffer-file-name)) "*guile output*")))
 #+end_src
 
 *** lsp-mode
@@ -659,21 +882,22 @@ difficult to read.
    (python-mode . lsp-deferred)
    (js-mode . lsp-deferred)
    (c++-mode . lsp-deferred)
+   (c-mode . lsp-deferred)
    (before-save . lsp-format-buffer)
    (before-save . lsp-organize-imports))
   :custom
   (lsp-auto-guess-root t)                ;; auto guess root
   ;; disable showing documentation in the minibuffer
-  (lsp-eldoc-hook nil)
+  ;; (lsp-eldoc-hook t)
   ;; (lsp-signature-auto-activate nil)
   ;; (lsp-signature-doc-lines 1)
   ;; (lsp-signature-render-documentation nil)
   (lsp-gopls-complete-unimported t)
   (lsp-prefer-capf t)                    ;; using `company-capf' by default
-  :config
-  (setq lsp-semantic-highlighting 'immediate)
-  (add-hook 'js-mode-hook (lambda () (setq js-indent-level 2)))
-  (add-hook 'js-mode-hook (lambda () (setq tab-width 2))))
+  (lsp-signature-auto-activate nil)
+  (lsp-lens-enable nil)
+  (lsp-ui-doc-enable nil)
+  (lsp-semantic-highlighting 'immediate))
 #+end_src
 
 *** lsp-ui
@@ -682,13 +906,13 @@ difficult to read.
   :hook (lsp-mode . lsp-ui-mode)
   :custom
   ;; (lsp-ui-doc-header t)
-  ;; (lsp-ui-doc-include-signature nil)
+  (lsp-ui-doc-include-signature t)
   (lsp-ui-doc-position 'bottom) ;; top, bottom, or at-point
   ;; (lsp-ui-doc-max-width 120)
   ;; (lsp-ui-doc-max-height 30)
   ;; (lsp-ui-doc-use-childframe t)
   ;; (lsp-ui-doc-use-webkit t)
-  (lsp-ui-doc-enable nil)
+  ;; (lsp-ui-doc-enable t)
   (lsp-ui-sideline-enable nil)
   (lsp-ui-sideline-show-code-actions nil)
   (lsp-ui-sideline-show-symbol t)
@@ -704,16 +928,18 @@ difficult to read.
 (use-package lsp-dart
   :straight (lsp-dart :type git :host github :repo "emacs-lsp/lsp-dart")
   :custom
-  (lsp-dart-sdk-dir "~/bin/flutter/bin/cache/dart-sdk/")
+  ;; (lsp-dart-sdk-dir "~/bin/flutter/bin/cache/dart-sdk/")
+  (lsp-dart-sdk-dir "~/bin/dart-sdk")
   :hook (dart-mode . lsp-deferred))
 #+end_src
 
-*** lsp-python-ms
+*** lsp-pyright
 #+begin_src emacs-lisp
-(use-package lsp-python-ms
+(use-package lsp-pyright
+  :straight (lsp-pyright :type git :host github :repo "emacs-lsp/lsp-pyright")
   :hook (python-mode . (lambda ()
-                         (require 'lsp-python-ms)
-                         (lsp))))
+                          (require 'lsp-pyright)
+                          (lsp))))  ; or lsp-deferred
 #+end_src
 
 *** treemacs
@@ -727,6 +953,27 @@ difficult to read.
   :after lsp-mode
   :config
   (lsp-treemacs-sync-mode 1))
+#+end_src
+
+*** dap-mode
+#+begin_src emacs-lisp
+(use-package dap-mode
+  :config
+  (setq dap-auto-configure-features '(sessions locals controls tooltip))
+  (require 'dap-cpptools)
+  (require 'dap-gdb-lldb)
+  (require 'dap-lldb)
+  (require 'dap-python)
+  (require 'dap-chrome)
+  (setq dap-print-io t)
+  :bind
+  (:map dap-mode-map
+        (("<f12>" . dap-debug)
+         ("<f8>" . dap-continue)
+         ("<f9>" . dap-next)
+         ("<M-f11>" . dap-step-in)
+         ("C-M-<f11>" . dap-step-out)
+         ("<f7>" . dap-breakpoint-toggle))))
 #+end_src
 
 *** hover.el
@@ -796,6 +1043,7 @@ Search for character
 (use-package ctrlf
   :straight (ctrlf :host github :repo "raxod502/ctrlf")
   :config
+  (add-hook 'exwm-mode-hook (lambda () (ctrlf-local-mode -1)))
   (ctrlf-mode +1))
 #+end_src
 
@@ -820,24 +1068,24 @@ Search for character
 #+end_src
 
 *** pdf-tools
-#+begin_src emacs-lisp
-;; pdf-tools depends on this package
-(use-package tablist)
+    #+begin_src emacs-lisp
+    ;; pdf-tools depends on this package
+    (use-package tablist)
 
-(use-package pdf-tools
-  :config
-  ;; initialise
-  (pdf-tools-install)
+    (use-package pdf-tools
+      :config
+      ;; initialise
+      (pdf-tools-install)
 
-  ;; open pdfs scaled to fit page
-  (setq-default pdf-view-display-size 'fit-page)
+      ;; open pdfs scaled to fit page
+      (setq-default pdf-view-display-size 'fit-page)
 
-  ;; more fine-grained zooming
-  (setq pdf-view-resize-factor 1.1)
+      ;; more fine-grained zooming
+      (setq pdf-view-resize-factor 1.1)
 
-  ;; automatically annotate highlights
-  (setq pdf-annot-activate-created-annotations t))
-#+end_src
+      ;; automatically annotate highlights
+      (setq pdf-annot-activate-created-annotations t))
+  #+end_src
 
 *** pdf-view-restore
 Support for opening last known pdf position in pdf-view-mode provided
@@ -851,17 +1099,15 @@ by pdf-tools
   (add-hook 'pdf-view-mode-hook 'pdf-view-restore-mode))
 #+end_src
 
+*** pdf-continuous-scroll-mode.el
+#+begin_src emacs-lisp :tangle no
+(use-package pdf-continuous-scroll-mode.el
+:straight (pdf-continuous-scroll-mode.el :type git :host github :repo "dalanicolai/pdf-continuous-scroll-mode.el"))
+#+end_src
+
 *** expand-region
 #+begin_src emacs-lisp
 (use-package expand-region)
-#+end_src
-
-*** slime
-#+begin_src emacs-lisp
-(use-package slime
-  :custom
-  (inferior-lisp-program "/usr/bin/sbcl")
-  (slime-contribs '(slime-fancy)))
 #+end_src
 
 *** auctex
@@ -890,21 +1136,35 @@ https://www.reddit.com/r/emacs/comments/a27sg9/how_can_i_set_the_pdfviewer_in_au
   ;;                ("zathura %o"
   ;;                 (mode-io-correlate " --synctex-forward %n:0:%b -x \"emacsclient +%{line} %{input}\""))
   ;;                "zathura"))
-  (setq TeX-source-correlate-method 'synctex)
-  (TeX-source-correlate-mode)
-  (setq TeX-source-correlate-start-server t)
+  ;; (setq TeX-source-correlate-method 'synctex)
+  ;; (TeX-source-correlate-mode)
+  ;; (setq TeX-source-correlate-start-server t)
 
   ;; Use zathura when C-c C-c or C-c C-a or C-c C-v
-  ;; (add-to-list 'TeX-view-program-selection
-  ;;              '(output-pdf "Zathura"))
+  (add-to-list 'TeX-view-program-selection
+               '(output-pdf "Zathura")))
 
-  (setq TeX-view-program-selection '((output-pdf "pdf-tools")))
-  (setq TeX-view-program-list '(("pdf-tools" "TeX-pdf-tools-sync-view"))))
+  ;; (setq TeX-view-program-selection '((output-pdf "pdf-tools")))
+  ;; (setq TeX-view-program-list '(("pdf-tools" "TeX-pdf-tools-sync-view"))))
 #+end_src
 
 *** lispy
 #+begin_src emacs-lisp
-(use-package lispy)
+(use-package lispy
+  :config
+  ;; (lispy-set-key-theme '(special paredit c-digits))
+  (add-hook 'scheme-mode-hook (lambda () (lispy-mode 1)))
+  (add-hook 'lisp-mode-hook (lambda () (lispy-mode 1)))
+  (add-hook 'emacs-lisp-mode-hook (lambda () (lispy-mode 1))))
+#+end_src
+
+*** lispyville
+#+begin_src emacs-lisp
+(use-package lispyville
+  :init
+  (general-add-hook '(emacs-lisp-mode-hook lisp-mode-hook) #'lispyville-mode)
+  :config
+  (lispyville-set-key-theme '(operators additional-insert c-w additional text-objects atom-motions additional-motions wrap slurp/barf-lispy)))
 #+end_src
 
 *** hydra
@@ -921,10 +1181,29 @@ sudo apt install gawk
    :type git :host github :repo "l3kn/org-fc"
    :files (:defaults "awk" "demo.org"))
   :custom
-  (org-fc-directories '("~/org/"))
+  (org-fc-directories '("~/org/roams"))
   :config
-  (require 'org-fc-hydra)
-  (require 'org-fc-keymap-hint))
+  (general-define-key
+   :definer 'minor-mode
+   :states 'normal
+   :keymaps 'org-fc-review-flip-mode
+   "RET" 'org-fc-review-flip
+   "n" 'org-fc-review-flip
+   "s" 'org-fc-review-suspend-card
+   "q" 'org-fc-review-quit)
+
+  (general-define-key
+   :definer 'minor-mode
+   :states 'normal
+   :keymaps 'org-fc-review-rate-mode
+   "a" 'org-fc-review-rate-again
+   "h" 'org-fc-review-rate-hard
+   "g" 'org-fc-review-rate-good
+   "e" 'org-fc-review-rate-easy
+   "s" 'org-fc-review-suspend-card
+   "q" 'org-fc-review-quit)
+
+  (require 'org-fc-hydra))
 #+end_src
 
 *** org-protocol
@@ -934,7 +1213,7 @@ sudo apt install gawk
 #+end_src
 
 *** org-roam
-#+begin_src elisp 
+#+begin_src elisp
 (use-package org-roam
   :hook
   (after-init . org-roam-mode)
@@ -946,6 +1225,7 @@ sudo apt install gawk
   :bind (:map org-roam-mode-map
               (("C-c n l" . org-roam)
                ("C-c n f" . org-roam-find-file)
+               ("C-c n t" . org-roam-tag-add)
                ("C-c n b" . org-roam-switch-to-buffer)
                ("C-c n g" . org-roam-show-graph))
               :map org-mode-map
@@ -958,10 +1238,9 @@ sudo apt install gawk
            "%?"
            :file-name "%<%Y%m%d%H%M%S>-${slug}"
            :head "#+TITLE: ${title}\n#+CREATED: %U\n#+LAST_MODIFIED: %U\n\n"
-           :unnarrowed t))
+           :unnarrowed t)
 
-        org-roam-ref-capture-templates
-        '(("r" "ref" plain
+          ("r" "ref" plain
            (function org-roam-capture--get-point)
            "%?"
            :file-name "websites/${slug}"
@@ -969,6 +1248,31 @@ sudo apt install gawk
            :unnarrowed t)))
 
   (setq org-roam-title-include-subdirs t))
+#+end_src
+
+*** org-noter
+#+begin_src emacs-lisp
+(use-package org-noter
+  :after org
+  :custom
+  (org-noter-always-create-frame nil))
+;; (use-package org-noter
+;;   :commands (org-noter)
+;;   :config
+;;   ;;(require 'org-noter-pdftools)
+;;   (with-eval-after-load 'pdf-tools
+;;     (setq pdf-annot-activate-handler-functions #'org-noter-pdftools-jump-to-note))
+;;   (setq org-noter-notes-mode-map (make-sparse-keymap)))
+
+;; (use-package org-noter-pdftools
+;;   :straight (org-noter-pdftools :host github :repo "fuxialexander/org-pdftools"
+;;                                 :files ("org-noter-pdftools.el"))
+;;   :after (org-noter)))
+#+end_src
+
+*** literate-calc-mode
+#+begin_src emacs-lisp
+(use-package literate-calc-mode)
 #+end_src
 
 *** biblio
@@ -1106,7 +1410,7 @@ org-ref depends on this package
 #+end_src
 
 *** flyspell
-#+begin_src emacs-lisp 
+#+begin_src emacs-lisp
 ;; Default dictionary. To change do M-x ispell-change-dictionary RET.
 ;; (setq ispell-dictionary "english")
 
@@ -1142,24 +1446,12 @@ org-ref depends on this package
 #+end_src
 
 *** org-pdftools
-#+begin_src emacs-lisp :tangle no
-(use-package org-noter
-  :commands (org-noter)
-  :config
-  ;;(require 'org-noter-pdftools)
-  (with-eval-after-load 'pdf-tools
-    (setq pdf-annot-activate-handler-functions #'org-noter-pdftools-jump-to-note))
-  (setq org-noter-notes-mode-map (make-sparse-keymap)))
-
-(use-package org-noter-pdftools
-  :straight (org-noter-pdftools :host github :repo "fuxialexander/org-pdftools"
-                                :files ("org-noter-pdftools.el"))
-  :after (org-noter))
-
+Allows to make org-link to a specific page in a pdf.
+#+begin_src emacs-lisp
 (use-package org-pdftools
-  :after (org-mode)
+  :hook (org-mode . org-pdftools-setup-link)
   :custom
-  (org-pdftools-root-dir "~/org/books")
+  (org-pdftools-root-dir "~/Documents/books")
   (org-pdftools-search-string-separator "??")
   :config
   (with-eval-after-load 'org
@@ -1204,7 +1496,7 @@ let’s tune it down a little bit.
   (calibredb-id-width 0)
   (calibredb-comment-width 0)
   (sql-sqlite-program "~/bin/sqlite/sqlite3")
-  (calibredb-root-dir "~/Documents/articles")
+  (calibredb-root-dir "~/Documents/books")
   (calibredb-db-dir (expand-file-name "metadata.db" calibredb-root-dir))
   (calibredb-program "/usr/bin/calibredb")
   (calibredb-library-alist '(("~/Documents/books")
@@ -1219,7 +1511,185 @@ let’s tune it down a little bit.
    '("http://nullprogram.com/feed/"
      "http://planet.emacsen.org/atom.xml"
      "https://mangaplus.shueisha.co.jp/titles/100034"
-     )))
+     "https://www.youtube.com/feeds/videos.xml?channel_id=UC0uTPqBCFIpZxlz_Lv1tk_g"
+     ))
+  :general
+  (:states 'normal
+           :keymaps 'elfeed-search-mode-map
+           "l" 'elfeed-search-show-entry
+           "s" 'elfeed-search-live-filter
+           "q" 'elfeed-search-quit-window
+           )
+  (:states 'normal
+          :keymaps 'elfeed-show-mode-map
+          "q" 'elfeed-kill-buffer
+           )
+  )
+#+end_src
+
+#+RESULTS:
+
+RET             elfeed-search-show-entry
++               elfeed-search-tag-all
+-               elfeed-search-untag-all
+0 .. 9          digit-argument
+<               elfeed-search-first-entry
+>               elfeed-search-last-entry
+G               elfeed-search-fetch
+S               elfeed-search-set-filter
+b               elfeed-search-browse-url
+c               elfeed-search-clear-filter
+g               elfeed-search-update--force
+h               describe-mode
+n               next-line
+p               previous-line
+q               elfeed-search-quit-window
+r               elfeed-search-untag-all-unread
+s               elfeed-search-live-filter
+u               elfeed-search-tag-all-unread
+y               elfeed-search-yank
+*** ligature.el
+#+begin_src emacs-lisp :tangle no
+(use-package ligature
+  :straight (lsp-mode :type git :host github :repo "mickeynp/ligature.el")
+  :config
+  ;; Enable the "www" ligature in every possible major mode
+  (ligature-set-ligatures 't '("www"))
+  ;; Enable traditional ligature support in eww-mode, if the
+  ;; `variable-pitch' face supports it
+  (ligature-set-ligatures 'eww-mode '("ff" "fi" "ffi"))
+  ;; Enable all Cascadia Code ligatures in programming modes
+  (ligature-set-ligatures 'prog-mode '("|||>" "<|||" "<==>" "<!--" "####" "~~>" "***" "||=" "||>"
+                                       ":::" "::=" "=:=" "===" "==>" "=!=" "=>>" "=<<" "=/=" "!=="
+                                       "!!." ">=>" ">>=" ">>>" ">>-" ">->" "->>" "-->" "---" "-<<"
+                                       "<~~" "<~>" "<*>" "<||" "<|>" "<$>" "<==" "<=>" "<=<" "<->"
+                                       "<--" "<-<" "<<=" "<<-" "<<<" "<+>" "</>" "###" "#_(" "..<"
+                                       "..." "+++" "/==" "///" "_|_" "www" "&&" "^=" "~~" "~@" "~="
+                                       "~>" "~-" "**" "*>" "*/" "||" "|}" "|]" "|=" "|>" "|-" "{|"
+                                       "[|" "]#" "::" ":=" ":>" ":<" "$>" "==" "=>" "!=" "!!" ">:"
+                                       ">=" ">>" ">-" "-~" "-|" "->" "--" "-<" "<~" "<*" "<|" "<:"
+                                       "<$" "<=" "<>" "<-" "<<" "<+" "</" "#{" "#[" "#:" "#=" "#!"
+                                       "##" "#(" "#?" "#_" "%%" ".=" ".-" ".." ".?" "+>" "++" "?:"
+                                       "?=" "?." "??" ";;" "/*" "/=" "/>" "//" "__" "~~" "(*" "*)"
+                                       "\\" "://"))
+  ;; Enables ligature checks globally in all buffers. You can also do it
+  ;; per mode with `ligature-mode'.
+  (global-ligature-mode t))
+#+end_src
+
+*** exwm
+#+begin_src emacs-lisp :tangle no
+(use-package exwm
+  :custom
+  (exwm-workspace-number 3)
+  :config
+  (require 'exwm-config)
+  ;; You are strongly encouraged to enable something like `ido-mode' to alter
+  ;; the default behavior of 'C-x b', or you will take great pains to switch
+  ;; to or back from a floating frame (remember 'C-x 5 o' if you refuse this
+  ;; proposal however).
+  ;; You may also want to call `exwm-config-ido' later (see below).
+  (ido-mode 1)
+
+  ;; All buffers created in EXWM mode are named "*EXWM*". You may want to
+  ;; change it in `exwm-update-class-hook' and `exwm-update-title-hook', which
+  ;; are run when a new X window class name or title is available.  Here's
+  ;; some advice on this topic:
+  ;; + Always use `exwm-workspace-rename-buffer` to avoid naming conflict.
+  ;; + For applications with multiple windows (e.g. GIMP), the class names of
+                                        ;    all windows are probably the same.  Using window titles for them makes
+  ;;   more sense.
+  ;; In the following example, we use class names for all windows except for
+  ;; Java applications and GIMP.
+  (add-hook 'exwm-update-class-hook
+            (lambda ()
+              (unless (or (string-prefix-p "sun-awt-X11-" exwm-instance-name)
+                          (string= "gimp" exwm-instance-name))
+                (exwm-workspace-rename-buffer exwm-class-name))))
+  (add-hook 'exwm-update-title-hook
+            (lambda ()
+              (when (or (not exwm-instance-name)
+                        (string-prefix-p "sun-awt-X11-" exwm-instance-name)
+                        (string= "gimp" exwm-instance-name))
+                (exwm-workspace-rename-buffer exwm-title))))
+
+  ;; Global keybindings can be defined with `exwm-input-global-keys'.
+  ;; Here are a few examples:
+  (setq exwm-input-global-keys
+        `(
+          ([?\s-q] . ram/switch-to-previous-buffer)
+          ([?\s-t] . exwm-floating-toggle-floating)
+          ([?\s-z] . ram/launch-app)))
+
+  ;; The following example demonstrates how to use simulation keys to mimic
+  ;; the behavior of Emacs.  The value of `exwm-input-simulation-keys` is a
+  ;; list of cons cells (SRC . DEST), where SRC is the key sequence you press
+  ;; and DEST is what EXWM actually sends to application.  Note that both SRC
+  ;; and DEST should be key sequences (vector or string).
+  (setq exwm-input-simulation-keys
+        '(
+          ;; movement
+          ([?\C-b] . [left])
+          ([?\M-b] . [C-left])
+          ([?\C-f] . [right])
+          ([?\M-f] . [C-right])
+          ([?\C-p] . [up])
+          ([?\C-n] . [down])
+          ([?\C-a] . [home])
+          ([?\C-e] . [end])
+          ([?\M-v] . [prior])
+          ([?\C-v] . [next])
+          ([?\C-d] . [delete])
+          ([?\C-k] . [S-end delete])
+          ;; cut/paste.
+          ([?\C-w] . [?\C-x])
+          ([?\M-w] . [?\C-c])
+          ([?\C-y] . [?\C-v])
+          ;; search
+          ([?\C-s] . [?\C-f])))
+
+  ;; You can hide the minibuffer and echo area when they're not used, by
+
+  (add-hook 'exwm-manage-finish-hook
+            (lambda ()
+              (exwm-layout-hide-mode-line)))
+
+  (add-hook 'exwm-mode-hook
+            (lambda ()
+              (setq exwm-workspace-minibuffer-position 'bottom)))
+
+  (exwm-enable))
+#+end_src
+
+*** anki
+#+begin_src emacs-lisp :tangle no
+(use-package anki
+  :straight (anki :type git :host github :repo "chenyanming/anki.el")
+  :init
+  (add-hook 'anki-mode-hook #'shrface-mode)
+  (add-hook 'anki-card-mode-hook #'shrface-mode)
+  (autoload 'anki "anki")
+  (autoload 'anki-browser "anki")
+  (autoload 'anki-list-decks "anki")
+  :config
+  (setq sql-sqlite-program "~/bin/sqlite/sqlite3")
+  (setq anki-collection-dir "~/.local/share/Anki2/User 1")
+  (setq anki-audio-player "mpv")
+  ;; (setq anki-audio-player (or (executable-find "aplay") (executable-find "afplay")))
+  (setq anki-shr-rendering-functions (append anki-shr-rendering-functions shr-external-rendering-functions)))
+#+end_src
+
+*** sudo-edit
+#+begin_src emacs-lisp
+(use-package sudo-edit)
+#+end_src
+
+*** cmake-mode
+#+begin_src emacs-lisp
+;; (straight-use-package '(cmake-mode :local-repo "/home/last/.emacs.d/local-packages/cmake-mode.el" :type nil))
+;;(straight-use-package '(cmake-mode :local-repo "/home/last/.emacs.d/local-packages/cmake-mode/cmake-mode.el"))
+(use-package cmake-mode)
+;;(straight-use-package '(cmake-mode :local-repo "~/.emacs.d/local-packages/cmake-mode" :source nil))
 #+end_src
 
 ** Functions
@@ -1235,32 +1705,52 @@ let’s tune it down a little bit.
     ;; shell-quote-argument escapes white spaces on the file name
     (async-start-process "Zathura" "zathura" nil file))
    ((string= ext "epub")
-    ;; shell-quote-argument escapes white spaces on the file name
-    (async-start-process "Calibre" "ebook-viewer" nil file))
+   (async-start-process "Zathura" "zathura" nil file))
+   ;; ((string= ext "epub")
+   ;;  (async-start-process "Calibre" "ebook-viewer" nil file))
    ((string= ext "rar")
-    (async-start-process "File-rolle" "file-roller" nil file))
+    (async-start-process "File-roller" "file-roller" nil file))
+   ((string= ext "tar")
+    (async-start-process "File-roller" "file-roller" nil file))
    ((string= ext "bz2")
-    (async-start-process "File-rolle" "file-roller" nil file))
+    (async-start-process "File-roller" "file-roller" nil file))
    ((string= ext "7z")
-    (async-start-process "File-rolle" "file-roller" nil file))
+    (async-start-process "File-roller" "file-roller" nil file))
    ((string= ext "xz")
-    (async-start-process "File-rolle" "file-roller" nil file))
+    (async-start-process "File-roller" "file-roller" nil file))
+   ((string= ext "gz")
+    (async-start-process "File-roller" "file-roller" nil file))
    ((string= ext "mp4")
-    (async-start-process "Vlc" "vlc" nil file))
+    (async-start-process "Mpv" "mpv" nil file))
    ((string= ext "mkv")
-    (async-start-process "Vlc" "vlc" nil file))
+    (async-start-process "Mpv" "mpv" nil file))
    ((string= ext "mp3")
     (async-start-process "Vlc" "vlc" nil file))
    ((string= ext "torrent")
     (async-start-process "Transmission" "transmission-gtk" nil file))
    ((string= ext "zip")
     (async-start-process "File-rolle" "file-roller" nil file))
-   ;;((string= ext "pdf")
-   ;; shell-quote-argument escapes white spaces on the file name
-   ;;(async-start-process "Zathura" "zathura" nil file))
    ;; default
    (t (dired-find-file))))
 #+end_src
+*** Backward-kill-line
+#+begin_src emacs-lisp
+(defun ram/backward-kill-line (arg)
+  "Kill ARG lines backward."
+  (interactive "p")
+  (kill-line (- 1 arg))
+  (company-indent-or-complete-common t))
+#+end_src
+*** insert ; at the end of line
+#+begin_src emacs-lisp
+(defun ram/insertSemicolon ()
+  "Insert semicolon end of line"
+  (interactive)
+  (save-excursion
+  (end-of-line)
+  (insert ";")))
+#+end_src
+
 *** realign existing contents of buffer on column-width
 #+begin_src emacs-lisp
 (defun ram/fill-buffer ()
@@ -1664,6 +2154,32 @@ window configurations are applied."
 #+RESULTS:
 : selectrum-outline
 
+*** In an org mode buffer, when you search for text that is in a fold Selectrum
+swiper doesn't take care of opening the folds so you can see the text you're
+at. You can call the following function at the end of selectrum swiper.
+
+#+begin_src emacs-lisp
+(defun org:show-subtree-headlines ()
+  "Show headlines surrounding point."
+  (save-excursion
+    (let ((points nil) (count 0))
+      (unless (org-at-heading-p) (org-back-to-heading t))
+      (push (point) points)
+      (while (org-up-heading-safe)
+        (push (point) points))
+      (dolist (point points)
+        (goto-char point)
+        (when (org:heading-folded-p)
+          (outline-toggle-children))))))
+
+(defun selectrum:reveal-if-in-org-folds (orig-fn &rest args)
+  (prog1 (apply orig-fn args)
+    (when (eq major-mode 'org-mode)
+      (org:show-subtree-headlines))))
+
+(advice-add #'selectrum-swiper :around #'selectrum:reveal-if-in-org-folds)
+#+end_src
+
 *** selectrum swiper-like Jumping to Matching Lines
 #+begin_src emacs-lisp
 (defvar selectrum-swiper-history nil "Submission history for `selectrum-swiper'.")
@@ -1701,39 +2217,84 @@ window configurations are applied."
     (beginning-of-line-text 1)))
 #+end_src
 
-#+RESULTS:
-: selectrum-swiper
-
-*** 
+*** Launching apps
 #+begin_src emacs-lisp
-(defun yank-pop+ (&optional arg)
- "Call `yank-pop' with ARG when appropriate, or offer completion."
- (interactive "*P")
- (if arg (yank-pop arg)
-   (let* ((old-last-command last-command)
-          (selectrum-should-sort-p nil)
-          (enable-recursive-minibuffers t)
-          (text (completing-read
-                 "Yank: "
-                 (cl-remove-duplicates
-                  kill-ring :test #'string= :from-end t)
-                 nil t nil nil))
-          ;; Find `text' in `kill-ring'.
-          (pos (cl-position text kill-ring :test #'string=))
-          ;; Translate relative to `kill-ring-yank-pointer'.
-          (n (+ pos (length kill-ring-yank-pointer))))
-     (unless (string= text (current-kill n t))
-       (error "Could not setup for `current-kill'"))
-     ;; Restore `last-command' over Selectrum commands.
-     (setq last-command old-last-command)
-     ;; Delegate to `yank-pop' if appropriate or just insert.
-     (if (eq last-command 'yank)
-         (yank-pop n) (insert-for-yank text)))))
+(defun ram/launch-app (arg)
+  (interactive (list (completing-read "Apps: "
+                                      '("google-chrome"
+                                        "firefox"
+                                        "shutdown"
+                                        "jd"
+                                        "calibre"
+                                        "gimp"
+                                        ))))
+  (cond ((string= arg "google-chrome")
+         ;; shell-quote-argument escapes white spaces on the file name
+         (async-start-process "Google-chrome" "google-chrome" nil))
+        ((string= arg "firefox")
+         (async-start-process "Firefox" "firefox" nil "-private"))
+        ((string= arg "shutdown")
+         (async-start-process "Shutdown" "shutdown" nil "-P" "now"))
+        ((string= arg "jd")
+         (async-start-process "JD" "~/bin/jd2/JDownloader2" nil))
+        ((string= arg "calibre")
+         (async-start-process "Calibre" "calibre" nil))
+        ((string= arg "gimp")
+         (async-start-process "Gimp" "gimp" nil))
+        ;; default
+        (t (message "Wrong option"))))
 #+end_src
+
+*** elfeed and mpv
+#+begin_src emacs-lisp
+(defun ram/mpv (url &optional ignored)
+  (interactive (browse-url-interactive-arg "URL: "))
+  (vterm)
+  (vterm-send-string (format "mpv %s" url))
+  (vterm-send-return)
+  )
+#+end_src
+
+*** experimenting
+#+begin_src emacs-lisp
+(defvar ls-file-path "/bin/ls"
+  "Path to the program `ls`")
+
+(defvar ls-arguments '("-l")
+  "Commandline arguments to pass to `ls'")
+
+(defvar ls-mode-map
+  (let ((map (nconc (make-sparse-keymap) comint-mode-map)))
+    ;; example definition
+    (define-key map "\t" 'completion-at-point)
+    map)
+  "Basic mode map for `run-ls'")
+
+(defun run-ls ()
+  "Run an inferior instance of `cassandra-cli' inside Emacs."
+  (interactive)
+  (let* ((ls-program ls-file-path)
+         (buffer (comint-check-proc "ls")))
+    ;; pop to the "*Cassandra*" buffer if the process is dead, the
+    ;; buffer is missing or it's got the wrong mode.
+    (pop-to-buffer-same-window
+     (if (or buffer (not (derived-mode-p 'ls-mode))
+             (comint-check-proc (current-buffer)))
+         (get-buffer-create (or buffer "*ls*"))
+       (current-buffer)))
+    ;; create the comint process if there is no buffer.
+    (unless buffer
+      (apply 'make-comint-in-buffer "ls" buffer
+             ls-program ls-arguments)
+      (ls-mode))))
+#+end_src
+
+#+RESULTS:
+: run-ls
 
 * Alacritty
 ** Theme
-   #+begin_src sh
+   #+begin_src sh :tangle no
      # Colors (Doom One)
      colors:
        # Default colors
@@ -1768,6 +2329,9 @@ export ALTERNATE_EDITOR=""
 export EDITOR="emacsclient -c"                  # $EDITOR opens in GUI mode
 export VISUAL="emacsclient -c -a emacs"         # $VISUAL opens in GUI mode
 export MANPAGER=cat
+export CXX="clang++"
+export CC="clang"
+# export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"$HOME/bin/pyenv/versions/3.5.0/lib"
 #+end_src
 
 ** Paths
@@ -1794,11 +2358,24 @@ fi
 *** awk
 #+begin_src sh
 export PATH="$HOME/bin/awk/bin:$PATH"
+export PATH="$HOME/.local/bin:$PATH"
 #+end_src
 
 *** Clang
 #+begin_src sh
 export PATH="$HOME/bin/clang/bin:$PATH"
+# For some reason this only works in .bashrc
+export LD_LIBRARY_PATH="$HOME/bin/clang/lib:$LD_LIBRARY_PATH"
+# export LIBRARY_PATH="$HOME/bin/clang/lib:$LD_LIBRARY_PATH"
+#+end_src
+
+*** Gcc
+#+begin_src sh
+export PATH="$HOME/bin/gcc-10.2.0/bin:$PATH"
+#export LD_LIBRARY_PATH="$HOME/bin/gcc-10.2.0/lib:$HOME/bin/gcc-10.2.0/lib64:$LD_LIBRARY_PATH"
+#export LIBRARY_PATH="$HOME/bin/gcc-10.2.0/lib:$HOME/bin/gcc-10.2.0/lib64:$LIBRARY_PATH"
+export MANPATH="$HOME/bin/gcc-10.2.0/share/man:$MANPATH"
+export INFOPATH="$HOME/bin/gcc-10.2.0/share/info:$INFOPATH"
 #+end_src
 
 *** Golang
@@ -1894,6 +2471,16 @@ export PATH=$HOME/bin/cmake/bin:$PATH
 export PATH=$HOME/bin/scripts:$PATH
 #+end_src
 
+*** Guile
+#+begin_src sh
+export PATH=$HOME/bin/guile/bin:$PATH
+#+end_src
+
+*** Common lisp
+#+begin_src sh
+export PATH=$HOME/bin/sbcl/bin:$PATH
+#+end_src
+
 *** Ripgrep
 #+begin_src sh
 export PATH=$HOME/bin/ripgrep:$PATH
@@ -1906,15 +2493,34 @@ export PATH=$HOME/bin/ripgrep:$PATH
 https://github.com/riobard/bash-powerline
 #+begin_src sh
 source ~/.config/bash-powerline/bash-powerline.sh
-,#+end_#+begin_src 
-
 #+end_src
 
+** Variables
+#+begin_src sh
+export CXX="clang++"
+export CC="clang"
+export PATH="$HOME/bin/gcc-10.2.0/bin:$PATH"
+#export LD_LIBRARY_PATH="$HOME/bin/gcc-10.2.0/lib:$HOME/bin/gcc-10.2.0/lib64:$LD_LIBRARY_PATH"
+#export LIBRARY_PATH="$HOME/bin/gcc-10.2.0/lib:$HOME/bin/gcc-10.2.0/lib64:$LIBRARY_PATH"
+export MANPATH="$HOME/bin/gcc-10.2.0/share/man:$MANPATH"
+export INFOPATH="$HOME/bin/gcc-10.2.0/share/info:$INFOPATH"
+#+end_src
+
+** Clang
+#+begin_src sh
+# For some reason this only works in .bashrc
+# Also seems that one stdlib can be active (clang or gcc)
+export LD_LIBRARY_PATH="$HOME/bin/clang/lib:$LD_LIBRARY_PATH"
+#export LIBRARY_PATH="$HOME/bin/clang/lib:$LD_LIBRARY_PATH"
+#+end_src
 ** alias
 #+begin_src sh
-alias dd="~/bin/dart-sdk/bin/dart --enable-experiment=non-nullable"
-alias dp="~/bin/dart-sdk/bin/pub"
+
+alias ds="~/bin/dart-sdk/bin/dart"
+alias dsn="~/bin/dart-sdk/bin/dart --enable-experiment=non-nullable"
+alias dsp="~/bin/dart-sdk/bin/pub"
 alias dn="~/bin/dart-sdk/bin/dart2native"
+alias anko="~/bin/anki-2.1.15-linux-amd64/bin/anki"
 #+end_src
 ** functions
 #+begin_src sh :tangle no
@@ -2025,7 +2631,7 @@ set selection-clipboard clipboard
 :PROPERTIES:
 :header-args: :tangle ~/.config/bspwm/bspwmrc
 :END:
-#+begin_src sh
+#+begin_src sh :tangle no
 #! /bin/sh
 
 sxhkd &
@@ -2046,8 +2652,8 @@ bspc desktop '^3' --layout monocle
 bspc desktop '^4' --layout monocle
 
 bspc rule --add Emacs state=tiled
+bspc rule --add emacs-capture state=state=floating
 bspc rule --add Zathura state=tiled
 bspc rule --add Google-chrome state=tiled
 bspc rule --add File-roller state=tiled
 #+end_src
-

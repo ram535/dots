@@ -1,7 +1,0 @@
-# -*- mode: snippet -*-
-# name: scg
-# key: scg
-# --
-#+begin_src go
-
-#+end_src
