@@ -346,7 +346,11 @@ It did not work as expected
   (org-imenu-depth 7)
   ;; Don't ask for confirm when evaluating a source block
   (org-confirm-babel-evaluate nil)
+
   :config
+  ;; Font size control of LateX previews in Org files
+  (setq org-format-latex-options (plist-put org-format-latex-options :scale 1.5))
+
   ;; open org-links with a specific program.
   ;; in this case open pdf files with zathura
  ;; (add-hook 'org-mode-hook
@@ -386,6 +390,7 @@ It did not work as expected
   (:prefix ","
            :states 'normal
            :keymaps 'org-mode-map
+           "t" 'ram/org-set-tags
            "h" 'selectrum-outline
            "n" 'org-toggle-narrow-to-subtree))
 #+end_src
@@ -619,7 +624,20 @@ It did not work as expected
 *** vterm
 Install cmake to be able to install vterm
 #+begin_src emacs-lisp
-(use-package vterm)
+(use-package vterm
+  :config
+  (defun evil-collection-vterm-escape-stay ()
+    "Go back to normal state but don't move
+cursor backwards. Moving cursor backwards is the default vim behavior but it is
+not appropriate in some cases like terminals."
+    (setq-local evil-move-cursor-back nil))
+
+  (add-hook 'vterm-mode-hook #'evil-collection-vterm-escape-stay)
+
+  :general
+  (:states 'insert
+           :keymaps 'vterm-mode-map
+           "C-r" 'vterm-send-C-r))
 #+end_src
 
 *** vterm-toggle
@@ -724,6 +742,8 @@ difficult to read.
 (use-package prog-mode
   :straight (:type built-in)
   ;; :straight nil
+  :init
+  (add-to-list 'auto-mode-alist '("\\.cppm\\'" . c++-mode))
   :general
   (:states 'normal
          :keymaps 'prog-mode-map
@@ -828,13 +848,13 @@ difficult to read.
 #+begin_src emacs-lisp
 (use-package dart-mode
   :general
-  :states '(emacs normal insert visual)
+  (:states '(emacs normal insert visual)
   :keymaps 'dart-mode-map
   "<f5>" '(lambda()
             (interactive)
             (async-shell-command
              (concat "dart --enable-experiment=non-nullable " (buffer-file-name)) "*dart output*"))
-  "C-;" 'ram/insertSemicolon)
+  "C-;" 'ram/insertSemicolon))
 #+end_src
 
 *** haskell-mode
@@ -1183,6 +1203,59 @@ sudo apt install gawk
   :custom
   (org-fc-directories '("~/org/roams"))
   :config
+  (setq org-tag-alist '(("dart")
+                        ("fundamentals")
+                        ("algorithms")
+                        ("cpp")
+                        ("javascript")
+                        ("linux")
+                        ("fp")
+                        ("bash")
+                        ("englishVoc")
+                        ("math")
+                        ))
+
+  ;; (setq org-tag-alist '(dart
+  ;;                       fundamentals
+  ;;                       algorithms
+  ;;                       cpp
+  ;;                       javascript
+  ;;                       linux
+  ;;                       fp
+  ;;                       bash
+  ;;                       englishVoc
+  ;;                       math
+  ;;                       ))
+  (add-to-list 'org-fc-custom-contexts
+               '(dart-cards . (:filter (tag "dart"))))
+  
+  (add-to-list 'org-fc-custom-contexts
+               '(fundamentals-cards . (:filter (tag "fundamentals"))))
+
+  (add-to-list 'org-fc-custom-contexts
+               '(algorithms-cards . (:filter (tag "algorithms"))))
+
+  (add-to-list 'org-fc-custom-contexts
+               '(cpp-cards . (:filter (tag "cpp"))))
+
+  (add-to-list 'org-fc-custom-contexts
+               '(javascript-cards . (:filter (tag "javascript"))))
+
+  (add-to-list 'org-fc-custom-contexts
+               '(linux-cards . (:filter (tag "linux"))))
+
+  (add-to-list 'org-fc-custom-contexts
+               '(fp-cards . (:filter (tag "fp"))))
+
+  (add-to-list 'org-fc-custom-contexts
+               '(bash-cards . (:filter (tag "bash"))))
+
+  (add-to-list 'org-fc-custom-contexts
+               '(englishVoc-cards . (:filter (tag "englishVoc"))))
+
+  (add-to-list 'org-fc-custom-contexts
+               '(math-cards . (:filter (tag "math"))))
+
   (general-define-key
    :definer 'minor-mode
    :states 'normal
@@ -1661,8 +1734,14 @@ y               elfeed-search-yank
   (exwm-enable))
 #+end_src
 
+*** emacsql-sqlite3
+Required by anki
+#+begin_src emacs-lisp
+(use-package emacsql-sqlite)
+#+end_src
+
 *** anki
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
 (use-package anki
   :straight (anki :type git :host github :repo "chenyanming/anki.el")
   :init
@@ -1692,6 +1771,16 @@ y               elfeed-search-yank
 ;;(straight-use-package '(cmake-mode :local-repo "~/.emacs.d/local-packages/cmake-mode" :source nil))
 #+end_src
 
+*** svg-tag-mode
+#+begin_src emacs-lisp :tangle no
+(use-package svg-tag-mode
+  :straight (svg-tag-mode :type git
+                          :host github
+                          :repo "rougier/svg-tag-mode"
+                          :files ("svg-tag-mode.el"))
+  )
+#+end_src
+
 ** Functions
 *** Make ~l~ to behave as expected in dired
 #+begin_src emacs-lisp
@@ -1704,10 +1793,10 @@ y               elfeed-search-yank
    ((string= ext "pdf")
     ;; shell-quote-argument escapes white spaces on the file name
     (async-start-process "Zathura" "zathura" nil file))
-   ((string= ext "epub")
-   (async-start-process "Zathura" "zathura" nil file))
    ;; ((string= ext "epub")
-   ;;  (async-start-process "Calibre" "ebook-viewer" nil file))
+   ;; (async-start-process "Zathura" "zathura" nil file))
+   ((string= ext "epub")
+    (async-start-process "Calibre" "ebook-viewer" nil file))
    ((string= ext "rar")
     (async-start-process "File-roller" "file-roller" nil file))
    ((string= ext "tar")
@@ -1732,6 +1821,56 @@ y               elfeed-search-yank
     (async-start-process "File-rolle" "file-roller" nil file))
    ;; default
    (t (dired-find-file))))
+#+end_src
+*** Autocomplete global org-mode tags
+#+begin_src emacs-lisp
+(defun ram/ident-org-tags()
+  (interactive)
+  (let ((current-prefix-arg '(4))) ;; emulate C-u
+    (call-interactively 'org-set-tags-command))) ;; invoke org-set-tags-command interactively
+
+(defun ram/org-swap-tags (tags)
+  "Replace any tags on the current headline with TAGS.
+
+The assumption is that TAGS will be a string conforming to Org Mode's
+tag format specifications, or nil to remove all tags."
+  (let ((old-tags (org-get-tags-string))
+        (tags (if tags
+                  (concat " " tags)
+                "")))
+    (save-excursion
+      (beginning-of-line)
+      (re-search-forward
+       (concat "[ \t]*" (regexp-quote old-tags) "[ \t]*$")
+       (line-end-position) t)
+      (replace-match tags)
+      (org-set-tags t)
+      )))
+
+(defun ram/org-set-tags (tag)
+  "Add TAG if it is not in the list of tags, remove it otherwise.
+
+TAG is chosen interactively from the global tags completion table."
+  (interactive
+   (list (let ((org-last-tags-completion-table
+                (if (derived-mode-p 'org-mode)
+                    (org-uniquify
+                     (delq nil (append (org-get-buffer-tags)
+                                       (org-global-tags-completion-table))))
+                  (org-global-tags-completion-table))))
+           (org-icompleting-read
+            "Tag: " 'org-tags-completion-function nil nil nil
+            'org-tags-history))))
+  (let* ((cur-list (org-get-tags))
+         (new-tags (mapconcat 'identity
+                              (if (member tag cur-list)
+                                  (delete tag cur-list)
+                                (append cur-list (list tag)))
+                              ":"))
+         (new (if (> (length new-tags) 1) (concat " :" new-tags ":")
+                nil)))
+    (ram/org-swap-tags new)
+    ))
 #+end_src
 *** Backward-kill-line
 #+begin_src emacs-lisp
@@ -1877,7 +2016,7 @@ Repeated invocations toggle between the two most recently open buffers."
 #+end_src
 
 *** Functions for vterm
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (push (list "find-file-below"
             (lambda (path)
               (if-let* ((buf (find-file-noselect path))
