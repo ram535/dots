@@ -1,0 +1,15 @@
+# -*- mode: snippet -*-
+# name: German Deck
+# key: gd
+# --
+* Item
+:PROPERTIES:
+:ANKI_NOTE_TYPE: German 1
+:END:
+** Front
+   $1
+   [[file:audio/$2.mp3]]
+** Back
+   $3
+** Audio 
+   [[file:audio/$4.mp3]]

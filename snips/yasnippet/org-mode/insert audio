@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: insert audio
+# key: ia
+# --
+[[file:audio/$0.mp3]]

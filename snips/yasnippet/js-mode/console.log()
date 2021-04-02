@@ -1,0 +1,5 @@
+# key: cl
+# name: console.log()
+# expand-env: ((yas-wrap-around-region t))
+# --
+console.log($0)

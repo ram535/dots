@@ -1,0 +1,24 @@
+snippet sc "#+begin_src cpp ... #+end_src" b
+#+begin_src cpp
+$0
+#+end_src
+endsnippet
+
+snippet sd "#+begin_src dart ... #+end_src" b
+#+begin_src dart
+$0
+#+end_src
+endsnippet
+
+snippet scv "source code vim" b
+#+begin_src vimrc :tangle ~/.config/nvim/init.vim
+$0
+#+end_src
+endsnippet
+
+snippet sce "source code emacs-lisp" b
+#+BEGIN_SRC emacs-lisp :tangle ~/.emacs.d/init.el
+   (use-package $0
+   :ensure t)
+#+END_SRC
+endsnippet

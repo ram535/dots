@@ -1,0 +1,11 @@
+# -*- mode: snippet -*-
+# name: main
+# key: main
+# --
+def main():
+    """ main """
+    $0
+
+
+if __name__ == '__main__':
+    main()
