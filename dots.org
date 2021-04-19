@@ -493,6 +493,7 @@ Highlight the the matching (){}[]
   :general
   (:states '(emacs normal insert visual)
            "C-<tab>" 'tab-next
+           "C-c t" 'tab-new
            "M-k" 'ram/backward-kill-line)
   (:states '(normal motion)
            "C-=" 'evil-scroll-up
@@ -1079,6 +1080,7 @@ straight.el.
 (use-package pyenv-mode
   :init
   (add-to-list 'exec-path "~/bin/pyenv/shims")
+  (setq pyenv-installation-dir "~/bin/pyenv")
   :config
   (pyenv-mode))
 #+end_src
@@ -1158,17 +1160,11 @@ straight.el.
 *** geiser (guile)
 #+begin_src emacs-lisp
 (use-package geiser
-  :init
-  (setq geiser-active-implementations '(guile))
-  :config
-  (general-define-key
-   :states 'normal
-   :keymaps 'scheme-mode-map
-   "<f5>" (lambda()
-             (interactive)
-             (async-shell-command
-              (concat "guile " (buffer-file-name)) "*guile output*"))))
+  :straight (geiser :type git :host gitlab :repo "emacs-geiser/geiser"))
 
+(use-package geiser-guile
+  :straight (geiser-guile :type git :host gitlab :repo "emacs-geiser/guile")
+  :after geiser)
 #+end_src
 
 *** lsp-mode
@@ -1431,6 +1427,7 @@ sudo apt install gawk
                         ("bash")
                         ("englishVoc")
                         ("orgmode")
+                        ("chess")
                         ("math")))
 
   ;; (setq org-tag-alist '(dart
@@ -1476,6 +1473,9 @@ sudo apt install gawk
 
   (add-to-list 'org-fc-custom-contexts
                '(bash-cards . (:filter (tag "bash"))))
+
+  (add-to-list 'org-fc-custom-contexts
+               '(chess-cards . (:filter (tag "chess"))))
 
   (add-to-list 'org-fc-custom-contexts
                '(orgmode-cards . (:filter (tag "orgmode"))))
@@ -1781,6 +1781,20 @@ Build-in package. Think htop but for emacs.
 (use-package hyperbole)
 #+end_src
 
+*** org-download
+#+begin_src emacs-lisp
+(use-package org-download
+  :config
+  (setq-default org-download-image-dir "~/org/roams/img"))
+#+end_src
+
+*** good-scroll
+#+begin_src emacs-lisp
+(use-package good-scroll
+  :config
+  (good-scroll-mode 1))
+#+end_src
+
 *** s.el
 #+begin_src emacs-lisp
 (use-package s)
@@ -1875,7 +1889,7 @@ TAG is chosen interactively from the global tags completion table."
         (files (directory-files-recursively default-directory "")))
     (while files
       (rename-file (car files)
-                   (format "%s%03d.%s"
+                   (format "%s%02d.%s"
                            (file-name-directory (car files))
                            sequence
                            (file-name-extension (car files))))
@@ -2580,7 +2594,7 @@ export PATH="$HOME/.local/bin:$PATH"
 #+begin_src sh
 export PATH="$HOME/bin/clang/bin:$PATH"
 # For some reason this only works in .bashrc
-export LD_LIBRARY_PATH="$HOME/bin/clang/lib:$LD_LIBRARY_PATH"
+# export LD_LIBRARY_PATH="$HOME/bin/clang/lib:$LD_LIBRARY_PATH"
 # export LIBRARY_PATH="$HOME/bin/clang/lib:$LD_LIBRARY_PATH"
 #+end_src
 
@@ -2602,6 +2616,7 @@ export PATH="$GOPATH/bin:$PATH"
 *** Pyenv
 #+begin_src sh
 export PATH=$PYENV_ROOT/bin:$PATH
+export PATH=$PYENV_ROOT/shims:$PATH
 #+end_src
 
 *** Anki
@@ -2830,6 +2845,9 @@ fi
 
 ** pyenv
 #+begin_src sh
+export PATH=$PYENV_ROOT/bin:$PATH
+export PATH=$PYENV_ROOT/shims:$PATH
+
 if command -v pyenv 1>/dev/null 2>&1; then
     eval "$(pyenv init -)"
 fi
