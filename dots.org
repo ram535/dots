@@ -160,9 +160,9 @@ This annoyed me when exactracting files with the UI program.
 #+end_src
 
 *** This plays nicely with lsp and company
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
 (setq read-process-output-max (* 1024 1024))
-(setq gc-cons-threshold 100000000)
+;; (setq gc-cons-threshold 100000000)
 #+end_src
 
 *** Hiding elements
@@ -255,6 +255,7 @@ Highlight the the matching (){}[]
 (setq register-alist
   `((115 . ,(with-current-buffer "*scratch*" (point-marker)))
     (109 . ,(with-current-buffer "*Messages*" (point-marker)))
+    (114 file . "~/.emacs.d/notes")
     (100 file . "~/Projects/dots/dots.org")))
 #+end_src
 
@@ -504,6 +505,7 @@ Highlight the the matching (){}[]
            ;; swap ; and :
            ";" 'evil-ex
            ":" 'evil-repeat-find-char
+           "gp" 'ram/evil-select-pasted
            "C-<tab>" 'tab-next)
   (:states '(normal visual)
            "ge" 'evil-last-non-blank
@@ -675,7 +677,7 @@ Highlight the the matching (){}[]
            "ff" 'dired-narrow-regexp
            "d" 'dired-hide-details-mode
            "i" 'image-dired-show-all-from-dir
-           "I" (lambda() (interactive) (start-process "sxiv" nil "sxiv" "."))
+           "I" (lambda() (interactive) (find-file (dired-get-filename)))
            "D" 'dired-do-delete)
   (:states 'normal
            :keymaps 'image-dired-thumbnail-mode-map
@@ -995,7 +997,8 @@ difficult to read.
 *** yaml-mode
 #+begin_src emacs-lisp
 (use-package yaml-mode
-  :mode ("\\.yaml\\'"))
+  :mode ("\\.yaml\\'")
+  :hook (yaml-mode . lsp-deferred))
 #+end_src
 
 *** prog-mode
@@ -1015,8 +1018,11 @@ difficult to read.
 #+begin_src emacs-lisp
 (use-package cc-mode
   :straight (:type built-in)
-  :init
-  (add-to-list 'auto-mode-alist '("\\.cppm\\'" . c++-mode))
+  ;; :mode ("\\.c\\'" "\\.h\\'" "\\.cpp\\'" "\\.cc\\'" "\\.cxx\\'" "\\.mxx\\'")
+   :init
+   (add-to-list 'auto-mode-alist '("\\.cppm\\'" . c++-mode))
+   (add-to-list 'auto-mode-alist '("\\.cxx\\'" . c++-mode))
+   (add-to-list 'auto-mode-alist '("\\.mxx\\'" . c++-mode))
   :general
   (:states '(normal insert)
            "C-;" 'ram/insertSemicolon)
@@ -1192,6 +1198,10 @@ straight.el.
   (lsp-lens-enable nil)
   (lsp-ui-doc-enable nil)
   (lsp-semantic-highlighting 'immediate)
+  (lsp-clients-clangd-args '("--header-insertion-decorators=0" "-j=4" "-background-index" "-log=error" "--clang-tidy"))
+  :init
+  ;; https://twitter.com/yonchovski/status/1384899744670093315
+  (setq lsp-use-plists t)
   :general
   (:states 'normal
          :keymaps 'lsp-mode-map
@@ -1229,8 +1239,7 @@ straight.el.
 (use-package lsp-dart
   :straight (lsp-dart :type git :host github :repo "emacs-lsp/lsp-dart")
   :custom
-  ;; (lsp-dart-sdk-dir "~/bin/flutter/bin/cache/dart-sdk/")
-  (lsp-dart-sdk-dir "~/bin/dart-sdk")
+  (lsp-dart-sdk-dir "~/bin/flutter/bin/cache/dart-sdk")
   :hook (dart-mode . lsp-deferred))
 #+end_src
 
@@ -1255,6 +1264,13 @@ straight.el.
   :after (lsp-mode treemacs)
   :config
   (lsp-treemacs-sync-mode 1))
+#+end_src
+
+*** consult-lsp
+#+begin_src emacs-lisp
+(use-package consult-lsp
+  :straight (consult-lsp :type git :host github :repo "gagbo/consult-lsp")
+  :after (consult lsp-mode selectrum))
 #+end_src
 
 *** dap-mode
@@ -1380,8 +1396,9 @@ Search for character
 #+begin_src emacs-lisp
 (use-package lispyville
   :after lispy
-  :init
-  (general-add-hook '(lisp-interaction-mode-hook emacs-lisp-mode-hook lisp-mode-hook) #'lispyville-mode)
+  :hook ((lispy-mode . lispyville-mode))
+  ;; :init
+  ;; (general-add-hook '(lisp-interaction-mode-hook emacs-lisp-mode-hook lisp-mode-hook) #'lispyville-mode)
   :config
   (lispyville-set-key-theme '(operators
                               additional-insert
@@ -1820,13 +1837,16 @@ Build-in package. Think htop but for emacs.
 (defun ram/dired-open()
   (interactive)
   (cond
+   ;; use dired-find-file if it is a directory
    ((file-directory-p (dired-get-file-for-visit))
     (dired-find-file))
-   ((string= "emacs.desktop\n" (shell-command-to-string
-                                (format "xdg-mime query filetype %s | xargs xdg-mime query default"
-                                        (shell-quote-argument (dired-get-file-for-visit)))))
+   ;; use dired-find-file if the mime type of the file is emacs.desktop
+   ((string= "emacs.desktop" (string-trim-right (shell-command-to-string
+                                                   (format "xdg-mime query filetype %s | xargs xdg-mime query default"
+                                                           (shell-quote-argument (dired-get-file-for-visit))))))
     (dired-find-file))
    (t
+    ;; use xdg-open for everything else
     ;; start-process quote the arguments so you do not need the sell-quote-argument function
     (start-process "ram-dired-open" nil "xdg-open" (dired-get-file-for-visit)))))
 #+end_src
@@ -1889,12 +1909,20 @@ TAG is chosen interactively from the global tags completion table."
         (files (directory-files-recursively default-directory "")))
     (while files
       (rename-file (car files)
-                   (format "%s%02d.%s"
+                   (format "%s%04d.%s"
                            (file-name-directory (car files))
                            sequence
                            (file-name-extension (car files))))
       (setq files (cdr files))
       (setq sequence (1+ sequence)))))
+#+end_src
+*** select last pasted text (like gv)
+#+begin_src emacs-lisp
+(defun ram/evil-select-pasted ()
+  (interactive)
+  (let ((start-marker (evil-get-marker ?\[))
+        (end-marker (evil-get-marker ?\])))
+        (evil-visual-select start-marker end-marker)))
 #+end_src
 *** Insert list of files in buffer
 Insert list of files recursively
@@ -2065,22 +2093,26 @@ Repeated invocations toggle between the two most recently open buffers."
 *** Functions for vterm
 #+begin_src emacs-lisp
 (with-eval-after-load 'vterm
-(push (list "find-file-below"
-            (lambda (path)
-              (if-let* ((buf (find-file-noselect path))
-                        (window (display-buffer-below-selected buf nil)))
-                  (select-window window)
-                (message "Failed to open file: %s" path))))
-      vterm-eval-cmds)
+  (push (list "find-file-below"
+              (lambda (path)
+                (if-let* ((buf (find-file-noselect path))
+                          (window (display-buffer-below-selected buf nil)))
+                    (select-window window)
+                  (message "Failed to open file: %s" path))))
+        vterm-eval-cmds)
 
-;; (push (list "man"
-;;             (lambda (cmd)
-;;               (man cmd)
-;;               ))
-;;       vterm-eval-cmds)
+  (defun ram/menos ()
+    (switch-to-buffer "menos")
+    (when (get-buffer "menos")
+      (with-current-buffer "menos")
+      (erase-buffer)
+      (insert (substring-no-properties (x-get-clipboard)))))
 
-(push (list "man" 'man)
-      vterm-eval-cmds))
+  (push (list "menos" 'ram/menos)
+        vterm-eval-cmds)
+
+  (push (list "man" 'man)
+        vterm-eval-cmds))
 #+end_src
 
 *** Hiding dired buffers in ivy
@@ -2489,7 +2521,7 @@ at. You can call the following function at the end of selectrum swiper.
 Dial the GC threshold back down so that garbage collection happens more frequently but in less time.
 #+begin_src emacs-lisp
 ;; Make gc pauses faster by decreasing the threshold.
-;; (setq gc-cons-threshold (* 2 1000 1000))
+(setq gc-cons-threshold (* 2 1000 1000))
 #+end_src
 
 * Early emacs
@@ -2558,8 +2590,11 @@ export ALTERNATE_EDITOR=""
 export EDITOR="emacsclient -c"                  # $EDITOR opens in GUI mode
 export VISUAL="emacsclient -c -a emacs"         # $VISUAL opens in GUI mode
 export MANPAGER=cat
-export CXX="clang++"
-export CC="clang"
+export CXX="g++"
+export CC="gcc"
+export PATH="$HOME/bin/cpp-libraries/bin:$HOME/bin/graphviz/bin:$PATH"
+export LD_LIBRARY_PATH="$HOME/bin/gcc-trunk/lib64:$HOME/bin/gcc-trunk/lib:$HOME/bin/clang/lib:$HOME/Projects/cpp/lazy cpp/cpp-for-lazy-programmers/external/SSDL/unix:$HOME/bin/cpp-libraries/lib:$HOME/bin/graphviz/lib:$LD_LIBRARY_PATH"
+
 # export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"$HOME/bin/pyenv/versions/3.5.0/lib"
 #+end_src
 
@@ -2589,6 +2624,10 @@ fi
 export PATH="$HOME/bin/awk/bin:$PATH"
 export PATH="$HOME/.local/bin:$PATH"
 #+end_src
+*** build2
+#+begin_src sh
+export "PATH=$HOME/bin/build2/bin:$PATH"
+#+end_src
 
 *** Clang
 #+begin_src sh
@@ -2598,13 +2637,18 @@ export PATH="$HOME/bin/clang/bin:$PATH"
 # export LIBRARY_PATH="$HOME/bin/clang/lib:$LD_LIBRARY_PATH"
 #+end_src
 
+*** ccls
+#+begin_src sh
+export PATH="$HOME/bin/ccls/bin:$PATH"
+#+end_src
+
 *** Gcc
 #+begin_src sh
-export PATH="$HOME/bin/gcc-10.2.0/bin:$PATH"
+export PATH="$HOME/bin/gcc-trunk/bin:$PATH"
 #export LD_LIBRARY_PATH="$HOME/bin/gcc-10.2.0/lib:$HOME/bin/gcc-10.2.0/lib64:$LD_LIBRARY_PATH"
 #export LIBRARY_PATH="$HOME/bin/gcc-10.2.0/lib:$HOME/bin/gcc-10.2.0/lib64:$LIBRARY_PATH"
-export MANPATH="$HOME/bin/gcc-10.2.0/share/man:$MANPATH"
-export INFOPATH="$HOME/bin/gcc-10.2.0/share/info:$INFOPATH"
+export MANPATH="$HOME/bin/gcc-trunk/share/man:$MANPATH"
+export INFOPATH="$HOME/bin/gcc-trunk/share/info:$INFOPATH"
 #+end_src
 
 *** Golang
@@ -2727,23 +2771,21 @@ source ~/.config/bash-powerline/bash-powerline.sh
 #+end_src
 
 ** Variables
-#+begin_src sh
-export CXX="clang++"
-export CC="clang"
-export PATH="$HOME/bin/gcc-10.2.0/bin:$HOME/bin/cpp-libraries/bin:$HOME/bin/graphviz/bin:$PATH"
+#+begin_src sh 
+export CXX="g++"
+export CC="gcc"
+export PATH="$HOME/bin/gcc-trunk/bin:$HOME/bin/build2/bin:$HOME/bin/cpp-libraries/bin:$HOME/bin/graphviz/bin:$PATH"
 
 #export LD_LIBRARY_PATH="$HOME/bin/gcc-10.2.0/lib:$HOME/bin/gcc-10.2.0/lib64:$LD_LIBRARY_PATH"
 #export LIBRARY_PATH="$HOME/bin/gcc-10.2.0/lib:$HOME/bin/gcc-10.2.0/lib64:$LIBRARY_PATH"
 export MANPATH="$HOME/bin/gcc-10.2.0/share/man:$MANPATH"
 export INFOPATH="$HOME/bin/gcc-10.2.0/share/info:$INFOPATH"
-#+end_src
 
-** Clang
-#+begin_src sh
 # For some reason this only works in .bashrc
 # Also seems that one stdlib can be active (clang or gcc)
-export LD_LIBRARY_PATH="$HOME/bin/clang/lib:/usr/local/lib:$HOME/bin/gcc-10.2.0/lib64:$HOME/Projects/cpp/lazy cpp/cpp-for-lazy-programmers/external/SSDL/unix:$HOME/bin/cpp-libraries/lib:$HOME/bin/graphviz/lib:$LD_LIBRARY_PATH"
+# export LD_LIBRARY_PATH="$HOME/bin/clang/lib:/usr/local/lib:$HOME/bin/gcc-10.2.0/lib64:$HOME/Projects/cpp/lazy cpp/cpp-for-lazy-programmers/external/SSDL/unix:$HOME/bin/cpp-libraries/lib:$HOME/bin/graphviz/lib:$LD_LIBRARY_PATH"
 
+export LD_LIBRARY_PATH="$HOME/bin/gcc-trunk/lib64:$HOME/bin/gcc-trunk/lib:$HOME/bin/clang/lib:$HOME/Projects/cpp/lazy cpp/cpp-for-lazy-programmers/external/SSDL/unix:$HOME/bin/cpp-libraries/lib:$HOME/bin/graphviz/lib:$LD_LIBRARY_PATH"
 #export LD_LIBRARY_PATH="$HOME/bin/clang/lib:$LD_LIBRARY_PATH"
 #+end_src
 ** alias
@@ -2829,6 +2871,13 @@ if [[ "$INSIDE_EMACS" = 'vterm' ]]; then
 fi
 
 #+end_src
+*** Use a temp buffer instead of less
+#+begin_src sh
+function menos() {
+    xclip -selection clipboard
+    vterm_cmd menos
+}
+#+end_src
 
 ** fzf
   - Install
@@ -2859,6 +2908,11 @@ vterm_prompt_end(){
     vterm_printf "51;A$(whoami):$(pwd)"
 }
 PS1=$PS1'\[$(vterm_prompt_end)\]'
+#+end_src
+** dcli
+#+begin_src sh
+export PATH=$PATH:/home/last/.dcli/bin
+complete -o nospace -C 'dcli_complete' dcli
 #+end_src
 * zathura
 :PROPERTIES:
