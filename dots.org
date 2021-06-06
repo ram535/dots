@@ -651,6 +651,7 @@ Highlight the the matching (){}[]
            "gp" (lambda() (interactive) (dired "~/Projects"))
            "ge" (lambda() (interactive) (dired "~/.emacs.d"))
            "gc" (lambda() (interactive) (dired "~/.config"))
+           "gs" (lambda() (interactive) (dired "~/bin/scripts"))
            "gy" (lambda() (interactive) (dired "~/Projects/playground"))
            "gb" (lambda() (interactive) (dired "~/bin"))
            "gm" (lambda() (interactive) (dired "/media"))
@@ -1244,7 +1245,7 @@ straight.el.
 #+end_src
 
 *** lsp-pyright
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp
 (use-package lsp-pyright
   :after lsp
   :straight (lsp-pyright :type git :host github :repo "emacs-lsp/lsp-pyright")
@@ -2107,6 +2108,7 @@ Repeated invocations toggle between the two most recently open buffers."
       (with-current-buffer "menos")
       (erase-buffer)
       (insert (substring-no-properties (x-get-clipboard)))))
+  ;; (current-kill 0)
 
   (push (list "menos" 'ram/menos)
         vterm-eval-cmds)
