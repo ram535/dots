@@ -1716,21 +1716,30 @@ Argument POS return faces at this point."
 *** skeletor
 #+begin_src emacs-lisp
 (use-package skeletor
+  :custom
+  (skeletor-user-directory "~/Projects/dots/project-skeletons")
   :init
-  (skeletor-define-constructor "dart console-simple"
+  (skeletor-define-template "cpp-hello-world"
     :no-license? t
-    :no-git? t
+    :title "C++ Hellow World")
+  
+  (skeletor-define-constructor "Dart Project"
+    :no-license? t
     :initialise
     (lambda (spec)
       (let-alist spec
-        (shell-command
-         (format "mkdir -p %s/%s" .project-dir .project-name))
         (skeletor-shell-command
-         (format "stagehand console-simple")
-         (format "%s/%s" .project-dir  .project-name))))
-    :after-creation
-    (lambda (dir)
-      (skeletor-async-shell-command "pub get"))))
+         (format "dart create -t %s %s" (ram/get-dart-template) (shell-quote-argument .project-name))
+         .project-dir))))
+
+  (skeletor-define-constructor "Flutter Project"
+    :no-license? t
+    :initialise
+    (lambda (spec)
+      (let-alist spec
+        (skeletor-shell-command
+         (format "flutter create -t %s %s" (ram/get-flutter-template) (shell-quote-argument .project-name))
+         .project-dir)))))
 #+end_src
 
 *** helpful
@@ -1850,6 +1859,28 @@ Build-in package. Think htop but for emacs.
     ;; use xdg-open for everything else
     ;; start-process quote the arguments so you do not need the sell-quote-argument function
     (start-process "ram-dired-open" nil "xdg-open" (dired-get-file-for-visit)))))
+#+end_src
+*** Get dart template
+#+begin_src emacs-lisp
+(defun ram/get-dart-template ()
+  (car (s-split ":" (ram/choose-dart-template))))
+
+(defun ram/choose-dart-template ()
+  (completing-read "Choose: "
+                   (mapcar 's-trim
+                           ;; remove empty strings from the list
+                           (remove ""
+                                   ;; create a list of the templates available
+                                   (cdr (s-split "\n"
+                                                 ;; string of templates available
+                                                 (cadr (s-slice-at "^Available templates"
+                                                                   (shell-command-to-string "dart create")))))))))
+#+end_src
+
+*** Get flutter template
+#+begin_src emacs-lisp
+(defun ram/get-flutter-template ()
+	(completing-read "Choose: " '("app" "module" "package" "plugin")))
 #+end_src
 
 *** Autocomplete global org-mode tags
