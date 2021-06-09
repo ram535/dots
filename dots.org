@@ -1863,18 +1863,16 @@ Build-in package. Think htop but for emacs.
 *** Get dart template
 #+begin_src emacs-lisp
 (defun ram/get-dart-template ()
-  (car (s-split ":" (ram/choose-dart-template))))
-
-(defun ram/choose-dart-template ()
-  (completing-read "Choose: "
-                   (mapcar 's-trim
-                           ;; remove empty strings from the list
-                           (remove ""
-                                   ;; create a list of the templates available
-                                   (cdr (s-split "\n"
-                                                 ;; string of templates available
-                                                 (cadr (s-slice-at "^Available templates"
-                                                                   (shell-command-to-string "dart create")))))))))
+  (->> (shell-command-to-string "dart create")
+    (s-slice-at "^Available templates")
+    cadr
+    (s-split "\n")
+    cdr
+    (remove "")
+    (mapcar 's-trim)
+    (completing-read "Choose: ")
+    (s-split ":")
+    car))
 #+end_src
 
 *** Get flutter template
