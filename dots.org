@@ -663,6 +663,7 @@ Highlight the the matching (){}[]
            "r" 'revert-buffer
            "nd" 'dired-create-directory
            "nf" 'dired-create-empty-file
+           "np" 'ram/create-project
            "s" 'dired-do-async-shell-command
            "q" 'quit-window
            "w" 'dired-toggle-read-only
@@ -1732,6 +1733,19 @@ Argument POS return faces at this point."
          (format "dart create -t %s %s" (ram/get-dart-template) (shell-quote-argument .project-name))
          .project-dir))))
 
+  (skeletor-define-constructor "Dcli Script"
+    :no-license? t
+    :no-git? t
+    :initialise
+    (lambda (spec)
+      (let-alist spec
+        (skeletor-shell-command
+         (format "dcli create %s" (shell-quote-argument .project-name))
+         .project-dir)))
+    :after-creation
+    (lambda (dir)
+      (message "hola")))
+
   (skeletor-define-constructor "Flutter Project"
     :no-license? t
     :initialise
@@ -1823,24 +1837,33 @@ Build-in package. Think htop but for emacs.
 #+end_src
 
 *** s.el
+String manipulation library
 #+begin_src emacs-lisp
 (use-package s)
 #+end_src
 
 *** f.el
+Modern API for working with files and directories
 #+begin_src emacs-lisp
 (use-package f)
 #+end_src
 
 *** dash.el
+A modern list API
 #+begin_src emacs-lisp
 (use-package dash)
 #+end_src
 
 *** ht.el
+The missing hash table library for Emacs
 #+begin_src emacs-lisp
 (use-package ht)
 #+end_src
+*** let-alist
+#+begin_src emacs-lisp
+(use-package let-alist)
+#+end_src
+
 ** Functions
 *** Make ~l~ to behave as expected in dired
 #+begin_src emacs-lisp
@@ -1860,7 +1883,7 @@ Build-in package. Think htop but for emacs.
     ;; start-process quote the arguments so you do not need the sell-quote-argument function
     (start-process "ram-dired-open" nil "xdg-open" (dired-get-file-for-visit)))))
 #+end_src
-*** Get dart template
+*** Get dart template (skeletor)
 #+begin_src emacs-lisp
 (defun ram/get-dart-template ()
   (->> (shell-command-to-string "dart create")
@@ -1875,10 +1898,49 @@ Build-in package. Think htop but for emacs.
     car))
 #+end_src
 
-*** Get flutter template
+*** Get flutter template (skeletor)
 #+begin_src emacs-lisp
 (defun ram/get-flutter-template ()
 	(completing-read "Choose: " '("app" "module" "package" "plugin")))
+#+end_src
+
+*** Seting up projects (skeletor)
+#+begin_src emacs-lisp
+(defun ram/get-skeleton (skeleton)
+  (--first (equal skeleton (SkeletorProjectType-title it))
+           skeletor--project-types))
+
+(defun ram/dcli-create-script ()
+  (skeletor-create-project-at "~/bin/scripts" (ram/get-skeleton "Dcli Script")))
+
+(defun ram/dart-create-project ()
+  (skeletor-create-project-at "~/Projects/dart" (ram/get-skeleton "Dart Project")))
+
+(defun ram/flutter-create-project ()
+  (skeletor-create-project-at "~/Projects/flutter" (ram/get-skeleton "Flutter Project")))
+
+(defun ram/cpp-create-project ()
+  (let ((project (completing-read "Choose: " '("C++ Hellow World Project"
+                                               "C++ Make Project"
+                                               "C++ Cmake Project"
+                                               "C++ Build2 Project"))))
+    (pcase (list project)
+      ('("C++ Hellow World Project") (message "C++ Hellow World Project"))
+      ('("C++ Make Project") (message "C++ Make Project"))
+      ('("C++ Cmake Project") (message "C++ Cmake Project"))
+      ('("C++ Build2 Project") (message "C++ Build2 Project")))))
+
+(defun ram/create-project ()
+  (interactive)
+  (let ((project (completing-read "Choose: " '("C++ Project"
+                                               "Dart Project"
+                                               "Dcli Project"
+                                               "Flutter Project"))))
+    (pcase (list project)
+      ('("C++ Project") (ram/cpp-create-project))
+      ('("Dart Project") (ram/dart-create-project))
+      ('("Dcli Project") (ram/dcli-create-script))
+      ('("Flutter Project") (ram/flutter-create-project)))))
 #+end_src
 
 *** Autocomplete global org-mode tags
