@@ -1,0 +1,4 @@
+* Run test
+You can use the next options to run the tests.
+- *projectile-test-project*
+- In the root of the project *eldev test* in the terminal.

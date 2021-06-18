@@ -910,6 +910,10 @@ not appropriate in some cases like terminals."
   :general
   (:states '(normal insert emacs motion)
            "<f7>" 'projectile-configure-project)
+    (:states 'normal
+           :prefix ","
+           "t" 'projectile-test-project)
+
   (:prefix "C-c p"
            :states '(normal insert emacs motion)
            "f" 'projectile-find-file
@@ -1725,9 +1729,9 @@ Argument POS return faces at this point."
     :no-license? t
     :title "C++ Hellow World")
   
-  (skeletor-define-template "elisp-kata"
+  (skeletor-define-template "elisp"
     :no-license? t
-    :title "Elisp Kata")
+    :title "Elisp")
 
   (skeletor-define-constructor "Dart Project"
     :no-license? t
@@ -1864,6 +1868,11 @@ Build-in package. Think htop but for emacs.
 *** emacs-test-simple
 #+begin_src emacs-lisp
 (use-package test-simple)
+#+end_src
+
+*** buttercup (tdd)
+#+begin_src emacs-lisp
+(use-package buttercup)
 #+end_src
 
 *** s.el
@@ -2768,6 +2777,11 @@ export PATH="$HOME/bin/clang/bin:$PATH"
 *** ccls
 #+begin_src sh
 export PATH="$HOME/bin/ccls/bin:$PATH"
+#+end_src
+
+*** eldev
+#+begin_src sh
+export PATH="$HOME/bin/eldev:$PATH"
 #+end_src
 
 *** Gcc
