@@ -10,7 +10,7 @@
       (gc-cons-percentage .6)
       (gc-cons-threshold most-positive-fixnum)
       (read-process-output-max (* 1024 1024)))
-  
+
 (setq-default
  cursor-in-non-selected-windows nil     ; Hide the cursor in inactive windows
  fill-column 80                         ; Set width for automatic line breaks
@@ -899,6 +899,7 @@ not appropriate in some cases like terminals."
   :config
   (projectile-mode +1)
   (add-to-list 'projectile-project-root-files-bottom-up "pubspec.yaml")
+  (add-to-list 'projectile-project-root-files-bottom-up "pyproject.toml")
 
   (projectile-register-project-type 'dart '("pubspec.yaml")
                                     :test "pub run test"
@@ -1724,6 +1725,10 @@ Argument POS return faces at this point."
     :no-license? t
     :title "C++ Hellow World")
   
+  (skeletor-define-template "elisp-kata"
+    :no-license? t
+    :title "Elisp Kata")
+
   (skeletor-define-constructor "Dart Project"
     :no-license? t
     :initialise
@@ -1741,11 +1746,8 @@ Argument POS return faces at this point."
       (let-alist spec
         (skeletor-shell-command
          (format "dcli create %s" (shell-quote-argument .project-name))
-         .project-dir)))
-    :after-creation
-    (lambda (dir)
-      (message "hola")))
-
+         .project-dir))))
+  
   (skeletor-define-constructor "Flutter Project"
     :no-license? t
     :initialise
@@ -1753,6 +1755,29 @@ Argument POS return faces at this point."
       (let-alist spec
         (skeletor-shell-command
          (format "flutter create -t %s %s" (ram/get-flutter-template) (shell-quote-argument .project-name))
+         .project-dir))))
+
+  (skeletor-define-constructor "Python Project"
+    :no-license? t
+    :no-git? t
+    :initialise
+    (lambda (spec)
+      (let-alist spec
+        (skeletor-shell-command
+         (format "poetry new %s" (shell-quote-argument .project-name))
+         .project-dir)))
+    :after-creation
+    (lambda (dir)
+      (skeletor-async-shell-command "poetry install")))
+
+  (skeletor-define-constructor "Python Kata"
+    :no-license? t
+    :no-git? t
+    :initialise
+    (lambda (spec)
+      (let-alist spec
+        (skeletor-shell-command
+         (format "poetry new --name %s --src python" (shell-quote-argument .project-name))
          .project-dir)))))
 #+end_src
 
@@ -1818,7 +1843,7 @@ Build-in package. Think htop but for emacs.
 #+end_src
 
 *** hyperbole
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (use-package hyperbole)
 #+end_src
 
@@ -1834,6 +1859,11 @@ Build-in package. Think htop but for emacs.
 (use-package good-scroll
   :config
   (good-scroll-mode 1))
+#+end_src
+
+*** emacs-test-simple
+#+begin_src emacs-lisp
+(use-package test-simple)
 #+end_src
 
 *** s.el
@@ -1901,23 +1931,14 @@ The missing hash table library for Emacs
 *** Get flutter template (skeletor)
 #+begin_src emacs-lisp
 (defun ram/get-flutter-template ()
-	(completing-read "Choose: " '("app" "module" "package" "plugin")))
+  (completing-read "Choose: " '("app" "module" "package" "plugin")))
 #+end_src
 
-*** Seting up projects (skeletor)
+*** Setting up projects (skeletor)
 #+begin_src emacs-lisp
 (defun ram/get-skeleton (skeleton)
   (--first (equal skeleton (SkeletorProjectType-title it))
            skeletor--project-types))
-
-(defun ram/dcli-create-script ()
-  (skeletor-create-project-at "~/bin/scripts" (ram/get-skeleton "Dcli Script")))
-
-(defun ram/dart-create-project ()
-  (skeletor-create-project-at "~/Projects/dart" (ram/get-skeleton "Dart Project")))
-
-(defun ram/flutter-create-project ()
-  (skeletor-create-project-at "~/Projects/flutter" (ram/get-skeleton "Flutter Project")))
 
 (defun ram/cpp-create-project ()
   (let ((project (completing-read "Choose: " '("C++ Hellow World Project"
@@ -1930,17 +1951,31 @@ The missing hash table library for Emacs
       ('("C++ Cmake Project") (message "C++ Cmake Project"))
       ('("C++ Build2 Project") (message "C++ Build2 Project")))))
 
+(defun ram/dcli-create-script ()
+  (skeletor-create-project-at "~/bin/scripts" (ram/get-skeleton "Dcli Script")))
+
+(defun ram/dart-create-project ()
+  (skeletor-create-project-at "~/Projects/dart" (ram/get-skeleton "Dart Project")))
+
+(defun ram/flutter-create-project ()
+  (skeletor-create-project-at "~/Projects/flutter" (ram/get-skeleton "Flutter Project")))
+
+(defun ram/python-create-project ()
+  (skeletor-create-project-at "~/Projects/python" (ram/get-skeleton "Python Project")))
+
 (defun ram/create-project ()
   (interactive)
   (let ((project (completing-read "Choose: " '("C++ Project"
                                                "Dart Project"
                                                "Dcli Project"
-                                               "Flutter Project"))))
+                                               "Flutter Project"
+                                               "Python Project"))))
     (pcase (list project)
       ('("C++ Project") (ram/cpp-create-project))
       ('("Dart Project") (ram/dart-create-project))
       ('("Dcli Project") (ram/dcli-create-script))
-      ('("Flutter Project") (ram/flutter-create-project)))))
+      ('("Flutter Project") (ram/flutter-create-project))
+      ('("Python Project") (ram/python-create-project)))))
 #+end_src
 
 *** Autocomplete global org-mode tags
@@ -2622,7 +2657,7 @@ Dial the GC threshold back down so that garbage collection happens more frequent
 :header-args: :tangle ~/.emacs.d/early-init.el
 :END:
 
-#+begin_src  
+#+begin_src
 ;;; early-init.el --- Early Emacs configuration -*- lexical-binding: t; -*-
 
 (setq-default
@@ -2864,7 +2899,7 @@ source ~/.config/bash-powerline/bash-powerline.sh
 #+end_src
 
 ** Variables
-#+begin_src sh 
+#+begin_src sh
 export CXX="g++"
 export CC="gcc"
 export PATH="$HOME/bin/gcc-trunk/bin:$HOME/bin/build2/bin:$HOME/bin/cpp-libraries/bin:$HOME/bin/graphviz/bin:$PATH"
