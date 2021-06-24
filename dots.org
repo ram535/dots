@@ -1725,10 +1725,21 @@ Argument POS return faces at this point."
   :custom
   (skeletor-user-directory "~/Projects/dots/project-skeletons")
   :init
+  (skeletor-define-template "c-make-munit-kata"
+    :no-license? t
+    :no-git? t
+    :title "C make munit kata")
+
   (skeletor-define-template "cpp-hello-world"
     :no-license? t
+    :no-git? t
     :title "C++ Hellow World")
   
+  (skeletor-define-template "cpp-make-fmt-ut-as-headers"
+    :no-license? t
+    :no-git? t
+    :title "C++ make fmt ut kata")
+
   (skeletor-define-template "elisp"
     :no-license? t
     :title "Elisp")
@@ -2730,7 +2741,10 @@ export MANPAGER=cat
 export CXX="g++"
 export CC="gcc"
 export PATH="$HOME/bin/cpp-libraries/bin:$HOME/bin/graphviz/bin:$PATH"
-export LD_LIBRARY_PATH="$HOME/bin/gcc-trunk/lib64:$HOME/bin/gcc-trunk/lib:$HOME/bin/clang/lib:$HOME/Projects/cpp/lazy cpp/cpp-for-lazy-programmers/external/SSDL/unix:$HOME/bin/cpp-libraries/lib:$HOME/bin/graphviz/lib:$LD_LIBRARY_PATH"
+export LIBRARY_PATH="$HOME/bin/cpp-libraries/lib:$HOME/bin/c-libraries/lib:$LIBRARY_PATH"
+export C_INCLUDE_PATH="$HOME/bin/c-libraries/include:$CPLUS_INCLUDE_PATH"
+export CPLUS_INCLUDE_PATH="$HOME/bin/cpp-libraries/include:$CPLUS_INCLUDE_PATH"
+export LD_LIBRARY_PATH="$HOME/bin/c-libraries/lib:$HOME/bin/gcc-trunk/lib64:$HOME/bin/gcc-trunk/lib:$HOME/bin/clang/lib:$HOME/Projects/cpp/lazy cpp/cpp-for-lazy-programmers/external/SSDL/unix:$HOME/bin/cpp-libraries/lib:$HOME/bin/graphviz/lib:$LD_LIBRARY_PATH"
 export HISTSIZE=10000
 export HISTFILESIZE=10000
 # export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"$HOME/bin/pyenv/versions/3.5.0/lib"
