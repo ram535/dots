@@ -897,20 +897,54 @@ not appropriate in some cases like terminals."
   (projectile-completion-system 'default)
   (projectile-create-missing-test-files t)
   :config
+  ;; (setq projectile-project-search-path '("~/Projects/"))
+  (setq projectile-switch-project-action #'projectile-dired)
+  
   (projectile-mode +1)
   (add-to-list 'projectile-project-root-files-bottom-up "pubspec.yaml")
   (add-to-list 'projectile-project-root-files-bottom-up "pyproject.toml")
+  (add-to-list 'projectile-project-root-files-bottom-up "package.json")
+  (add-to-list 'projectile-project-root-files-bottom-up "Makefile")
+  (add-to-list 'projectile-project-root-files-bottom-up "Eldev")
 
   (projectile-register-project-type 'dart '("pubspec.yaml")
-                                    :test "pub run test"
-                                    :configure 'ram/projectile-run-project
+                                    :test "dart run test"
+                                    :configure "dart pub get"
                                     :run "webdev serve"
-                                    :test-suffix "_test.dart")
+                                    :test-dir "test/"
+                                    :test-suffix "_test")
+
+  (projectile-register-project-type 'python '("pyproject.toml")
+                                    :project-file "pyproject.toml"
+                                    :test "poetry run pytest"
+                                    :test-dir "tests/"
+                                    :test-suffix "_test")
+
+  (projectile-register-project-type 'npm '("package.json")
+                                    :project-file "package.json"
+				                            :configure "npm install"
+				                            :test "npm test"
+				                            :run "npm start"
+                                    :test-dir "__tests__"
+				                            :test-suffix ".test")
+
+  (projectile-register-project-type 'cpp '("Makefile")
+                                    :project-file "Makefile"
+				                            :compile "make"
+				                            :test "make test"
+                                    :test-dir "tests/"
+				                            :test-suffix "_test")
+
+  (projectile-register-project-type 'elisp '("Eldev")
+                                    :project-file "Eldev"
+				                            :test "eldev test"
+                                    :test-dir "tests/"
+				                            :test-suffix "-test")
 
   :general
   (:states '(normal insert emacs motion)
            "<f7>" 'projectile-configure-project)
-    (:states 'normal
+  (:states 'normal
            :prefix ","
            "t" 'projectile-test-project)
 
