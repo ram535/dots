@@ -906,11 +906,18 @@ not appropriate in some cases like terminals."
   (add-to-list 'projectile-project-root-files-bottom-up "package.json")
   (add-to-list 'projectile-project-root-files-bottom-up "Makefile")
   (add-to-list 'projectile-project-root-files-bottom-up "Eldev")
+  (add-to-list 'projectile-project-root-files-bottom-up "dev_deps.ts")
 
   (projectile-register-project-type 'dart '("pubspec.yaml")
                                     :test "dart run test"
                                     :configure "dart pub get"
                                     :run "webdev serve"
+                                    :test-dir "test/"
+                                    :test-suffix "_test")
+
+  (projectile-register-project-type 'deno '("dev_deps.ts")
+                                    :run "deno run"
+                                    :test "deno test test/"
                                     :test-dir "test/"
                                     :test-suffix "_test")
 
@@ -946,7 +953,7 @@ not appropriate in some cases like terminals."
            "<f7>" 'projectile-configure-project)
   (:states 'normal
            :prefix ","
-           "t" 'projectile-test-project)
+           "t" 'projectile-toggle-between-implementation-and-test)
 
   (:prefix "C-c p"
            :states '(normal insert emacs motion)
@@ -1777,6 +1784,11 @@ Argument POS return faces at this point."
   (skeletor-define-template "elisp"
     :no-license? t
     :title "Elisp")
+
+  (skeletor-define-template "js-kata"
+    :no-git? t
+    :no-license? t
+    :title "Javascript kata")
 
   (skeletor-define-constructor "Dart Project"
     :no-license? t
@@ -2833,6 +2845,12 @@ export PATH="$HOME/bin/ccls/bin:$PATH"
 export PATH="$HOME/bin/eldev:$PATH"
 #+end_src
 
+*** Deno
+#+begin_src sh
+export DENO_INSTALL="$HOME/.deno"
+export PATH="$DENO_INSTALL/bin:$PATH"
+#+end_src
+
 *** Gcc
 #+begin_src sh
 export PATH="$HOME/bin/gcc-trunk/bin:$PATH"
@@ -3146,4 +3164,18 @@ bspc rule --add emacs-capture state=state=floating
 bspc rule --add Zathura state=tiled
 bspc rule --add Google-chrome state=tiled
 bspc rule --add File-roller state=tiled
+#+end_src
+* common lisp (.sbclrc)
+:PROPERTIES:
+:header-args: :tangle ~/.sbclrc
+:END:
+#+begin_src lisp
+;;; The following lines added by ql:add-to-init-file:
+#-quicklisp
+(let ((quicklisp-init (merge-pathnames "bin/quicklisp/setup.lisp"
+                                       (user-homedir-pathname))))
+  (when (probe-file quicklisp-init)
+    (load quicklisp-init)))
+;;; 
+(pushnew (truename "~/Projects/lisp") ql:*local-project-directories* )
 #+end_src
