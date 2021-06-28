@@ -649,6 +649,7 @@ Highlight the the matching (){}[]
            "gn" (lambda() (interactive) (dired "~/Documents/notes"))
            "gd" (lambda() (interactive) (dired "~/Downloads"))
            "gp" (lambda() (interactive) (dired "~/Projects"))
+           "gk" (lambda() (interactive) (dired "~/Projects/katas"))
            "ge" (lambda() (interactive) (dired "~/.emacs.d"))
            "gc" (lambda() (interactive) (dired "~/.config"))
            "gs" (lambda() (interactive) (dired "~/bin/scripts"))
@@ -664,6 +665,7 @@ Highlight the the matching (){}[]
            "nd" 'dired-create-directory
            "nf" 'dired-create-empty-file
            "np" 'ram/create-project
+           "nk" 'ram/create-kata
            "s" 'dired-do-async-shell-command
            "q" 'quit-window
            "w" 'dired-toggle-read-only
@@ -1766,7 +1768,7 @@ Argument POS return faces at this point."
   :custom
   (skeletor-user-directory "~/Projects/dots/project-skeletons")
   :init
-  (skeletor-define-template "c-make-munit-kata"
+  (skeletor-define-template "c-make-munit"
     :no-license? t
     :no-git? t
     :title "C make munit kata")
@@ -1782,16 +1784,31 @@ Argument POS return faces at this point."
     :title "C++ make fmt ut kata")
 
   (skeletor-define-template "elisp"
+    :no-git? t
     :no-license? t
-    :title "Elisp")
+    :title "Elisp kata")
 
-  (skeletor-define-template "js-kata"
+  (skeletor-define-template "lisp-fiveam"
+    :no-git? t
+    :no-license? t
+    :title "Lisp fiveam kata")
+  
+  (skeletor-define-template "lisp"
+    :no-git? t
+    :no-license? t
+    :title "Lisp kata"
+    :after-creation
+    (lambda (dir)
+      (skeletor-async-shell-command (format "ln -s %s ~/Projects/lisp/katas" dir))))
+
+  (skeletor-define-template "js"
     :no-git? t
     :no-license? t
     :title "Javascript kata")
 
   (skeletor-define-constructor "Dart Project"
     :no-license? t
+    :no-git? t
     :initialise
     (lambda (spec)
       (let-alist spec
@@ -1811,6 +1828,7 @@ Argument POS return faces at this point."
   
   (skeletor-define-constructor "Flutter Project"
     :no-license? t
+    :no-git? t
     :initialise
     (lambda (spec)
       (let-alist spec
@@ -2000,7 +2018,7 @@ The missing hash table library for Emacs
   (completing-read "Choose: " '("app" "module" "package" "plugin")))
 #+end_src
 
-*** Setting up projects (skeletor)
+*** Create a project (skeletor)
 #+begin_src emacs-lisp
 (defun ram/get-skeleton (skeleton)
   (--first (equal skeleton (SkeletorProjectType-title it))
@@ -2040,6 +2058,41 @@ The missing hash table library for Emacs
       ('("C++ Project") (ram/cpp-create-project))
       ('("Dart Project") (ram/dart-create-project))
       ('("Dcli Project") (ram/dcli-create-script))
+      ('("Flutter Project") (ram/flutter-create-project))
+      ('("Python Project") (ram/python-create-project)))))
+#+end_src
+
+*** Create a kata (skeletor)
+#+begin_src emacs-lisp
+(defun ram/elisp-create-kata ()
+  (skeletor-create-project-at default-directory
+                              (ram/get-skeleton "Elisp kata")))
+
+(defun ram/elisp-fiveam-create-kata ()
+  (skeletor-create-project-at default-directory
+                              (ram/get-skeleton "Elisp fiveam kata")))
+
+(defun ram/lisp-create-kata ()
+  (skeletor-create-project-at default-directory
+                              (ram/get-skeleton "Lisp kata")))
+
+(defun ram/create-kata ()
+  (interactive)
+  (let ((project (completing-read "Choose: " '("Cpp kata with make, ut, fmt"
+                                               "Dart Project"
+                                               "Dcli Project"
+                                               "Elisp kata"
+                                               "Lisp kata"
+                                               "Lisp fiveam kata"
+                                               "Flutter Project"
+                                               "Python Project"))))
+    (pcase (list project)
+      ('("Cpp kata with make, ut, fmt") (ram/cpp-create-project))
+      ('("Dart Project") (ram/dart-create-project))
+      ('("Dcli Project") (ram/dcli-create-script))
+      ('("Elisp kata") (ram/elisp-create-kata))
+      ('("Lisp kata") (ram/lisp-create-kata))
+      ('("Lisp fiveam kata") (ram/elisp-fiveam-create-kata))
       ('("Flutter Project") (ram/flutter-create-project))
       ('("Python Project") (ram/python-create-project)))))
 #+end_src
@@ -3177,5 +3230,9 @@ bspc rule --add File-roller state=tiled
   (when (probe-file quicklisp-init)
     (load quicklisp-init)))
 ;;; 
+
 (pushnew (truename "~/Projects/lisp") ql:*local-project-directories* )
+;; update of the system index file
+;; ~/bin/quicklisp/local-projects/system-index.txt
+(ql:register-local-projects)
 #+end_src

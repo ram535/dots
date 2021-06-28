@@ -12,4 +12,5 @@
   (fiveam:is (= 1 (count-words "hola")))
   (fiveam:is (= 2 (count-words "hola lucky"))))
 
+;; C-c C-l
 (fiveam:run!)
