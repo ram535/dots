@@ -1259,6 +1259,7 @@ straight.el.
   (lsp-lens-enable nil)
   (lsp-ui-doc-enable nil)
   (lsp-semantic-highlighting 'immediate)
+  (lsp-headerline-breadcrumb-enable nil)
   (lsp-clients-clangd-args '("--header-insertion-decorators=0" "-j=4" "-background-index" "-log=error" "--clang-tidy"))
   :init
   ;; https://twitter.com/yonchovski/status/1384899744670093315
