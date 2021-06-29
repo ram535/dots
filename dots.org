@@ -1815,7 +1815,10 @@ Argument POS return faces at this point."
   (skeletor-define-template "js"
     :no-git? t
     :no-license? t
-    :title "Javascript Kata")
+    :title "Javascript Kata"
+    :after-creation
+    (lambda (dir)
+      (skeletor-async-shell-command "npm install")))
 
   (skeletor-define-template "typescript"
     :no-git? t
@@ -1882,7 +1885,7 @@ Argument POS return faces at this point."
     (lambda (spec)
       (let-alist spec
         (skeletor-shell-command
-         (format "poetry new --name %s" (shell-quote-argument .project-name))
+         (format "poetry new %s" (shell-quote-argument .project-name))
          .project-dir)))))
 #+end_src
 
