@@ -1,6 +1,6 @@
-(defpackage foo/tests/main
+(defpackage __PROJECT-NAME__/tests/main
   (:use :cl
-        :__PROJECT-NAME__
+   :__PROJECT-NAME__
         :rove))
 (in-package :__PROJECT-NAME__/tests/main)
 

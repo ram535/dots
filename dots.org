@@ -908,7 +908,20 @@ not appropriate in some cases like terminals."
   (add-to-list 'projectile-project-root-files-bottom-up "package.json")
   (add-to-list 'projectile-project-root-files-bottom-up "Makefile")
   (add-to-list 'projectile-project-root-files-bottom-up "Eldev")
+  (add-to-list 'projectile-project-root-files-bottom-up "lisp.org")
   (add-to-list 'projectile-project-root-files-bottom-up "dev_deps.ts")
+
+(projectile-register-project-type 'lisp '("lisp.org" "README.markdown")
+                                  :src-dir "src/"
+                                  :related-files-fn (list
+                                                     (projectile-related-files-fn-groups
+                                                      :test
+                                                      '(("src/main.lisp"
+                                                         "test/main.lisp"))))
+
+                                  :test (format "sbcl --noinform --non-interactive --eval '(ql:quickload \"%s/tests\")' --eval '(asdf:test-system :%s)'" (projectile-project-name) (projectile-project-name))
+                                  :test-dir "tests/"
+                                  :test-suffix "")
 
   (projectile-register-project-type 'dart '("pubspec.yaml")
                                     :test "dart run test"
@@ -1199,12 +1212,10 @@ straight.el.
 #+begin_src emacs-lisp
 (use-package sly
   :straight (sly :type git :host github :repo "joaotavora/sly")
-  :custom (inferior-lisp-program "~/bin/sbcl/bin/sbcl")
+  :custom (inferior-lisp-program "~/bin/sbcl/bin/sbcl --noinform")
   :config
-  ;; (add-hook 'sly-mode-hook
-  ;;           (lambda ()
-  ;;             (unless (sly-connected-p)
-  ;;               (save-excursion (sly)))))
+  ;; The SBCL configuration file is in Common Lisp
+  (add-to-list 'auto-mode-alist '("\\.sbclrc\\'" . lisp-mode))
   :general
   (:states 'normal
            :keymaps 'sly-mode-map
@@ -1771,32 +1782,32 @@ Argument POS return faces at this point."
   (skeletor-define-template "c-make-munit"
     :no-license? t
     :no-git? t
-    :title "C make munit kata")
+    :title "C Make Munit Kata")
 
   (skeletor-define-template "cpp-hello-world"
     :no-license? t
     :no-git? t
-    :title "C++ Hellow World")
+    :title "Cpp Hellow World")
   
   (skeletor-define-template "cpp-make-fmt-ut-as-headers"
     :no-license? t
     :no-git? t
-    :title "C++ make fmt ut kata")
+    :title "Cpp Make Fmt Ut Kata")
 
   (skeletor-define-template "elisp"
     :no-git? t
     :no-license? t
-    :title "Elisp kata")
+    :title "Elisp Kata")
 
   (skeletor-define-template "lisp-fiveam"
     :no-git? t
     :no-license? t
-    :title "Lisp fiveam kata")
+    :title "Lisp Fiveam Kata")
   
   (skeletor-define-template "lisp"
     :no-git? t
     :no-license? t
-    :title "Lisp kata"
+    :title "Lisp Kata"
     :after-creation
     (lambda (dir)
       (skeletor-async-shell-command (format "ln -s %s ~/Projects/lisp/katas" dir))))
@@ -1804,7 +1815,12 @@ Argument POS return faces at this point."
   (skeletor-define-template "js"
     :no-git? t
     :no-license? t
-    :title "Javascript kata")
+    :title "Javascript Kata")
+
+  (skeletor-define-template "typescript"
+    :no-git? t
+    :no-license? t
+    :title "Typescript Kata")
 
   (skeletor-define-constructor "Dart Project"
     :no-license? t
@@ -1814,6 +1830,16 @@ Argument POS return faces at this point."
       (let-alist spec
         (skeletor-shell-command
          (format "dart create -t %s %s" (ram/get-dart-template) (shell-quote-argument .project-name))
+         .project-dir))))
+
+  (skeletor-define-constructor "Dart Kata"
+    :no-license? t
+    :no-git? t
+    :initialise
+    (lambda (spec)
+      (let-alist spec
+        (skeletor-shell-command
+         (format "dart create -t package-simple %s" (shell-quote-argument .project-name))
          .project-dir))))
 
   (skeletor-define-constructor "Dcli Script"
@@ -1856,7 +1882,7 @@ Argument POS return faces at this point."
     (lambda (spec)
       (let-alist spec
         (skeletor-shell-command
-         (format "poetry new --name %s --src python" (shell-quote-argument .project-name))
+         (format "poetry new --name %s" (shell-quote-argument .project-name))
          .project-dir)))))
 #+end_src
 
@@ -2064,37 +2090,19 @@ The missing hash table library for Emacs
 
 *** Create a kata (skeletor)
 #+begin_src emacs-lisp
-(defun ram/elisp-create-kata ()
-  (skeletor-create-project-at default-directory
-                              (ram/get-skeleton "Elisp kata")))
-
-(defun ram/elisp-fiveam-create-kata ()
-  (skeletor-create-project-at default-directory
-                              (ram/get-skeleton "Elisp fiveam kata")))
-
-(defun ram/lisp-create-kata ()
-  (skeletor-create-project-at default-directory
-                              (ram/get-skeleton "Lisp kata")))
-
 (defun ram/create-kata ()
   (interactive)
-  (let ((project (completing-read "Choose: " '("Cpp kata with make, ut, fmt"
-                                               "Dart Project"
-                                               "Dcli Project"
-                                               "Elisp kata"
-                                               "Lisp kata"
-                                               "Lisp fiveam kata"
-                                               "Flutter Project"
-                                               "Python Project"))))
-    (pcase (list project)
-      ('("Cpp kata with make, ut, fmt") (ram/cpp-create-project))
-      ('("Dart Project") (ram/dart-create-project))
-      ('("Dcli Project") (ram/dcli-create-script))
-      ('("Elisp kata") (ram/elisp-create-kata))
-      ('("Lisp kata") (ram/lisp-create-kata))
-      ('("Lisp fiveam kata") (ram/elisp-fiveam-create-kata))
-      ('("Flutter Project") (ram/flutter-create-project))
-      ('("Python Project") (ram/python-create-project)))))
+  (let ((kata (completing-read "Choose: " '("C Make Munit Kata"
+                                            "Cpp Make Fmt Ut Kata"
+                                            "Dart Kata"
+                                            "Elisp Kata"
+                                            "Javascript Kata"
+                                            "Lisp Kata"
+                                            "Lisp Fiveam Kata"
+                                            "Python Kata"
+                                            "Typescript Kata"))))
+    (skeletor-create-project-at default-directory
+                                (ram/get-skeleton kata))))
 #+end_src
 
 *** Autocomplete global org-mode tags
@@ -3235,4 +3243,21 @@ bspc rule --add File-roller state=tiled
 ;; update of the system index file
 ;; ~/bin/quicklisp/local-projects/system-index.txt
 (ql:register-local-projects)
+#+end_src
+* guile (.guile)
+:PROPERTIES:
+:header-args: :tangle ~/.guile
+:END:
+#+begin_src lisp
+(module-set! (resolve-module '(system repl common))
+             'repl-welcome (const #f))
+#+end_src
+* ~/.guile-geiser
+:PROPERTIES:
+:header-args: :tangle ~/.guile-geiser
+:END:
+Remove the welcome message
+#+begin_src lisp
+(module-set! (resolve-module '(system repl common))
+             'repl-welcome (const #f))
 #+end_src
