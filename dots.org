@@ -729,18 +729,18 @@ Highlight the the matching (){}[]
 #+begin_src emacs-lisp
 (use-package selectrum
   :straight (selectrum :host github :repo "raxod502/selectrum")
+  :hook
+  (after-init . selectrum-mode)
   :config
+  (setq selectrum-prescient-enable-filtering nil)
 
-(setq selectrum-prescient-enable-filtering nil)
+  (setq orderless-skip-highlighting (lambda () selectrum-is-active))
 
-(setq orderless-skip-highlighting (lambda () selectrum-is-active))
+  ;; Completing variable names from `M-:`
+  (setq enable-recursive-minibuffers t)
 
-;; Completing variable names from `M-:`
-(setq enable-recursive-minibuffers t)
-
-(setq selectrum-refine-candidates-function #'orderless-filter)
-(setq selectrum-highlight-candidates-function #'orderless-highlight-matches)
-(selectrum-mode +1))
+  (setq selectrum-refine-candidates-function #'orderless-filter)
+  (setq selectrum-highlight-candidates-function #'orderless-highlight-matches))
 
 (use-package selectrum-prescient
   :after selectrum
@@ -1116,12 +1116,11 @@ difficult to read.
   (add-to-list 'auto-mode-alist '("\\.cppm\\'" . c++-mode))
   (add-to-list 'auto-mode-alist '("\\.cxx\\'" . c++-mode))
   (add-to-list 'auto-mode-alist '("\\.mxx\\'" . c++-mode))
-  :config
   (defun remove-electric-indent-mode ()
     (electric-indent-local-mode -1))
-
-  (add-hook 'c++-mode-hook 'remove-electric-indent-mode)
-  (add-hook 'c-mode-hook 'remove-electric-indent-mode)
+  :hook
+  (c++-mode . remove-electric-indent-mode)
+  (c-mode . remove-electric-indent-mode)
   :general
   (:states '(emacs normal insert visual)
            :keymaps '(c++-mode-map c-mode-map)
@@ -1468,6 +1467,17 @@ Search for character
   (add-hook 'smartparens-enabled-hook #'evil-smartparens-mode))
 #+end_src
 
+*** whitespace
+#+begin_src emacs-lisp
+(use-package whitespace
+  :straight (:type built-in)
+  :hook
+  (prog-mode . whitespace-mode)
+  (text-mode . whitespace-mode)
+  :custom
+  (whitespace-style '(face empty indentation::space tab trailing)))
+#+end_src
+
 *** ctrlf
 #+begin_src emacs-lisp
 (use-package ctrlf
@@ -1747,17 +1757,31 @@ sudo apt install gawk
 *** yasnippet
 #+begin_src elisp
 (use-package yasnippet
-  :defer 10
+  :bind
+  (:map yas-minor-mode-map
+        ("TAB" . nil)
+        ([tab] . nil))
+  :hook
+  (prog-mode . yas-minor-mode)
+  (text-mode . yas-minor-mode)
   :custom
   (yas-snippet-dirs
    '("~/Projects/dots/snips/yasnippet"))
   :config
+  (yas-reload-all)
   ;; (define-key yas-minor-mode-map (kbd "TAB")    nil)
-  (yas-global-mode +1)
+  ;; (yas-global-mode +1)
   :general
-    (:states 'visual
+  (:states 'visual
            :prefix ","
-           "y" 'yas-insert-snippet))
+           "y" 'yas-insert-snippet)
+  (:states 'insert
+           "C-<return>" 'yas-expand)
+
+  (:states 'insert
+           :keymaps 'yas-minor-mode-map
+           "C-l" 'yas-next-field
+           "C-h" 'yas-prev-field))
 #+end_src
 
 *** web-mode
