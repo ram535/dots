@@ -4,38 +4,48 @@
 :END:
 
 ** Better defaults
-#+begin_src emacs-lisp :tangle no
-(let ((default-directory user-emacs-directory)
-      (file-name-handler-alist nil)
-      (gc-cons-percentage .6)
-      (gc-cons-threshold most-positive-fixnum)
-      (read-process-output-max (* 1024 1024)))
-
-(setq-default
- cursor-in-non-selected-windows nil     ; Hide the cursor in inactive windows
- fill-column 80                         ; Set width for automatic line breaks
- gc-cons-threshold (* 8 1024 1024)      ; We're not using Game Boys anymore
- help-window-select t                   ; Focus new help windows when opened
- indent-tabs-mode nil                   ; Stop using tabs to indent
- inhibit-startup-screen t               ; Disable start-up screen
- initial-scratch-message ""             ; Empty the initial *scratch* buffer
- recenter-positions '(5 top bottom)     ; Set re-centering positions
- scroll-conservatively 101              ; Avoid recentering when scrolling far
- scroll-margin 2                        ; Add a margin when scrolling vertically
- select-enable-clipboard t              ; Merge system's and Emacs' clipboard
- sentence-end-double-space nil          ; Use a single space after dots
- tab-width 4                            ; Set width for tabs
- warning-minimum-level :error           ; Skip warning buffers
- window-combination-resize t            ; Resize windows proportionally
- x-stretch-cursor t)                    ; Stretch cursor to the glyph width
-(blink-cursor-mode 0)                   ; Prefer a still cursor
-(delete-selection-mode 1)               ; Replace region when inserting text
-(fset 'yes-or-no-p 'y-or-n-p)           ; Replace yes/no prompts with y/n
-(mouse-avoidance-mode 'exile)           ; Avoid collision of mouse with point
-(set-default-coding-systems 'utf-8)     ; Default to utf-8 encoding
+*** Set better default for a better emacs start up
+#+begin_src emacs-lisp
+(setq default-directory user-emacs-directory
+      gc-cons-percentage .6
+      gc-cons-threshold most-positive-fixnum
+      read-process-output-max (* 1024 1024))
+;; Profile emacs startup
+;; (add-hook 'emacs-startup-hook
+;;           (lambda ()
+;;             (message "*** Emacs loaded in %s with %d garbage collections."
+;;                      (format "%.2f seconds"
+;;                              (float-time
+;;                               (time-subtract after-init-time before-init-time)))
+;;                      gcs-done)))
 #+end_src
 
-I chose to lay out my configurations and customizations in this very Org
+*** Start server
+#+begin_src emacs-lisp
+(server-start)
+#+end_src
+*** Hide menu, tool-bar, scroll-bar
+#+begin_src emacs-lisp
+(when window-system
+  (menu-bar-mode -1)
+  (tool-bar-mode -1)
+  (scroll-bar-mode -1)
+  (tooltip-mode -1))
+#+end_src
+*** Default utf-8 encoding
+#+begin_src emacs-lisp
+(set-default-coding-systems 'utf-8)
+#+end_src
+
+*** Start in a blank page
+This allow to start emacs in a blank page
+#+begin_src emacs-lisp
+(setq inhibit-startup-message t)
+(setq initial-scratch-message "")
+#+end_src
+
+*** Disable custom file
+I choose to lay out my configurations and customizations in this very Org
 document for better visibility and maintainability through time and various
 upgrades. Albeit useful, the =customize-*= routines go against that strategy by
 writing directly at the end of the =user-init-file= or into a dedicated file
@@ -44,14 +54,10 @@ when set accordingly.
 To fight the littering I've decided to completely disable this feature and
 redirect the writing to =/dev/null=.
 
-#+BEGIN_SRC emacs-lisp :tangle no
-(setq-default custom-file null-device)
-#+END_SRC
-
-*** Start server
 #+begin_src emacs-lisp
-(server-start)
+(setq-default custom-file null-device)
 #+end_src
+
 *** Set font
 #+begin_src emacs-lisp
 (add-to-list 'default-frame-alist
@@ -73,12 +79,7 @@ redirect the writing to =/dev/null=.
       auto-window-vscroll nil)
 #+end_src
 
-*** Hide tabs
-#+begin_src emacs-lisp
-(setq tab-bar-show nil)
-#+end_src
-
-*** open buffer vertically (help buffer, pdf, etc)
+*** Open buffer vertically (help buffer, pdf, etc)
 #+begin_src emacs-lisp
 (setq split-height-threshold nil)
 (setq split-width-threshold 0)
@@ -87,6 +88,11 @@ redirect the writing to =/dev/null=.
 *** Stop emacs from asking me if I want to load a large file
 #+begin_src emacs-lisp
 (setq large-file-warning-threshold nil)
+#+end_src
+
+*** Hide tabs
+#+begin_src emacs-lisp
+(setq tab-bar-show nil)
 #+end_src
 
 *** Convert tabs to white spaces
@@ -106,14 +112,12 @@ This always creates unnecessary diffs in git. Just delete it upon saving.
 (add-hook 'before-save-hook 'whitespace-cleanup)
 #+end_src
 
-*** Don't convert tabs to white spaces in makefiles
+*** Show trailing white spaces and empty lines
 #+begin_src emacs-lisp
-(add-hook 'makefile-mode-hook
-          (lambda ()
-            (setq indent-tabs-mode t)
-            (setq-default indent-tabs-mode t)
-            (setq tab-width 8)))
+(setq-default show-trailing-whitespace nil)
+(setq-default indicate-empty-lines t)
 #+end_src
+
 *** Configure compile command
 #+begin_src emacs-lisp
 ;; use make as default command when M-x compile
@@ -137,7 +141,7 @@ can have a kill ring solution to this with the following:
 Now the contents of the clipboard are stored in the kill ring and can
 be retrieved from there (e.g. with M-y).
 
-*** Auto revert mode
+*** Update file whenever the file change
 This mode ensures that the buffer is updated whenever the file
 changes. A change can happen externally or by some other tool
 inside of Emacs (e.g. kill a Magit diff).
@@ -153,34 +157,10 @@ inside of Emacs (e.g. kill a Magit diff).
 #+end_src
 
 *** Do not display buffers with the name ~*Async Shell Command*~
-This annoyed me when exactracting files with the UI program.
+It is annoying when exactracting files with the UI program.
 #+begin_src emacs-lisp
 (add-to-list 'display-buffer-alist
              (cons "\\*Async Shell Command\\*.*" (cons #'display-buffer-no-window nil)))
-#+end_src
-
-*** This plays nicely with lsp and company
-#+begin_src emacs-lisp
-(setq read-process-output-max (* 1024 1024))
-;; (setq gc-cons-threshold 100000000)
-#+end_src
-
-*** Hiding elements
-This hide several elements like menu, too bar, etc.
-in GUI mode
-#+begin_src emacs-lisp
-(when window-system
-  (menu-bar-mode -1)
-  (tool-bar-mode -1)
-  (scroll-bar-mode -1)
-  (tooltip-mode -1))
-#+end_src
-
-*** Start in a blank page
-This allow to start emacs in a blank page
-#+begin_src emacs-lisp
-(setq inhibit-startup-message t)
-(setq initial-scratch-message "")
 #+end_src
 
 *** Stop blinking cursor
@@ -228,30 +208,8 @@ Highlight the the matching (){}[]
 (setq auto-save-list-file-prefix nil)
 #+end_src
 
-*** Show trailing white spaces and empty lines
+*** Position register
 #+begin_src emacs-lisp
-(setq-default show-trailing-whitespace nil)
-(setq-default indicate-empty-lines t)
-#+end_src
-
-*** Mode line
-#+begin_src emacs-lisp :tangle no
-(setq-default mode-line-format
-              (list
-               ;; value of current buffer name
-               "%b "
-               ;; spaces to align right
-               '(:eval (propertize
-                        " " 'display
-                        `((space :align-to (- (+ right right-fringe right-margin)
-                                              ,(+ 3 (string-width mode-name)))))))
-               ;; value of `mode-name'
-               "%m "))
-#+end_src
-
-*** Set position register
-#+begin_src emacs-lisp
-;;(set-register ?d '(file . "~/Projects/dots/dots.org"))
 (setq register-alist
   `((115 . ,(with-current-buffer "*scratch*" (point-marker)))
     (109 . ,(with-current-buffer "*Messages*" (point-marker)))
@@ -271,37 +229,11 @@ Highlight the the matching (){}[]
           ("epsilon" . 120518)
           ("->" . 8594)
           ("<=" . 8804)
-          (">=" . 8805)
-          )))
+          (">=" . 8805))))
 (add-hook 'prog-mode-hook 'add-pretty-lambda)
 (add-hook 'org-mode-hook 'add-pretty-lambda)
 #+end_src
 
-*** Set env variables
-#+begin_src emacs-lisp
-(setq myHome (getenv "HOME"))
-(setenv "LD_LIBRARY_PATH" (format "%s/bin/gcc-10.2.0/lib;%s/bin/gcc-10.2.0/lib64" myHome myHome))
-;;(setenv "LD_LIBRARY_PATH" (format "%s/bin/clang/lib" myHome))
-#+end_src
-
-*** Windmove
-#+begin_src emacs-lisp
-(with-eval-after-load 'general
-  (general-define-key
-   :states 'normal
-   "s-l" 'windmove-right
-   "s-h" 'windmove-left
-   "s-k" 'windmove-up
-   "s-j" 'windmove-down)
-
-  (general-define-key
-   :states 'normal
-   :prefix "C-c"
-   "r l" 'windmove-delete-right
-   "r h" 'windmove-delete-left
-   "r j" 'windmove-delete-down
-   "r k" 'windmove-delete-up))
-#+end_src
 ** Packages
 *** straight.el
 #+begin_src emacs-lisp
@@ -325,12 +257,13 @@ Highlight the the matching (){}[]
 *** use-package
 #+begin_src emacs-lisp
 (straight-use-package 'use-package)
-;;(setq use-package-verbose t)
+;; (setq use-package-verbose t)
 #+end_src
 
 *** exec-path-from-shell
 #+begin_src emacs-lisp
 (use-package exec-path-from-shell
+  :defer 5
   :config
   (exec-path-from-shell-copy-env "LD_LIBRARY_PATH")
   (when (daemonp)
@@ -387,12 +320,33 @@ Highlight the the matching (){}[]
   (general-evil-setup))
 #+end_src
 
+*** windmove
+#+begin_src emacs-lisp
+(use-package windmove
+  :straight (:type built-in)
+  :config
+  (general-define-key
+   :states '(normal insert motion emacs)
+   "s-l" 'windmove-right
+   "s-h" 'windmove-left
+   "s-k" 'windmove-up
+   "s-j" 'windmove-down)
+
+  (general-define-key
+   :states 'normal
+   :prefix "C-c"
+   "r l" 'windmove-delete-right
+   "r h" 'windmove-delete-left
+   "r j" 'windmove-delete-down
+   "r k" 'windmove-delete-up))
+#+end_src
+
 *** winner-mode
 #+begin_src emacs-lisp
-(use-package winner-mode
+(use-package winner
   :straight (:type built-in)
-  :init
-   (winner-mode t)
+  :hook
+  (after-init . winner-mode)
   :general
   (:states '(normal insert motion emacs)
            "s-n" 'winner-undo
@@ -402,6 +356,7 @@ Highlight the the matching (){}[]
 *** org-mode
 #+begin_src emacs-lisp
 (use-package org
+  :defer 3
   :custom
   (org-startup-folded t)
   ;; (org-hide-emphasis-markers t)
@@ -686,7 +641,6 @@ Highlight the the matching (){}[]
            "s-d" (lambda() (interactive) (dired default-directory)))
   (:states 'normal
            :keymaps 'dired-mode-map
-           "TAB" 'other-window
            "j" 'dired-next-line
            "k" 'dired-previous-line
            "l" 'ram/dired-open
@@ -740,12 +694,10 @@ Highlight the the matching (){}[]
            "j" 'image-dired-next-line
            "m" 'image-dired-toggle-mark-thumb-original-file
            "s" 'image-dired-display-thumbnail-original-image
-           "TAB" 'image-dired-jump-original-dired-buffer
            "q" 'quit-window
            "SPC" 'image-dired-thumbnail-display-external)
   (:states 'normal
            :keymaps 'image-dired-display-image-mode-map
-           "TAB" 'image-dired-jump-original-dired-buffer
            "q" 'quit-window))
 #+end_src
 
@@ -931,25 +883,43 @@ not appropriate in some cases like terminals."
 *** company
 #+begin_src emacs-lisp
 (use-package company
-  ;;:hook
-  ;;(after-init . global-company-mode)
   :custom
   (company-idle-delay 0)
   :config
   (setq company-capf t)
-  (push 'company-capf company-backends)
-  (global-company-mode t)
-(defun yas-expand-or-company-complete (&optional arg)
-  (interactive)
-  (or (yas-expand) (company-indent-or-complete-common arg)))
+  ;; (push 'company-capf company-backends)
+  ;; (add-to-list 'company-backends '(company-capf company-dabbrev))
+  ;; (global-company-mode t)
+
+  (define-key company-active-map (kbd "<tab>") nil)
   :general
   (:states '(emacs insert)
-           "<tab>" 'yas-expand-or-company-complete
            "C-j" 'company-complete)
   (:states '(normal insert)
            :keymaps 'company-active-map
            "C-n" 'company-select-next-or-abort
            "C-p" 'company-select-previous-or-abort))
+#+end_src
+
+*** fancy-dabbrev
+#+begin_src emacs-lisp
+(use-package fancy-dabbrev
+  :init
+  (global-fancy-dabbrev-mode t)
+  :config
+  ;; Let dabbrev searches ignore case and expansions preserve case:
+  (setq dabbrev-case-distinction nil)
+  (setq dabbrev-case-fold-search t)
+  (setq dabbrev-case-replace nil)
+
+  (setq fancy-dabbrev-preview-delay 0.1)
+  (setq fancy-dabbrev-preview-context 'before-non-word)
+
+  (setq fancy-dabbrev-expansion-on-preview-only t)
+  (setq fancy-dabbrev-indent-command 'tab-to-tab-stop)
+  :general
+  (:states '(emacs insert)
+           "<tab>" 'fancy-dabbrev-expand-or-indent))
 #+end_src
 
 *** projectile
@@ -961,7 +931,7 @@ not appropriate in some cases like terminals."
   :config
   ;; (setq projectile-project-search-path '("~/Projects/"))
   (setq projectile-switch-project-action #'projectile-dired)
-  
+
   (projectile-mode +1)
   (add-to-list 'projectile-project-root-files-bottom-up "pubspec.yaml")
   (add-to-list 'projectile-project-root-files-bottom-up "pyproject.toml")
@@ -1004,25 +974,25 @@ not appropriate in some cases like terminals."
 
   (projectile-register-project-type 'npm '("package.json")
                                     :project-file "package.json"
-				                            :configure "npm install"
-				                            :test "npm test"
-				                            :run "npm start"
+                                    :configure "npm install"
+                                    :test "npm test"
+                                    :run "npm start"
                                     :test-dir "__tests__"
-				                            :test-suffix ".test")
+                                    :test-suffix ".test")
 
   (projectile-register-project-type 'cpp '("Makefile")
                                     :project-file "Makefile"
-				                            :compile "make"
-																		:run "make run"
-				                            :test "make test"
+                                    :compile "make"
+                                    :run "make run"
+                                    :test "make test"
                                     :test-dir "tests/"
-				                            :test-suffix "_test")
+                                    :test-suffix "_test")
 
   (projectile-register-project-type 'elisp '("Eldev")
                                     :project-file "Eldev"
-				                            :test "eldev test"
+                                    :test "eldev test"
                                     :test-dir "tests/"
-				                            :test-suffix "-test")
+                                    :test-suffix "-test")
 
   :general
   (:states '(normal insert emacs motion)
@@ -1115,7 +1085,8 @@ difficult to read.
 
 *** git-link
 #+begin_src emacs-lisp
-(use-package git-link)
+(use-package git-link
+  :defer 5)
 #+end_src
 
 *** yaml-mode
@@ -1141,29 +1112,32 @@ difficult to read.
 #+begin_src emacs-lisp
 (use-package cc-mode
   :straight (:type built-in)
-  ;; :mode ("\\.c\\'" "\\.h\\'" "\\.cpp\\'" "\\.cc\\'" "\\.cxx\\'" "\\.mxx\\'")
-   :init
-   (add-to-list 'auto-mode-alist '("\\.cppm\\'" . c++-mode))
-   (add-to-list 'auto-mode-alist '("\\.cxx\\'" . c++-mode))
-   (add-to-list 'auto-mode-alist '("\\.mxx\\'" . c++-mode))
+  :init
+  (add-to-list 'auto-mode-alist '("\\.cppm\\'" . c++-mode))
+  (add-to-list 'auto-mode-alist '("\\.cxx\\'" . c++-mode))
+  (add-to-list 'auto-mode-alist '("\\.mxx\\'" . c++-mode))
+  :config
+  (defun remove-electric-indent-mode ()
+    (electric-indent-local-mode -1))
+
+  (add-hook 'c++-mode-hook 'remove-electric-indent-mode)
+  (add-hook 'c-mode-hook 'remove-electric-indent-mode)
   :general
-  (:states '(normal insert)
-           "C-;" 'ram/insertSemicolon)
   (:states '(emacs normal insert visual)
-           :keymaps 'c-mode-map
-           "<f5>" (lambda()
-                     (interactive)
-                     (async-shell-command
-                      (concat "gcc " (buffer-file-name) " && ./a.out") "*c output*")))
-  (:states '(emacs normal insert visual)
-           :keymaps 'c++-mode-map
-           "<f5>" (lambda()
-                     (interactive)
-                     (async-shell-command
-                      (concat "g++ "
-                              (shell-quote-argument (buffer-name))
-                              " --std=c++2a -lfmt -g && ./a.out")
-                      "*c output*"))))
+           :keymaps '(c++-mode-map c-mode-map)
+           "C-;" 'ram/insertSemicolon))
+#+end_src
+
+*** make-mode
+#+begin_src emacs-lisp
+(use-package make-mode
+  :straight (:type built-in)
+  :config
+  (add-hook 'makefile-mode-hook
+            (lambda ()
+              (setq indent-tabs-mode t)
+              (setq-default indent-tabs-mode t)
+              (setq tab-width 8))))
 #+end_src
 
 *** js-mode
@@ -1173,6 +1147,7 @@ js.el, thus you should pass js to use-package.  This is independent of
 straight.el.
 #+begin_src emacs-lisp
 (use-package js
+  :defer 3
   :config
   (add-hook 'js-mode-hook (lambda () (setq js-indent-level 2
                                       tab-width 2)))
@@ -1207,6 +1182,7 @@ straight.el.
 *** pyvenv
 #+begin_src emacs-lisp
 (use-package pyenv-mode
+  :defer 5
   :init
   (add-to-list 'exec-path "~/bin/pyenv/shims")
   (setq pyenv-installation-dir "~/bin/pyenv")
@@ -1248,18 +1224,25 @@ straight.el.
 (use-package dart-mode
   :general
   (:states '(emacs normal insert visual)
-  :keymaps 'dart-mode-map
-  "<f5>" (lambda()
-            (interactive)
-            (async-shell-command
-             (concat "dart --enable-experiment=non-nullable " (buffer-file-name)) "*dart output*"))
-  "C-;" 'ram/insertSemicolon))
+           :keymaps 'dart-mode-map
+           "<f5>" (lambda()
+                    (interactive)
+                    (async-shell-command
+                     (concat "dart --enable-experiment=non-nullable " (buffer-file-name)) "*dart output*"))
+           "C-;" 'ram/insertSemicolon))
 #+end_src
 
 *** haskell-mode
 #+begin_src emacs-lisp
 (use-package haskell-mode
-  :mode ("\\.hs\\'"))
+  :mode ("\\.hs\\'")
+  :general
+  (:states '(emacs normal insert visual)
+           :keymaps 'haskell-mode-map
+           "<f5>" (lambda()
+                    (interactive)
+                    (async-shell-command
+                     (concat "ghc -e main " (buffer-name)) "*haskell output*"))))
 #+end_src
 
 *** typescript-mode
@@ -1287,6 +1270,7 @@ straight.el.
 *** geiser (guile)
 #+begin_src emacs-lisp
 (use-package geiser
+  :defer 5
   :straight (geiser :type git :host gitlab :repo "emacs-geiser/geiser"))
 
 (use-package geiser-guile
@@ -1320,7 +1304,8 @@ straight.el.
   (lsp-ui-doc-enable nil)
   (lsp-semantic-highlighting 'immediate)
   (lsp-headerline-breadcrumb-enable nil)
-  (lsp-clients-clangd-args '("--header-insertion-decorators=0" "-j=4" "-background-index" "-log=error" "--clang-tidy"))
+  (lsp-clients-clangd-executable (concat (getenv "HOME") "/bin/clang/bin/clangd"))
+  (lsp-clients-clangd-args '("--header-insertion-decorators=0" "-j=4" "--suggest-missing-includes" "-background-index" "-log=error" "--clang-tidy"))
   :init
   ;; https://twitter.com/yonchovski/status/1384899744670093315
   (setq lsp-use-plists t)
@@ -1377,7 +1362,8 @@ straight.el.
 
 *** treemacs
 #+begin_src emacs-lisp
-(use-package treemacs)
+(use-package treemacs
+  :defer 3)
 #+end_src
 
 *** lsp-treemacs
@@ -1542,6 +1528,7 @@ Search for character
 sudo apt install gawk
 #+begin_src emacs-lisp
 (use-package org-fc
+  :defer 5
   :straight
   (org-fc
    :type git
@@ -1765,7 +1752,7 @@ sudo apt install gawk
   (yas-snippet-dirs
    '("~/Projects/dots/snips/yasnippet"))
   :config
-  (define-key yas-minor-mode-map (kbd "TAB")    nil)
+  ;; (define-key yas-minor-mode-map (kbd "TAB")    nil)
   (yas-global-mode +1)
   :general
     (:states 'visual
@@ -1800,6 +1787,7 @@ sudo apt install gawk
 *** calibredb.el
 #+begin_src emacs-lisp
 (use-package calibredb
+  :defer 5
   :init
   (autoload 'calibredb "calibredb")
   :config
@@ -1871,7 +1859,7 @@ Argument POS return faces at this point."
     :no-license? t
     :no-git? t
     :title "Cpp Hellow World")
-  
+
   (skeletor-define-template "cpp-make-fmt-ut-as-headers"
     :no-license? t
     :no-git? t
@@ -1886,7 +1874,7 @@ Argument POS return faces at this point."
     :no-git? t
     :no-license? t
     :title "Lisp Fiveam Kata")
-  
+
   (skeletor-define-template "lisp"
     :no-git? t
     :no-license? t
@@ -1937,7 +1925,7 @@ Argument POS return faces at this point."
         (skeletor-shell-command
          (format "dcli create %s" (shell-quote-argument .project-name))
          .project-dir))))
-  
+
   (skeletor-define-constructor "Flutter Project"
     :no-license? t
     :no-git? t
@@ -2041,6 +2029,7 @@ Build-in package. Think htop but for emacs.
 *** org-download
 #+begin_src emacs-lisp
 (use-package org-download
+  :defer 5
   :config
   (setq-default org-download-image-dir "~/org/roams/img"))
 #+end_src
@@ -2142,7 +2131,7 @@ The missing hash table library for Emacs
                                                "C++ Cmake Project"
                                                "C++ Build2 Project"))))
 
-		(skeletor-create-project-at "~/Projects/cpp" (ram/get-skeleton project))))
+    (skeletor-create-project-at "~/Projects/cpp" (ram/get-skeleton project))))
 
 (defun ram/dcli-create-script ()
   (skeletor-create-project-at "~/bin/scripts" (ram/get-skeleton "Dcli Script")))
@@ -2814,52 +2803,14 @@ at. You can call the following function at the end of selectrum swiper.
   (interactive (browse-url-interactive-arg "URL: "))
   (vterm)
   (vterm-send-string (format "mpv %s" url))
-  (vterm-send-return)
-  )
+  (vterm-send-return))
 #+end_src
 
-*** experimenting
-#+begin_src emacs-lisp :tangle no
-(defvar ls-file-path "/bin/ls"
-  "Path to the program `ls`")
-
-(defvar ls-arguments '("-l")
-  "Commandline arguments to pass to `ls'")
-
-(defvar ls-mode-map
-  (let ((map (nconc (make-sparse-keymap) comint-mode-map)))
-    ;; example definition
-    (define-key map "\t" 'completion-at-point)
-    map)
-  "Basic mode map for `run-ls'")
-
-(defun run-ls ()
-  "Run an inferior instance of `cassandra-cli' inside Emacs."
-  (interactive)
-  (let* ((ls-program ls-file-path)
-         (buffer (comint-check-proc "ls")))
-    ;; pop to the "*Cassandra*" buffer if the process is dead, the
-    ;; buffer is missing or it's got the wrong mode.
-    (pop-to-buffer-same-window
-     (if (or buffer (not (derived-mode-p 'ls-mode))
-             (comint-check-proc (current-buffer)))
-         (get-buffer-create (or buffer "*ls*"))
-       (current-buffer)))
-    ;; create the comint process if there is no buffer.
-    (unless buffer
-      (apply 'make-comint-in-buffer "ls" buffer
-             ls-program ls-arguments)
-      (ls-mode))))
-#+end_src
-
-#+RESULTS:
-: run-ls
-
-*** Runtime Performance
+** Make gc pauses faster by decreasing the threshold
 Dial the GC threshold back down so that garbage collection happens more frequently but in less time.
 #+begin_src emacs-lisp
-;; Make gc pauses faster by decreasing the threshold.
-(setq gc-cons-threshold (* 2 1000 1000))
+(setq  gc-cons-threshold (* 2 1024 1024))
+(setq  gc-cons-percentage .1)
 #+end_src
 
 * Early emacs
@@ -3113,6 +3064,10 @@ export PATH=$HOME/bin/sbcl/bin:$PATH
 #+begin_src sh
 export PATH=$HOME/bin/ripgrep:$PATH
 #+end_src
+
+** Daemons
+#+begin_src sh
+#+end_src
 * bashrc
 :PROPERTIES:
 :header-args: :tangle ~/.bashrc
@@ -3320,7 +3275,7 @@ bspc rule --add File-roller state=tiled
                                        (user-homedir-pathname))))
   (when (probe-file quicklisp-init)
     (load quicklisp-init)))
-;;; 
+;;;
 
 (pushnew (truename "~/Projects/lisp") ql:*local-project-directories* )
 ;; update of the system index file

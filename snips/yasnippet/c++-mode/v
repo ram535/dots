@@ -1,5 +1,5 @@
 # -*- mode: snippet -*-
 # name: v
-# key: v
+# key: ,v
 # --
-${1:TYPE} ${2:NAME} = ${3:VALUE}
+${1:TYPE} ${2:NAME} = ${3:VALUE};

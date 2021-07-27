@@ -1,12 +1,8 @@
 # -*- mode: snippet -*-
 # name: main
-# key: main
+# key: ,main
 # --
-#include <cstdio>
-
-using namespace std;
-
-int main() {
+auto main() -> int {
   $0
   return 0;
 }
