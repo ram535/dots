@@ -848,7 +848,6 @@ Highlight the the matching (){}[]
 Install cmake to be able to install vterm
 #+begin_src emacs-lisp
 (use-package vterm
-  :defer 5
   :config
   (defun evil-collection-vterm-escape-stay ()
     "Go back to normal state but don't move
@@ -867,7 +866,6 @@ not appropriate in some cases like terminals."
 *** vterm-toggle
 #+begin_src emacs-lisp
 (use-package vterm-toggle
-  :after vterm
   :init
   ;; Toggle and change directory to current working directory vterm
   (defun ram/toggle-vterm ()
@@ -1040,6 +1038,7 @@ difficult to read.
 *** magit
 #+begin_src emacs-lisp
 (use-package magit
+  :commands magit-status
   :custom
   ;; When maintaining a number of projects, it sometimes is necessary
   ;; to produce a full list of them with their corresponding Magit
@@ -1068,6 +1067,7 @@ difficult to read.
 *** git-timemachine
 #+begin_src emacs-lisp
 (use-package git-timemachine
+  :after magit
   :general
   (:states 'normal
            :keymaps 'git-timemachine-mode-map
@@ -1086,7 +1086,7 @@ difficult to read.
 *** git-link
 #+begin_src emacs-lisp
 (use-package git-link
-  :defer 5)
+  :after magit)
 #+end_src
 
 *** yaml-mode
@@ -1255,6 +1255,7 @@ straight.el.
 (use-package sly
   :straight (sly :type git :host github :repo "joaotavora/sly")
   :custom (inferior-lisp-program "~/bin/sbcl/bin/sbcl --noinform")
+  :commands sly
   :config
   ;; The SBCL configuration file is in Common Lisp
   (add-to-list 'auto-mode-alist '("\\.sbclrc\\'" . lisp-mode))
@@ -1269,8 +1270,8 @@ straight.el.
 *** geiser (guile)
 #+begin_src emacs-lisp
 (use-package geiser
-  :defer 5
-  :straight (geiser :type git :host gitlab :repo "emacs-geiser/geiser"))
+  :straight (geiser :type git :host gitlab :repo "emacs-geiser/geiser")
+  :commands geiser)
 
 (use-package geiser-guile
   :straight (geiser-guile :type git :host gitlab :repo "emacs-geiser/guile")
@@ -1484,7 +1485,6 @@ Search for character
   :straight (ctrlf :host github :repo "raxod502/ctrlf")
   :bind ("C-s" . ctrlf-forward-literal)
   :config
-  (add-hook 'exwm-mode-hook (lambda () (ctrlf-local-mode -1)))
   (ctrlf-mode +1))
 #+end_src
 
@@ -1686,44 +1686,6 @@ sudo apt install gawk
            "a" 'org-roam-alias-add))
 #+end_src
 
-#+begin_src elisp :tangle no
-(use-package org-roam
-  :custom
-  (org-roam-directory "~/org/roams")
-  (org-roam-buffer-no-delete-other-windows t)
-  :custom-face
-  (org-roam-link ((t (:inherit org-link :foreground "orange"))))
-  :config
-  (require 'org-roam-protocol)
-  (setq org-roam-capture-templates
-        '(("d" "default" plain
-           (function org-roam-capture--get-point)
-           "%?"
-           :file-name "%<%Y%m%d%H%M%S>-${slug}"
-           :head "#+TITLE: ${title}\n#+CREATED: %U\n#+LAST_MODIFIED: %U\n\n"
-           :unnarrowed t)
-
-          ("r" "ref" plain
-           (function org-roam-capture--get-point)
-           "%?"
-           :file-name "websites/${slug}"
-           :head "#+TITLE: ${title}\n#+ROAM_KEY: ${ref}"
-           :unnarrowed t)))
-
-  (setq org-roam-title-include-subdirs t)
-  :general
-  (:prefix "C-c n"
-           :states '(normal motion insert emacs)
-           "f" 'org-roam-find-file
-           "b" 'org-roam-switch-to-buffer)
-  (:prefix "C-c n"
-           :states '(normal insert)
-           :keymaps 'org-roam-mode-map
-           "l" 'org-roam
-           "t" 'org-roam-tag-add
-           "g" 'org-roam-show-graph))
-#+end_src
-
 *** rg
 #+begin_src elisp
 (use-package rg
@@ -1769,15 +1731,12 @@ sudo apt install gawk
    '("~/Projects/dots/snips/yasnippet"))
   :config
   (yas-reload-all)
-  ;; (define-key yas-minor-mode-map (kbd "TAB")    nil)
-  ;; (yas-global-mode +1)
   :general
   (:states 'visual
            :prefix ","
            "y" 'yas-insert-snippet)
   (:states 'insert
            "C-<return>" 'yas-expand)
-
   (:states 'insert
            :keymaps 'yas-minor-mode-map
            "C-l" 'yas-next-field
@@ -1811,7 +1770,7 @@ sudo apt install gawk
 *** calibredb.el
 #+begin_src emacs-lisp
 (use-package calibredb
-  :defer 5
+  :commands calibredb
   :init
   (autoload 'calibredb "calibredb")
   :config
@@ -1871,6 +1830,7 @@ Argument POS return faces at this point."
 *** skeletor
 #+begin_src emacs-lisp
 (use-package skeletor
+  :commands (skeletor-create-project skeletor-create-project-at ram/create-kata ram/create-project)
   :custom
   (skeletor-user-directory "~/Projects/dots/project-skeletons")
   :init
@@ -2053,7 +2013,7 @@ Build-in package. Think htop but for emacs.
 *** org-download
 #+begin_src emacs-lisp
 (use-package org-download
-  :defer 5
+  :commands org-download-clipboard
   :config
   (setq-default org-download-image-dir "~/org/roams/img"))
 #+end_src
@@ -2066,7 +2026,7 @@ Build-in package. Think htop but for emacs.
 #+end_src
 
 *** emacs-test-simple
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (use-package test-simple)
 #+end_src
 
@@ -3323,3 +3283,23 @@ Remove the welcome message
 (module-set! (resolve-module '(system repl common))
              'repl-welcome (const #f))
 #+end_src
+* stumpwm
+:PROPERTIES:
+:header-args: :tangle ~/.stumpwmrc
+:END:
+** Set super as prefix
+#+begin_src lisp
+(run-shell-command "xmodmap $HOME/Projects/dots/modmap" t)
+(run-shell-command "xmodmap -e \'keycode 94 = F20\'" t)
+(set-prefix-key (kbd "F20"))
+
+(define-key *root-map* (kbd "p") "exec dmenu_core")
+(define-key *root-map* (kbd "c") "exec alacritty")
+
+;; define volume control keys
+;; (define-key *top-map* (kbd "XF86AudioLowerVolume") "exec amixer set Master 5%-")
+;; (define-key *top-map* (kbd "XF86AudioRaiseVolume") "exec amixer set Master 5%+")
+;; (define-key *top-map* (kbd "XF86AudioMute") "exec amixer set Master toggle")
+;; (define-key *top-map* (kbd "XF86AudioMicMute") "exec amixer set Capture toggle")
+#+end_src
+
