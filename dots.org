@@ -1257,8 +1257,10 @@ straight.el.
   :custom (inferior-lisp-program "~/bin/sbcl/bin/sbcl --noinform")
   :commands sly
   :config
-  ;; The SBCL configuration file is in Common Lisp
+  ;; Activate common lisp highlight syntax to SBCL configuration file
   (add-to-list 'auto-mode-alist '("\\.sbclrc\\'" . lisp-mode))
+  ;; Activate common lisp highlight syntax to Stumpwm configuration file
+  (add-to-list 'auto-mode-alist '("\\.stumpwmrc\\'" . lisp-mode))
   :general
   (:states 'normal
            :keymaps 'sly-mode-map
@@ -3288,18 +3290,71 @@ Remove the welcome message
 :header-args: :tangle ~/.stumpwmrc
 :END:
 ** Set super as prefix
+*** Have access to the sumpwm functions
+#+begin_src lisp
+(in-package :stumpwm)
+#+end_src
+
+*** Connect sly to stumpwm
+Going back to the .stumpwmrc, notice how the port is set to 4004? I do that so
+that when you start SLY in Emacs, there are no errors because the default port
+is actually 4005. This ensures you can't mess up your WM by accident while
+writing unrelated code.
+[[https://kaashif.co.uk/2015/06/28/hacking-stumpwm-with-common-lisp/][kaashif.co.uk: Hacking StumpWM with Common Lisp]]
+
+#+begin_src lisp :tangle no
+(ql:quickload :slynk)
+(slynk:create-server :port 4004 :dont-close t)
+;; (slynk:create-server :port 4008)
+#+end_src
+
+*** Workspaces
+Stumpwm has only one workspace by default.
+#+begin_src lisp
+(defvar *ram/workspaces* (list "1" "2" "3"))
+;; rename the default workspace to "1"
+(stumpwm:grename (nth 0 *ram/workspaces*))
+;; create workspace "2" and "3"
+(dolist (workspace (cdr *ram/workspaces*))
+  (stumpwm:gnewbg workspace))
+#+end_src
+
+*** Set the prefix key
 #+begin_src lisp
 (run-shell-command "xmodmap $HOME/Projects/dots/modmap" t)
 (run-shell-command "xmodmap -e \'keycode 94 = F20\'" t)
 (set-prefix-key (kbd "F20"))
+;; (set-prefix-key (kbd "less"))
+#+end_src
 
+*** Key bindings
+#+begin_src lisp
 (define-key *root-map* (kbd "p") "exec dmenu_core")
 (define-key *root-map* (kbd "c") "exec alacritty")
 
+;; move to workspace
+(defvar *move-to-keybinds* (list "!" "@" "#"))
+(dotimes (y (length *ram/workspaces*))
+  (let ((workspace (write-to-string (+ y 1))))
+    (define-key *root-map* (kbd workspace) (concat "gselect " workspace))
+    (define-key *root-map* (kbd (nth y *move-to-keybinds*)) (concat "gmove-and-follow " workspace))))
+
 ;; define volume control keys
-;; (define-key *top-map* (kbd "XF86AudioLowerVolume") "exec amixer set Master 5%-")
-;; (define-key *top-map* (kbd "XF86AudioRaiseVolume") "exec amixer set Master 5%+")
-;; (define-key *top-map* (kbd "XF86AudioMute") "exec amixer set Master toggle")
+(define-key *top-map* (kbd "XF86AudioLowerVolume") "exec amixer set Master 5%-")
+(define-key *top-map* (kbd "XF86AudioRaiseVolume") "exec amixer set Master 5%+")
+(define-key *top-map* (kbd "XF86AudioMute") "exec amixer set Master toggle")
 ;; (define-key *top-map* (kbd "XF86AudioMicMute") "exec amixer set Capture toggle")
+
+(define-key *root-map* (kbd "R") "restart-hard")
+
+(define-key *root-map* (kbd "h") "move-focus left")
+(define-key *root-map* (kbd "j") "move-focus down")
+(define-key *root-map* (kbd "k") "move-focus up")
+(define-key *root-map* (kbd "l") "move-focus right")
+
+(define-key *root-map* (kbd "H") "move-window left")
+(define-key *root-map* (kbd "J") "move-window down")
+(define-key *root-map* (kbd "K") "move-window up")
+(define-key *root-map* (kbd "L") "move-window right")
 #+end_src
 
