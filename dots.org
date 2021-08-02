@@ -429,6 +429,7 @@ Highlight the the matching (){}[]
   (:states '(normal insert emacs)
            :keymaps 'org-mode-map
            "M-l" 'org-metaright
+	   "<tab>" 'org-cycle
            "M-h" 'org-metaleft)
   (:prefix ","
            :states 'normal
@@ -436,8 +437,6 @@ Highlight the the matching (){}[]
            "t" 'ram/org-set-tags
            "n" 'org-toggle-narrow-to-subtree))
 #+end_src
-
-#+RESULTS:
 
 *** evil
 #+begin_src emacs-lisp
@@ -732,7 +731,7 @@ Highlight the the matching (){}[]
   :hook
   (after-init . selectrum-mode)
   :config
-  (setq selectrum-prescient-enable-filtering nil)
+  ;; (setq selectrum-prescient-enable-filtering nil)
 
   (setq orderless-skip-highlighting (lambda () selectrum-is-active))
 
@@ -848,34 +847,20 @@ Highlight the the matching (){}[]
 Install cmake to be able to install vterm
 #+begin_src emacs-lisp
 (use-package vterm
-  :config
-  (defun evil-collection-vterm-escape-stay ()
-    "Go back to normal state but don't move
-cursor backwards. Moving cursor backwards is the default vim behavior but it is
-not appropriate in some cases like terminals."
-    (setq-local evil-move-cursor-back nil))
-
-  (add-hook 'vterm-mode-hook #'evil-collection-vterm-escape-stay)
-
   :general
   (:states 'insert
            :keymaps 'vterm-mode-map
-           "C-r" 'vterm-send-C-r))
+           "M-y" 'ram/vterm-consult-yank-pop
+           "<tab>" 'ram/vterm-completion))
 #+end_src
 
 *** vterm-toggle
 #+begin_src emacs-lisp
 (use-package vterm-toggle
   :init
-  ;; Toggle and change directory to current working directory vterm
-  (defun ram/toggle-vterm ()
-    (interactive)
-    (vterm-toggle)
-    (vterm-toggle-insert-cd)
-    (delete-other-windows))
   :general
   (:states '(emacs normal insert visual)
-           "M-`" 'ram/toggle-vterm))
+           "M-`" 'vterm-toggle-cd))
 #+end_src
 
 *** company
@@ -1509,7 +1494,11 @@ Search for character
          (racket-mode . lispy-mode)
          (hy-mode . lispy-mode)
          (lfe-mode . lispy-mode)
-         (clojure-mode . lispy-mode)))
+         (clojure-mode . lispy-mode))
+  :general
+  (:states '(emacs insert)
+           :keymaps 'lispy-mode-map
+           "M-a" 'lispy-wrap-round))
 #+end_src
 
 *** lispyville
@@ -1741,8 +1730,8 @@ sudo apt install gawk
            "C-<return>" 'yas-expand)
   (:states 'insert
            :keymaps 'yas-minor-mode-map
-           "C-l" 'yas-next-field
-           "C-h" 'yas-prev-field))
+           "M-l" 'yas-next-field
+           "M-h" 'yas-prev-field))
 #+end_src
 
 *** web-mode
@@ -2084,6 +2073,109 @@ The missing hash table library for Emacs
     ;; start-process quote the arguments so you do not need the sell-quote-argument function
     (start-process "ram-dired-open" nil "xdg-open" (dired-get-file-for-visit)))))
 #+end_src
+*** vterm functions
+**** Find file
+#+begin_src emacs-lisp
+(with-eval-after-load 'vterm
+  (push (list "find-file-below"
+              (lambda (path)
+                (if-let* ((buf (find-file-noselect path))
+                          (window (display-buffer-below-selected buf nil)))
+                    (select-window window)
+                  (message "Failed to open file: %s" path))))
+        vterm-eval-cmds))
+#+end_src
+
+**** Stay in the same positin when going back to normal mode
+#+begin_src emacs-lisp
+(with-eval-after-load 'vterm
+  (defun evil-collection-vterm-escape-stay ()
+    "Go back to normal state but don't move
+cursor backwards. Moving cursor backwards is the default vim behavior but it is
+not appropriate in some cases like terminals."
+    (setq-local evil-move-cursor-back nil))
+
+  (add-hook 'vterm-mode-hook #'evil-collection-vterm-escape-stay))
+#+end_src
+
+**** Vterm completion for files, directories, history and programs
+#+begin_src emacs-lisp
+(with-eval-after-load 'vterm
+  (defun ram/get-full-list ()
+    (let ((program-list (split-string (shell-command-to-string "compgen -c") "\n" t ))
+          (file-directory-list (split-string (shell-command-to-string "compgen -f") "\n" t ))
+          (history-list (with-temp-buffer
+                          (insert-file-contents "~/.bash_history")
+                          (split-string (buffer-string) "\n" t))))
+
+      (delete-dups (append program-list file-directory-list history-list))))
+
+  (defun ram/vterm-completion-choose-item ()
+    (completing-read "Choose: " (ram/get-full-list) nil nil (thing-at-point 'word 'no-properties)))
+
+(defun ram/vterm-completion ()
+  (interactive)
+  (vterm-directory-sync)
+  (let ((ram/vterm-chosen-item (ram/vterm-completion-choose-item)))
+    (when (thing-at-point 'word)
+      (vterm-send-meta-backspace))
+    (vterm-send-string ram/vterm-chosen-item))))
+#+end_src
+
+**** Consult-yank for vterm
+#+begin_src emacs-lisp
+(with-eval-after-load 'vterm
+  (advice-add #'insert-for-yank
+              :around
+              (defun ram/insert-for-yank-vterm-shim (orig-fun &rest args)
+                (if (eq major-mode 'vterm-mode)
+                    (let ((inhibit-read-only t))
+                      (apply #'vterm-insert args))
+                  (apply orig-fun args))))
+
+  (defun ram/vterm-consult-yank-pop (&optional arg)
+    "A `consult-yank-pop' wrapper for vterm compatibility."
+    (interactive "p")
+    (let ((inhibit-read-only t))
+      (consult-yank-pop arg))))
+#+end_src
+
+**** less like function for vterm
+#+begin_src emacs-lisp
+(with-eval-after-load 'vterm
+  (defun ram/menos ()
+    (switch-to-buffer "menos")
+    (when (get-buffer "menos")
+      (with-current-buffer "menos")
+      (erase-buffer)
+      (insert (substring-no-properties (x-get-clipboard)))))
+  ;; (current-kill 0)
+
+  (push (list "menos" 'ram/menos)
+        vterm-eval-cmds))
+#+end_src
+
+**** Open man pages in a emacs buffer
+#+begin_src emacs-lisp
+(with-eval-after-load 'vterm
+  (push (list "man" 'man)
+        vterm-eval-cmds))
+#+end_src
+
+**** Update the CWD
+#+begin_src emacs-lisp
+(defun vterm-directory-sync ()
+  "Synchronize current working directory."
+  (interactive)
+  (when vterm--process
+    (let* ((pid (process-id vterm--process))
+           (dir (file-truename (format "/proc/%d/cwd/" pid))))
+      (setq default-directory dir))))
+
+(with-eval-after-load 'vterm
+  (add-to-list 'vterm-eval-cmds '("update-pwd" (lambda (path) (setq default-directory path)))))
+#+end_src
+
 *** Get dart template (skeletor)
 #+begin_src emacs-lisp
 (defun ram/get-dart-template ()
@@ -2400,32 +2492,6 @@ Repeated invocations toggle between the two most recently open buffers."
 (defun ram/mount-drive ()
   (interactive)
   (async-start-process "udisksctl" "udisksctl" nil "mount" "-b" "/dev/sdb1"))
-#+end_src
-
-*** Functions for vterm
-#+begin_src emacs-lisp
-(with-eval-after-load 'vterm
-  (push (list "find-file-below"
-              (lambda (path)
-                (if-let* ((buf (find-file-noselect path))
-                          (window (display-buffer-below-selected buf nil)))
-                    (select-window window)
-                  (message "Failed to open file: %s" path))))
-        vterm-eval-cmds)
-
-  (defun ram/menos ()
-    (switch-to-buffer "menos")
-    (when (get-buffer "menos")
-      (with-current-buffer "menos")
-      (erase-buffer)
-      (insert (substring-no-properties (x-get-clipboard)))))
-  ;; (current-kill 0)
-
-  (push (list "menos" 'ram/menos)
-        vterm-eval-cmds)
-
-  (push (list "man" 'man)
-        vterm-eval-cmds))
 #+end_src
 
 *** Hiding dired buffers in ivy
@@ -2922,8 +2988,15 @@ export PATH="$HOME/bin/ccls/bin:$PATH"
 #+end_src
 
 *** eldev
+It is an alternative to Cask. Unlike Cask, Eldev itself is fully written in
+Elisp and its configuration files are also Elisp programs.
 #+begin_src sh
 export PATH="$HOME/bin/eldev:$PATH"
+#+end_src
+
+*** fd
+#+begin_src sh
+export PATH="$HOME/bin/fd:$PATH"
 #+end_src
 
 *** Deno
@@ -3066,6 +3139,9 @@ source ~/.config/bash-powerline/bash-powerline.sh
 
 ** Variables
 #+begin_src sh
+export HISTSIZE=10000
+export HISTFILESIZE=10000
+export HISTCONTROL=ignoreboth:erasedups
 export CXX="g++"
 export CC="gcc"
 export PATH="$HOME/bin/gcc-trunk/bin:$HOME/bin/build2/bin:$HOME/bin/cpp-libraries/bin:$HOME/bin/graphviz/bin:$PATH"
@@ -3150,7 +3226,7 @@ vterm_cmd() {
     vterm_printf "51;E$vterm_elisp"
 }
 #+end_src
-*** open file or dired in emacs when using vterm
+*** Open file or dired in emacs when using vterm
 #+begin_src sh
 op() {
     vterm_cmd find-file "$(realpath "$@")"
@@ -3165,11 +3241,19 @@ if [[ "$INSIDE_EMACS" = 'vterm' ]]; then
 fi
 
 #+end_src
+
 *** Use a temp buffer instead of less
 #+begin_src sh
 function menos() {
     xclip -selection clipboard
     vterm_cmd menos
+}
+#+end_src
+
+*** Update the CWD
+#+begin_src sh
+vterm_set_directory() {
+    vterm_cmd update-pwd "$PWD/"
 }
 #+end_src
 
