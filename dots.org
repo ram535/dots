@@ -379,7 +379,6 @@ Highlight the the matching (){}[]
   (org-confirm-babel-evaluate nil)
   ;; RETURN will follow links in org-mode files
   (org-return-follows-link  t)
-
   :config
   ;; Font size control of LateX previews in Org files
   (setq org-format-latex-options (plist-put org-format-latex-options :scale 1.5))
@@ -426,11 +425,9 @@ Highlight the the matching (){}[]
      (python . t)
      (emacs-lisp . t)))
   :general
-  (:states '(normal insert emacs)
+  (:states '(normal)
            :keymaps 'org-mode-map
-           "M-l" 'org-metaright
-	   "<tab>" 'org-cycle
-           "M-h" 'org-metaleft)
+           "<tab>" 'org-cycle)
   (:prefix ","
            :states 'normal
            :keymaps 'org-mode-map
@@ -755,9 +752,11 @@ Highlight the the matching (){}[]
 *** orderless
 #+begin_src emacs-lisp
 (use-package orderless
-  :init (icomplete-mode) ; optional but recommended!
-  :custom
-  (completion-styles '(orderless)))
+  :init (icomplete-mode)                ; optional but recommended!
+  :config
+  (setq completion-styles '(orderless)
+        completion-category-defaults nil
+        completion-category-overrides '((file (styles . (partial-completion))))))
 #+end_src
 
 *** consult
@@ -864,7 +863,7 @@ Install cmake to be able to install vterm
 #+end_src
 
 *** company
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (use-package company
   :custom
   (company-idle-delay 0)
@@ -903,6 +902,21 @@ Install cmake to be able to install vterm
   :general
   (:states '(emacs insert)
            "<tab>" 'fancy-dabbrev-expand-or-indent))
+#+end_src
+
+*** corfu
+#+begin_src emacs-lisp
+(use-package corfu
+  :init
+  (corfu-global-mode)
+  :custom
+  (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
+  :general
+  (:states 'insert
+           :keymaps 'corfu-mode-map
+           "C-n" 'corfu-next)
+  (:states 'insert
+           "C-." 'completion-at-point))
 #+end_src
 
 *** projectile
@@ -1241,7 +1255,7 @@ straight.el.
   :straight (sly :type git :host github :repo "joaotavora/sly")
   :custom (inferior-lisp-program "~/bin/sbcl/bin/sbcl --noinform")
   :commands sly
-  :config
+  :init
   ;; Activate common lisp highlight syntax to SBCL configuration file
   (add-to-list 'auto-mode-alist '("\\.sbclrc\\'" . lisp-mode))
   ;; Activate common lisp highlight syntax to Stumpwm configuration file
@@ -3373,13 +3387,12 @@ Remove the welcome message
 :PROPERTIES:
 :header-args: :tangle ~/.stumpwmrc
 :END:
-** Set super as prefix
-*** Have access to the sumpwm functions
+** Have access to the sumpwm functions
 #+begin_src lisp
 (in-package :stumpwm)
 #+end_src
 
-*** Connect sly to stumpwm
+** Connect sly to stumpwm
 Going back to the .stumpwmrc, notice how the port is set to 4004? I do that so
 that when you start SLY in Emacs, there are no errors because the default port
 is actually 4005. This ensures you can't mess up your WM by accident while
@@ -3392,7 +3405,7 @@ writing unrelated code.
 ;; (slynk:create-server :port 4008)
 #+end_src
 
-*** Workspaces
+** Workspaces
 Stumpwm has only one workspace by default.
 #+begin_src lisp
 (defvar *ram/workspaces* (list "1" "2" "3"))
@@ -3403,7 +3416,7 @@ Stumpwm has only one workspace by default.
   (stumpwm:gnewbg workspace))
 #+end_src
 
-*** Set the prefix key
+** Set the prefix key
 #+begin_src lisp
 (run-shell-command "xmodmap $HOME/Projects/dots/modmap" t)
 (run-shell-command "xmodmap -e \'keycode 94 = F20\'" t)
@@ -3411,34 +3424,76 @@ Stumpwm has only one workspace by default.
 ;; (set-prefix-key (kbd "less"))
 #+end_src
 
-*** Key bindings
+** Key bindings
+*** Programs
 #+begin_src lisp
 (define-key *root-map* (kbd "p") "exec dmenu_core")
 (define-key *root-map* (kbd "c") "exec alacritty")
+#+end_src
 
+*** Switch to a workspace
+#+begin_src lisp
 ;; move to workspace
 (defvar *move-to-keybinds* (list "!" "@" "#"))
 (dotimes (y (length *ram/workspaces*))
   (let ((workspace (write-to-string (+ y 1))))
     (define-key *root-map* (kbd workspace) (concat "gselect " workspace))
     (define-key *root-map* (kbd (nth y *move-to-keybinds*)) (concat "gmove-and-follow " workspace))))
+#+end_src
 
+*** Volume control
+#+begin_src lisp
 ;; define volume control keys
 (define-key *top-map* (kbd "XF86AudioLowerVolume") "exec amixer set Master 5%-")
 (define-key *top-map* (kbd "XF86AudioRaiseVolume") "exec amixer set Master 5%+")
 (define-key *top-map* (kbd "XF86AudioMute") "exec amixer set Master toggle")
 ;; (define-key *top-map* (kbd "XF86AudioMicMute") "exec amixer set Capture toggle")
+#+end_src
 
-(define-key *root-map* (kbd "R") "restart-hard")
-
+*** Windows focus
+#+begin_src lisp
 (define-key *root-map* (kbd "h") "move-focus left")
 (define-key *root-map* (kbd "j") "move-focus down")
 (define-key *root-map* (kbd "k") "move-focus up")
 (define-key *root-map* (kbd "l") "move-focus right")
+#+end_src
 
+*** Move windows around
+#+begin_src lisp
 (define-key *root-map* (kbd "H") "move-window left")
 (define-key *root-map* (kbd "J") "move-window down")
 (define-key *root-map* (kbd "K") "move-window up")
 (define-key *root-map* (kbd "L") "move-window right")
 #+end_src
 
+*** Restart
+#+begin_src lisp
+(define-key *root-map* (kbd "R") "restart-hard")
+#+end_src
+
+*** Show programs in every workspaces
+#+begin_src lisp
+(define-key *root-map* (kbd "0") "vgroups")
+#+end_src
+
+*** Brightness
+#+begin_src lisp
+;; (define-key *top-map* (kbd "XF86MonBrightnessUp") "backlight-up")
+;; (define-key *top-map* (kbd "XF86MonBrightnessDown") "backlight-down")
+#+end_src
+
+** Frame preference
+#+begin_src lisp :tangle no
+;;;; Frame Preferences
+(define-frame-preference "Default"
+    ;; frame raise lock (lock AND raise == jumpto)
+    (0 t   t :class "Firefox"))
+
+(define-frame-preference "MAIL"
+    ;; frame raise lock (lock AND raise == jumpto)
+    (0 t   t :class "Thunderbird"))
+
+(define-frame-preference "EMACS"
+    ;; frame raise lock (lock AND raise == jumpto)
+    (0 t   t :class "Emacs"))
+#+end_src
