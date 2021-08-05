@@ -806,29 +806,10 @@ Highlight the the matching (){}[]
 *** embark
 #+begin_src emacs-lisp
 (use-package embark
-  :after consult
-  :bind
-  ("C-S-a" . embark-act)               ; pick some comfortable binding
-  :config
-  ;; For Selectrum users:
-  (defun current-candidate+category ()
-    (when selectrum-active-p
-      (cons (selectrum--get-meta 'category)
-            (selectrum-get-current-candidate))))
-
-  (add-hook 'embark-target-finders #'current-candidate+category)
-
-  (defun current-candidates+category ()
-    (when selectrum-active-p
-      (cons (selectrum--get-meta 'category)
-            (selectrum-get-current-candidates
-             ;; Pass relative file names for dired.
-             minibuffer-completing-file-name))))
-
-  (add-hook 'embark-candidate-collectors #'current-candidates+category)
-
-  ;; No unnecessary computation delay after injection.
-  (add-hook 'embark-setup-hook 'selectrum-set-selected-candidate))
+  :general
+  (:states '(normal insert)
+           "C-;" 'embark-dwim
+           "C-c e" 'embark-act))
 #+end_src
 
 *** consult-projectile
@@ -2978,12 +2959,12 @@ if [ -d "$HOME/.local/bin" ] ; then
     PATH="$HOME/.local/bin:$PATH"
 fi
 #+end_src
-*** awk
+*** Awk
 #+begin_src sh
 export PATH="$HOME/bin/awk/bin:$PATH"
 export PATH="$HOME/.local/bin:$PATH"
 #+end_src
-*** build2
+*** Build2
 #+begin_src sh
 export "PATH=$HOME/bin/build2/bin:$PATH"
 #+end_src
@@ -2996,21 +2977,26 @@ export PATH="$HOME/bin/clang/bin:$PATH"
 # export LIBRARY_PATH="$HOME/bin/clang/lib:$LD_LIBRARY_PATH"
 #+end_src
 
-*** ccls
+*** Ccls
 #+begin_src sh
 export PATH="$HOME/bin/ccls/bin:$PATH"
 #+end_src
 
-*** eldev
+*** Eldev
 It is an alternative to Cask. Unlike Cask, Eldev itself is fully written in
 Elisp and its configuration files are also Elisp programs.
 #+begin_src sh
 export PATH="$HOME/bin/eldev:$PATH"
 #+end_src
 
-*** fd
+*** Fd
 #+begin_src sh
 export PATH="$HOME/bin/fd:$PATH"
+#+end_src
+
+*** Kmonad
+#+begin_src sh
+export PATH="$HOME/bin/kmonad:$PATH"
 #+end_src
 
 *** Deno
@@ -3140,8 +3126,9 @@ export PATH=$HOME/bin/ripgrep:$PATH
 
 ** Daemons
 #+begin_src sh
+kmonad $HOME/.config/kmonad/config.kbd &
 #+end_src
-* bashrc
+* Bashrc
 :PROPERTIES:
 :header-args: :tangle ~/.bashrc
 :END:
@@ -3306,7 +3293,7 @@ PS1=$PS1'\[$(vterm_prompt_end)\]'
 export PATH=$PATH:/home/last/.dcli/bin
 complete -o nospace -C 'dcli_complete' dcli
 #+end_src
-* zathura
+* Zathura
 :PROPERTIES:
 :header-args: :tangle ~/.config/zathura/zathurarc
 :END:
@@ -3318,37 +3305,7 @@ set smooth-scroll true
 set statusbar-basename true
 set selection-clipboard clipboard
 #+end_src
-* bspwm
-:PROPERTIES:
-:header-args: :tangle ~/.config/bspwm/bspwmrc
-:END:
-#+begin_src sh :tangle no
-#! /bin/sh
-
-sxhkd &
-
-bspc monitor -d I II III IV V VI VII VIII IX X
-
-# bspc config border_width         0
-# bspc config window_gap          12
-
-bspc config split_ratio          0.52
-bspc config borderless_monocle   true
-bspc config gapless_monocle      true
-
-# Use monocle layout on desktop 1
-bspc desktop '^1' --layout monocle
-bspc desktop '^2' --layout monocle
-bspc desktop '^3' --layout monocle
-bspc desktop '^4' --layout monocle
-
-bspc rule --add Emacs state=tiled
-bspc rule --add emacs-capture state=state=floating
-bspc rule --add Zathura state=tiled
-bspc rule --add Google-chrome state=tiled
-bspc rule --add File-roller state=tiled
-#+end_src
-* common lisp (.sbclrc)
+* Common lisp (.sbclrc)
 :PROPERTIES:
 :header-args: :tangle ~/.sbclrc
 :END:
@@ -3366,7 +3323,7 @@ bspc rule --add File-roller state=tiled
 ;; ~/bin/quicklisp/local-projects/system-index.txt
 (ql:register-local-projects)
 #+end_src
-* guile (.guile)
+* Guile (.guile)
 :PROPERTIES:
 :header-args: :tangle ~/.guile
 :END:
@@ -3383,13 +3340,17 @@ Remove the welcome message
 (module-set! (resolve-module '(system repl common))
              'repl-welcome (const #f))
 #+end_src
-* stumpwm
+* Stumpwm
 :PROPERTIES:
 :header-args: :tangle ~/.stumpwmrc
 :END:
 ** Have access to the sumpwm functions
 #+begin_src lisp
 (in-package :stumpwm)
+#+end_src
+** Startup programs
+#+begin_src lisp
+(run-shell-command "kmonad $HOME/.config/kmonad/config.kbd" t)
 #+end_src
 
 ** Connect sly to stumpwm
@@ -3418,9 +3379,9 @@ Stumpwm has only one workspace by default.
 
 ** Set the prefix key
 #+begin_src lisp
-(run-shell-command "xmodmap $HOME/Projects/dots/modmap" t)
-(run-shell-command "xmodmap -e \'keycode 94 = F20\'" t)
-(set-prefix-key (kbd "F20"))
+;; (run-shell-command "xmodmap $HOME/Projects/dots/modmap" t)
+;; (run-shell-command "xmodmap -e \'keycode 94 = F20\'" t)
+;; (set-prefix-key (kbd "F20"))
 ;; (set-prefix-key (kbd "less"))
 #+end_src
 
@@ -3497,3 +3458,100 @@ Stumpwm has only one workspace by default.
     ;; frame raise lock (lock AND raise == jumpto)
     (0 t   t :class "Emacs"))
 #+end_src
+* Kmonad
+:PROPERTIES:
+:header-args: :tangle ~/.config/kmonad/config.kbd
+:END:
+** Copy-out the following template to quickly create a layer
+
+#+begin_src lisp :tangle no
+#| --------------------------------------------------------------------------
+
+(deflayer base
+  _         _    _    _    _    _    _    _    _    _    _   _   _   _   _     _    _
+  _         _    _    _    _    _    _    _    _    _    _   _   _   _              _
+  _         _    _    _    _    _    _    _    _    _    _   _   _   _              _
+  _         _    _    _    _    _    _    _    _    _    _   _   _                  _
+  _    _    _    _    _    _    _    _    _    _    _    _   _       _              _
+  _         _    _         _         _    _    _                 _   _   _
+  )
+
+-------------------------------------------------------------------------- |#
+#+end_src
+
+** Basic system config
+The name given as the first argument to ~uinput-sink~ will be the
+name given to the virtual keyboard that KMonad creates.
+
+~input~ is the build-in notebook keyboard. If a keyboard is plug, the value
+has to be changed.
+
+~fallthrough~ just means that if a key is not define in the current layer,
+it will take the key value of the base layer.
+
+#+begin_src lisp
+(defcfg
+  input  (device-file "/dev/input/by-path/platform-i8042-serio-0-event-kbd")
+  output (uinput-sink "KMonad kbd"))
+
+#+end_src
+
+** Aliases
+#+begin_src lisp
+(defalias ct  C-t)
+
+(defalias
+  j  (tap-hold-next 150 j \()
+  k  (tap-hold-next 150 k \))
+  d  (tap-hold-next 150 d [)
+  f  (tap-hold-next 150 f ])
+  n  (tap-hold-next 150 n {)
+  m  (tap-hold-next 150 m })
+  r  (tap-next (around r u) [))
+
+(defalias
+  ;; sym (tap-hold-next 150 a (layer-toggle syms))
+  sym (tap-next a (layer-toggle syms))
+  bas (layer-toggle base))
+#+end_src
+
+** Source layer
+First up is the source (base) layer; this is used to set the default
+keys that will be overwritten later.  It is `not' a layer that will
+be used in the actual layout.
+
+#+begin_src lisp
+(defsrc
+  esc         f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11   f12    pause  prnt  ins  del
+  `           1    2    3    4    5    6    7    8    9    0    -     =      bspc              home
+  tab         q    w    e    r    t    y    u    i    o    p    [     ]      ret               pgup
+  caps        a    s    d    f    g    h    j    k    l    ;    '     \                        pgdn
+  lsft   102d z    x    c    v    b    n    m    ,    .    /    rsft         up                end
+  lctl        lmet lalt      spc       ralt cmps rctl                 left   down   rght
+  )
+
+#+end_src
+
+** Layers
+Since this is the first layer, it's the layout KMonad starts in.
+
+#+begin_src lisp
+(deflayer base
+  esc         f1    f2   f3   f4   f5   f6   f7   f8   f9   f10  f11   f12    pause  prnt  ins  del
+  `           1     2    3    4    5    6    7    8    9    0    -     =      caps              home
+  tab         q     w    e    r    t    y    u    i    o    p    [     ]      ret               pgup
+  bspc        @sym  s    d    f    g    h    j    k    l    ;    '     \                        pgdn
+  lsft  @ct   z     x    c    v    b    n    m    ,    .    /    rsft         up                end
+  lctl        lmet  lalt      spc       ralt cmps rctl                 left   down   rght
+  )
+
+(deflayer syms
+  _         _    _    _    _    _    _    _    _    _    _   _   _   _   _     _    _
+  _         _    _    _    _    _    _    _    _    _    _   _   _   _              _
+  _         _    _    ^    #    *    &    \_   =    -    `   _   _   _              _
+  _         _    _    /    \    {    }    [    ]    "    |   _   _                  _
+  _    _    _    _    ~    !    %    \(   \)   +    ?    _   _       _              _
+  _         _    _         _         _    _    _                 _   _   _
+  )
+#+end_src
+
