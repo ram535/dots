@@ -471,7 +471,6 @@ Highlight the the matching (){}[]
   (evil-set-initial-state 'pdf-view-mode 'emacs)
   (evil-set-initial-state 'pdf-annot-list-mode 'emacs)
   (evil-set-initial-state 'pdf-outline-buffer-mode 'emacs)
-  ;;(evil-mode 1)
   :general
   (:states '(emacs normal insert visual)
            "C-<tab>" 'tab-next
@@ -493,68 +492,7 @@ Highlight the the matching (){}[]
            "ga" 'evil-first-non-blank)
   (:states 'normal
            :prefix ","
-           "q" 'mode-line-other-buffer)
-  (:prefix "z"
-           :states 'insert
-           "o" 'insert-parentheses
-           "p" (lambda() (interactive) (insert ")"))
-           "a" (lambda() (interactive) (insert "&"))
-           "s" (lambda() (interactive) (insert "*"))
-           "g" (lambda() (interactive) (insert "#"))
-           "z" (lambda() (interactive) (insert "z"))
-           "q" (lambda() (interactive) (insert "@"))
-           "t" (lambda() (interactive) (insert "|"))
-           "r" (lambda() (interactive) (insert "\\"))
-           "i" (lambda() (interactive) (insert "="))
-           "\'" (lambda() (interactive) (insert "`"))
-           "h" (lambda() (interactive) (insert "~"))
-           "m" (lambda() (interactive) (insert "+"))
-           "," (lambda() (interactive) (insert "-"))
-           "u" (lambda() (interactive) (insert "_"))
-           "e" (lambda() (interactive) (insert "^"))
-           "w" (lambda() (interactive) (insert "%"))
-           "x" (lambda() (interactive) (insert "$")))
-  (:prefix "z"
-           :keymaps 'minibuffer-local-map
-           "o" 'insert-parentheses
-           "p" (lambda() (interactive) (insert ")"))
-           "a" (lambda() (interactive) (insert "&"))
-           "s" (lambda() (interactive) (insert "*"))
-           "g" (lambda() (interactive) (insert "#"))
-           "z" (lambda() (interactive) (insert "z"))
-           "q" (lambda() (interactive) (insert "@"))
-           "t" (lambda() (interactive) (insert "|"))
-           "r" (lambda() (interactive) (insert "\\"))
-           "i" (lambda() (interactive) (insert "="))
-           "\'" (lambda() (interactive) (insert "`"))
-           "h" (lambda() (interactive) (insert "~"))
-           "m" (lambda() (interactive) (insert "+"))
-           "," (lambda() (interactive) (insert "-"))
-           "u" (lambda() (interactive) (insert "_"))
-           "e" (lambda() (interactive) (insert "^"))
-           "w" (lambda() (interactive) (insert "%"))
-           "x" (lambda() (interactive) (insert "$")))
-  (:prefix "z"
-           :states 'insert
-           :keymaps 'vterm-mode-map
-           "o" (lambda() (interactive) (vterm-send-string "("))
-           "p" (lambda() (interactive) (vterm-send-string ")"))
-           "a" (lambda() (interactive) (vterm-send-string "&"))
-           "s" (lambda() (interactive) (vterm-send-string "*"))
-           "g" (lambda() (interactive) (vterm-send-string "#"))
-           "z" (lambda() (interactive) (vterm-send-string "z"))
-           "q" (lambda() (interactive) (vterm-send-string "@"))
-           "t" (lambda() (interactive) (vterm-send-string "|"))
-           "r" (lambda() (interactive) (vterm-send-string "\\"))
-           "i" (lambda() (interactive) (vterm-send-string "="))
-           "\'" (lambda() (interactive) (vterm-send-string "`"))
-           "h" (lambda() (interactive) (vterm-send-string "~"))
-           "m" (lambda() (interactive) (vterm-send-string "+"))
-           "," (lambda() (interactive) (vterm-send-string "-"))
-           "u" (lambda() (interactive) (vterm-send-string "_"))
-           "e" (lambda() (interactive) (vterm-send-string "^"))
-           "w" (lambda() (interactive) (vterm-send-string "%"))
-           "x" (lambda() (interactive) (vterm-send-string "$"))))
+           "q" 'mode-line-other-buffer))
 #+end_src
 
 *** evil-commentary
@@ -806,6 +744,7 @@ Highlight the the matching (){}[]
 *** embark
 #+begin_src emacs-lisp
 (use-package embark
+  ;; :keymaps 'minibuffer-local-map
   :general
   (:states '(normal insert)
            "C-;" 'embark-dwim
@@ -3501,18 +3440,7 @@ it will take the key value of the base layer.
 (defalias ct  C-t)
 
 (defalias
-  j  (tap-hold-next 150 j \()
-  k  (tap-hold-next 150 k \))
-  d  (tap-hold-next 150 d [)
-  f  (tap-hold-next 150 f ])
-  n  (tap-hold-next 150 n {)
-  m  (tap-hold-next 150 m })
-  r  (tap-next (around r u) [))
-
-(defalias
-  ;; sym (tap-hold-next 150 a (layer-toggle syms))
-  sym (tap-next a (layer-toggle syms))
-  bas (layer-toggle base))
+  sym (tap-next bspc (layer-toggle syms)))
 #+end_src
 
 ** Source layer
@@ -3538,9 +3466,9 @@ Since this is the first layer, it's the layout KMonad starts in.
 #+begin_src lisp
 (deflayer base
   esc         f1    f2   f3   f4   f5   f6   f7   f8   f9   f10  f11   f12    pause  prnt  ins  del
-  `           1     2    3    4    5    6    7    8    9    0    -     =      caps              home
+  `           1     2    3    4    5    6    7    8    9    0    -     =      bspc              home
   tab         q     w    e    r    t    y    u    i    o    p    [     ]      ret               pgup
-  bspc        @sym  s    d    f    g    h    j    k    l    ;    '     \                        pgdn
+  @sym        a     s    d    f    g    h    j    k    l    ;    '     \                        pgdn
   lsft  @ct   z     x    c    v    b    n    m    ,    .    /    rsft         up                end
   lctl        lmet  lalt      spc       ralt cmps rctl                 left   down   rght
   )
