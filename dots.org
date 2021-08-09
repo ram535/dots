@@ -379,6 +379,7 @@ Highlight the the matching (){}[]
   (org-confirm-babel-evaluate nil)
   ;; RETURN will follow links in org-mode files
   (org-return-follows-link  t)
+  (org-export-backends '(ascii beamer html latex md))
   :config
   ;; Font size control of LateX previews in Org files
   (setq org-format-latex-options (plist-put org-format-latex-options :scale 1.5))
@@ -473,11 +474,9 @@ Highlight the the matching (){}[]
   (evil-set-initial-state 'pdf-outline-buffer-mode 'emacs)
   :general
   (:states '(emacs normal insert visual)
-           "C-<tab>" 'tab-next
-           "C-c t" 'tab-new
            "M-k" 'ram/backward-kill-line)
   (:states '(normal motion)
-           "C-=" 'evil-scroll-up
+           "C-c r u" 'evil-scroll-up
            "j" 'evil-next-visual-line
            "k" 'evil-previous-visual-line
            "m" 'point-to-register
@@ -485,8 +484,7 @@ Highlight the the matching (){}[]
            ;; swap ; and :
            ";" 'evil-ex
            ":" 'evil-repeat-find-char
-           "gp" 'ram/evil-select-pasted
-           "C-<tab>" 'tab-next)
+           "gp" 'ram/evil-select-pasted)
   (:states '(normal visual)
            "ge" 'evil-last-non-blank
            "ga" 'evil-first-non-blank)
@@ -779,7 +777,7 @@ Install cmake to be able to install vterm
   :init
   :general
   (:states '(emacs normal insert visual)
-           "M-`" 'vterm-toggle-cd))
+           "C-c r v" 'vterm-toggle-cd))
 #+end_src
 
 *** company
@@ -3287,11 +3285,6 @@ Remove the welcome message
 #+begin_src lisp
 (in-package :stumpwm)
 #+end_src
-** Startup programs
-#+begin_src lisp
-(run-shell-command "kmonad $HOME/.config/kmonad/config.kbd" t)
-#+end_src
-
 ** Connect sly to stumpwm
 Going back to the .stumpwmrc, notice how the port is set to 4004? I do that so
 that when you start SLY in Emacs, there are no errors because the default port
@@ -3351,24 +3344,24 @@ Stumpwm has only one workspace by default.
 #+end_src
 
 *** Windows focus
-#+begin_src lisp
-(define-key *root-map* (kbd "h") "move-focus left")
-(define-key *root-map* (kbd "j") "move-focus down")
-(define-key *root-map* (kbd "k") "move-focus up")
-(define-key *root-map* (kbd "l") "move-focus right")
+#+begin_src lisp :tangle no
+;; (define-key *root-map* (kbd "h") "move-focus left")
+;; (define-key *root-map* (kbd "j") "move-focus down")
+;; (define-key *root-map* (kbd "k") "move-focus up")
+;; (define-key *root-map* (kbd "l") "move-focus right")
 #+end_src
 
 *** Move windows around
-#+begin_src lisp
-(define-key *root-map* (kbd "H") "move-window left")
-(define-key *root-map* (kbd "J") "move-window down")
-(define-key *root-map* (kbd "K") "move-window up")
-(define-key *root-map* (kbd "L") "move-window right")
+#+begin_src lisp :tangle no
+;; (define-key *root-map* (kbd "H") "move-window left")
+;; (define-key *root-map* (kbd "J") "move-window down")
+;; (define-key *root-map* (kbd "K") "move-window up")
+;; (define-key *root-map* (kbd "L") "move-window right")
 #+end_src
 
 *** Restart
-#+begin_src lisp
-(define-key *root-map* (kbd "R") "restart-hard")
+#+begin_src lisp :tangle no
+;; (define-key *root-map* (kbd "R") "restart-hard")
 #+end_src
 
 *** Show programs in every workspaces
@@ -3432,15 +3425,90 @@ it will take the key value of the base layer.
 (defcfg
   input  (device-file "/dev/input/by-path/platform-i8042-serio-0-event-kbd")
   output (uinput-sink "KMonad kbd"))
-
 #+end_src
 
 ** Aliases
+*** Other aliases
 #+begin_src lisp
 (defalias ct  C-t)
 
+(defalias ls-def (layer-switch default))
+(defalias ls-sym (layer-switch symbols))
+#+end_src
+
+*** Layout aliases
+#+begin_src lisp
 (defalias
-  sym (tap-next bspc (layer-toggle syms)))
+  lip (layer-switch lisp)
+  def (layer-switch default)
+  hl (layer-switch handler)
+  win (layer-switch window)
+  ema (layer-switch emacs)
+  sym (layer-switch symbols))
+#+end_src
+*** Window manager aliases
+#+begin_src lisp
+;; Window manager
+(defalias
+  ctt #(@ct @ct @ls-def)
+  ct1 #(@ct P20 1 @ls-def)
+  ct2 #(@ct P20 2 @ls-def)
+  ct3 #(@ct P20 3 @ls-def)
+  pro #(@ct P50 p @ls-def)
+  )
+#+end_src
+
+*** Emacs aliases
+#+begin_src lisp
+;; emacs
+(defalias
+  ;; other-window
+  cxo #(C-x o @ls-def)
+  ;; toggle vterm
+  ccv #(C-c r v @ls-def)
+  ;; tab-next
+  cxto #(C-x t o @ls-def)
+  ;; evil-scroll-down
+  cd #(C-d @ls-def)
+  ;; evil-scroll-up
+  ccru #(C-c r u @ls-def)
+  ;; delete-window
+  cx0 #(C-x 0 @ls-def)
+  ;; delete-other-window
+  cx1 #(C-x 1 @ls-def)
+  ;; tab-new
+  cxt2 #(C-x t 2 @ls-def)
+  )
+#+end_src
+
+*** Symbols aliases
+#+begin_src lisp
+;; symbols
+(defalias
+  [ #([ @ls-def)
+  ] #(] @ls-def)
+  op #(\( @ls-def)
+  cp #(\) @ls-def)
+  { #({ @ls-def)
+  } #(} @ls-def)
+  & #(& @ls-def)
+  ,* #(* @ls-def)
+  / #(/ @ls-def)
+  r/ #(\\ @ls-def)
+  ex #(^ @ls-def)
+  = #(= @ls-def)
+  ` #(` @ls-def)
+  ~ #(~ @ls-def)
+  at #(@ @ls-def)
+  us #(\_ @ls-def)
+  - #(- @ls-def)
+  | #(| @ls-def)
+  ; #(; @ls-def)
+  + #(+ @ls-def)
+  ? #(? @ls-def)
+  % #(% @ls-def)
+  ! #(! @ls-def)
+  # #(# @ls-def))
 #+end_src
 
 ** Source layer
@@ -3457,29 +3525,79 @@ be used in the actual layout.
   lsft   102d z    x    c    v    b    n    m    ,    .    /    rsft         up                end
   lctl        lmet lalt      spc       ralt cmps rctl                 left   down   rght
   )
-
 #+end_src
 
 ** Layers
+*** Default layer
 Since this is the first layer, it's the layout KMonad starts in.
-
 #+begin_src lisp
-(deflayer base
+(deflayer default
   esc         f1    f2   f3   f4   f5   f6   f7   f8   f9   f10  f11   f12    pause  prnt  ins  del
-  `           1     2    3    4    5    6    7    8    9    0    -     =      bspc              home
+  `           1     2    3    4    5    6    7    8    9    0    -     =      caps              home
   tab         q     w    e    r    t    y    u    i    o    p    [     ]      ret               pgup
-  @sym        a     s    d    f    g    h    j    k    l    ;    '     \                        pgdn
+  bspc        a     s    d    f    g    h    j    k    l    @hl  '     \                        pgdn
   lsft  @ct   z     x    c    v    b    n    m    ,    .    /    rsft         up                end
   lctl        lmet  lalt      spc       ralt cmps rctl                 left   down   rght
   )
+#+end_src
 
-(deflayer syms
+*** Intermediate layer
+#+begin_src lisp
+(deflayer handler
+  _         _    _    _    _    _    _    _    _    _    _     _   _   _   _     _    _
+  _         _    _    _    _    _    _    _    _    _    _     _   _   _              _
+  _         _    _    @ema _    _    _    _    _    _    _     _   _   _              _
+  _         _    _    _    @sym _    _    _    _    @lip @ctt  _   _                  _
+  _    _    _    _    _    _    _    _    _    _    _    _     _       _              _
+  _         _    _         @win      @def _    _                   _   _   _
+  )
+#+end_src
+
+*** Symbols layer
+#+begin_src lisp
+(deflayer symbols
   _         _    _    _    _    _    _    _    _    _    _   _   _   _   _     _    _
   _         _    _    _    _    _    _    _    _    _    _   _   _   _              _
-  _         _    _    ^    #    *    &    \_   =    -    `   _   _   _              _
-  _         _    _    /    \    {    }    [    ]    "    |   _   _                  _
-  _    _    _    _    ~    !    %    \(   \)   +    ?    _   _       _              _
-  _         _    _         _         _    _    _                 _   _   _
+  _         @~   @at  @ex  @`   _    _    @us  @=   @-   _   _   _   _              _
+  _         @&   @*   @op  @cp  @/   @r/  @[   @]   @|   @;  _   _                  _
+  _    _    _    @#   @%   @!   _    @{   @}   @+   @?   _   _       _              _
+  _         _    _         _         @def _    _                 _   _   _
+  )
+#+end_src
+
+*** Window manager layer
+#+begin_src lisp
+(deflayer window
+  _         _    _    _    _    _    _    _    _    _    _     _   _   _   _     _    _
+  _         _    _    _    _    _    _    _    _    _    _     _   _   _              _
+  _         _    _    _    _    _    _    _    _    _    @pro  _   _   _              _
+  _         @ct1 @ct2 @ct3 _    _    _    _    _    _    _     _   _                  _
+  _    _    _    _    _    _    _    _    _    _    _    _     _       _              _
+  _         _    _         _         @def _    _                   _   _   _
+  )
+#+end_src
+
+*** Emacs layer
+#+begin_src lisp
+(deflayer emacs
+  _         _    _    _    _    _     _    _    _     _    _     _   _   _   _     _    _
+  _         _    _    _    _    _     _    _    _     _    _     _   _   _              _
+  @cxto     _    _    _    _    @cxt2 _    _    _     @cx0 _     _   _   _              _
+  _         _    _    _    _    _     _    @cd  @ccru _    _     _   _                  _
+  _    _    _    _    _    @ccv _     _    @cx1 _     _    _     _       _              _
+  _         _    _         @cxo       @def _    _                    _   _   _
+  )
+#+end_src
+
+*** Lisp layer
+#+begin_src lisp
+(deflayer lisp
+  esc         f1    f2   f3   f4   f5   f6   f7   f8   f9   f10  f11   f12    pause  prnt  ins  del
+  `           1     2    3    4    5    6    7    8    9    0    -     =      caps              home
+  tab         q     w    e    r    t    y    u    i    o    p    [     ]      ret               pgup
+  bspc        a     s    d    f    g    h    [    k    l    ;    '     \                        pgdn
+  lsft  @ct   z     x    c    v    b    n    m    ,    .    /    rsft         up                end
+  lctl        lmet  lalt      spc       @def cmps rctl                 left   down   rght
   )
 #+end_src
 
