@@ -473,25 +473,25 @@ Highlight the the matching (){}[]
   (evil-set-initial-state 'pdf-annot-list-mode 'emacs)
   (evil-set-initial-state 'pdf-outline-buffer-mode 'emacs)
   :general
-  (:states '(emacs normal insert visual)
-           "M-k" 'ram/backward-kill-line)
-  (:states '(normal motion)
+  (:states '(emacs normal motion insert visual)
+           "C-c r k" 'ram/backward-kill-line
            "C-c r u" 'evil-scroll-up
+           "C-c r d" 'evil-scroll-down
+           "C-c r f" 'forward-char
+           "C-c r b" 'backward-char
+           "C-c r p" 'previous-line
+           "C-c r n" 'next-line
+           "C-c r a" 'evil-first-non-blank
+           "C-c r s" 'evil-last-non-blank
+           "C-c r ," 'mode-line-other-buffer
+           "C-c r m" 'org-toggle-narrow-to-subtree)
+  (:states '(normal motion)
            "j" 'evil-next-visual-line
            "k" 'evil-previous-visual-line
            "m" 'point-to-register
            "'" 'jump-to-register
-           ;; swap ; and :
-           ";" 'evil-ex
-           ":" 'evil-repeat-find-char
-           "gp" 'ram/evil-select-pasted)
-  (:states '(normal visual)
-           "ge" 'evil-last-non-blank
-           "ga" 'evil-first-non-blank)
-  (:states 'normal
-           :prefix ","
-           "q" 'mode-line-other-buffer))
-#+end_src
+           "gp" 'ram/evil-select-pasted))
+           #+end_src
 
 *** evil-commentary
 #+begin_src emacs-lisp
@@ -715,10 +715,10 @@ Highlight the the matching (){}[]
   :after consult
   :bind (:map minibuffer-local-map
               ("C-M-a" . marginalia-cycle)
-         ;; When using the Embark package, you can bind `marginalia-cycle' as an Embark action!
-         ;;:map embark-general-map
-         ;;     ("A" . marginalia-cycle)
-        )
+              ;; When using the Embark package, you can bind `marginalia-cycle' as an Embark action!
+              ;;:map embark-general-map
+              ;;     ("A" . marginalia-cycle)
+              )
 
   ;; The :init configuration is always executed (Not lazy!)
   :init
@@ -856,17 +856,17 @@ Install cmake to be able to install vterm
   (add-to-list 'projectile-project-root-files-bottom-up "lisp.org")
   (add-to-list 'projectile-project-root-files-bottom-up "dev_deps.ts")
 
-(projectile-register-project-type 'lisp '("lisp.org" "README.markdown")
-                                  :src-dir "src/"
-                                  :related-files-fn (list
-                                                     (projectile-related-files-fn-groups
-                                                      :test
-                                                      '(("src/main.lisp"
-                                                         "test/main.lisp"))))
+  (projectile-register-project-type 'lisp '("lisp.org" "README.markdown")
+                                    :src-dir "src/"
+                                    :related-files-fn (list
+                                                       (projectile-related-files-fn-groups
+                                                        :test
+                                                        '(("src/main.lisp"
+                                                           "test/main.lisp"))))
 
-                                  :test (format "sbcl --noinform --non-interactive --eval '(ql:quickload \"%s/tests\")' --eval '(asdf:test-system :%s)'" (projectile-project-name) (projectile-project-name))
-                                  :test-dir "tests/"
-                                  :test-suffix "")
+                                    :test (format "sbcl --noinform --non-interactive --eval '(ql:quickload \"%s/tests\")' --eval '(asdf:test-system :%s)'" (projectile-project-name) (projectile-project-name))
+                                    :test-dir "tests/"
+                                    :test-suffix "")
 
   (projectile-register-project-type 'dart '("pubspec.yaml")
                                     :test "dart run test"
@@ -941,15 +941,15 @@ difficult to read.
   ;;   (when (eq major-mode 'compilation-mode)
   ;;     (ansi-color-apply-on-region compilation-filter-start (point))))
   (defun my-colorize-compilation-buffer ()
-  (toggle-read-only)
-  (ansi-color-apply-on-region (point-min) (point-max))
-  (toggle-read-only))
+    (toggle-read-only)
+    (ansi-color-apply-on-region (point-min) (point-max))
+    (toggle-read-only))
   ;; (defun my-colorize-compilation-buffer ()
   ;;   (when (eq major-mode 'compilation-mode)
   ;;     (ansi-color-apply-on-region compilation-filter-start (point-max))))
   :hook (compilation-filter . my-colorize-compilation-buffer)
   :config
-    (add-hook 'compilation-filter-hook 'ansi-color-for-comint-mode-on))
+  (add-hook 'compilation-filter-hook 'ansi-color-for-comint-mode-on))
 #+end_src
 
 *** magit
@@ -964,7 +964,7 @@ difficult to read.
   (magit-repository-directories
    '(("~/Projects" . 1)))
   :general
-    (:states 'normal
+  (:states 'normal
            :prefix ","
            "s" 'magit-status))
 #+end_src
@@ -1019,10 +1019,10 @@ difficult to read.
   :straight (:type built-in)
   :general
   (:states 'normal
-         :keymaps 'prog-mode-map
-         "<f6>" 'async-shell-command
-         "gc" 'evil-commentary
-         "gb" 'evil-jump-backward))
+           :keymaps 'prog-mode-map
+           "<f6>" 'async-shell-command
+           "gc" 'evil-commentary
+           "gb" 'evil-jump-backward))
 #+end_src
 
 *** c-mode and c++-mode
@@ -1066,14 +1066,14 @@ straight.el.
   :defer 3
   :config
   (add-hook 'js-mode-hook (lambda () (setq js-indent-level 2
-                                      tab-width 2)))
+                                           tab-width 2)))
   (general-define-key
    :states '(emacs normal insert visual)
    :keymaps 'js-mode-map
    "<f5>" (lambda()
-             (interactive)
-             (async-shell-command
-              (concat "node " (buffer-file-name)) "*javascript output*"))
+            (interactive)
+            (async-shell-command
+             (concat "node " (buffer-file-name)) "*javascript output*"))
    "C-;" 'ram/insertSemicolon))
 #+end_src
 
@@ -1089,9 +1089,9 @@ straight.el.
    :states 'normal
    :keymaps 'python-mode-map
    "<f5>" (lambda()
-             (interactive)
-             (async-shell-command
-              (concat "python " (buffer-file-name)) "*python output*"))))
+            (interactive)
+            (async-shell-command
+             (concat "python " (buffer-file-name)) "*python output*"))))
 
 #+end_src
 
@@ -1124,9 +1124,9 @@ straight.el.
   (:states 'normal
            :keymaps 'go-mode-map
            "<f5>" (lambda()
-                     (interactive)
-                     (async-shell-command
-                      (concat "go run " (buffer-file-name)) "*go output*"))))
+                    (interactive)
+                    (async-shell-command
+                     (concat "go run " (buffer-file-name)) "*go output*"))))
 #+end_src
 
 *** json-mode
@@ -1230,11 +1230,11 @@ straight.el.
   (setq lsp-use-plists t)
   :general
   (:states 'normal
-         :keymaps 'lsp-mode-map
-         "<f9>" 'lsp-ui-imenu
-         "gd" 'lsp-find-definition
-         "gp" 'lsp-ui-peek-find-references
-         "K" 'lsp-ui-doc-mode))
+           :keymaps 'lsp-mode-map
+           "<f9>" 'lsp-ui-imenu
+           "gd" 'lsp-find-definition
+           "gp" 'lsp-ui-peek-find-references
+           "K" 'lsp-ui-doc-mode))
 #+end_src
 
 *** lsp-ui
@@ -1275,8 +1275,8 @@ straight.el.
   :after lsp
   :straight (lsp-pyright :type git :host github :repo "emacs-lsp/lsp-pyright")
   :hook (python-mode . (lambda ()
-                          (require 'lsp-pyright)
-                          (lsp))))  ; or lsp-deferred
+                         (require 'lsp-pyright)
+                         (lsp))))  ; or lsp-deferred
 #+end_src
 
 *** treemacs
@@ -1348,8 +1348,8 @@ Search for character
 #+begin_src emacs-lisp
 (use-package avy
   :general
-    (:states '(normal motion)
-             "f" 'avy-goto-char-2))
+  (:states '(normal motion)
+           "f" 'avy-goto-char-2))
 #+end_src
 
 *** smartparens
@@ -1997,8 +1997,8 @@ The missing hash table library for Emacs
     (dired-find-file))
    ;; use dired-find-file if the mime type of the file is emacs.desktop
    ((string= "emacs.desktop" (string-trim-right (shell-command-to-string
-                                                   (format "xdg-mime query filetype %s | xargs xdg-mime query default"
-                                                           (shell-quote-argument (dired-get-file-for-visit))))))
+                                                 (format "xdg-mime query filetype %s | xargs xdg-mime query default"
+                                                         (shell-quote-argument (dired-get-file-for-visit))))))
     (dired-find-file))
    (t
     ;; use xdg-open for everything else
@@ -2045,13 +2045,13 @@ not appropriate in some cases like terminals."
   (defun ram/vterm-completion-choose-item ()
     (completing-read "Choose: " (ram/get-full-list) nil nil (thing-at-point 'word 'no-properties)))
 
-(defun ram/vterm-completion ()
-  (interactive)
-  (vterm-directory-sync)
-  (let ((ram/vterm-chosen-item (ram/vterm-completion-choose-item)))
-    (when (thing-at-point 'word)
-      (vterm-send-meta-backspace))
-    (vterm-send-string ram/vterm-chosen-item))))
+  (defun ram/vterm-completion ()
+    (interactive)
+    (vterm-directory-sync)
+    (let ((ram/vterm-chosen-item (ram/vterm-completion-choose-item)))
+      (when (thing-at-point 'word)
+        (vterm-send-meta-backspace))
+      (vterm-send-string ram/vterm-chosen-item))))
 #+end_src
 
 **** Consult-yank for vterm
@@ -2112,15 +2112,15 @@ not appropriate in some cases like terminals."
 #+begin_src emacs-lisp
 (defun ram/get-dart-template ()
   (->> (shell-command-to-string "dart create")
-    (s-slice-at "^Available templates")
-    cadr
-    (s-split "\n")
-    cdr
-    (remove "")
-    (mapcar 's-trim)
-    (completing-read "Choose: ")
-    (s-split ":")
-    car))
+       (s-slice-at "^Available templates")
+       cadr
+       (s-split "\n")
+       cdr
+       (remove "")
+       (mapcar 's-trim)
+       (completing-read "Choose: ")
+       (s-split ":")
+       car))
 #+end_src
 
 *** Get flutter template (skeletor)
@@ -2258,7 +2258,7 @@ TAG is chosen interactively from the global tags completion table."
   (interactive)
   (let ((start-marker (evil-get-marker ?\[))
         (end-marker (evil-get-marker ?\])))
-        (evil-visual-select start-marker end-marker)))
+    (evil-visual-select start-marker end-marker)))
 #+end_src
 *** Insert list of files in buffer
 Insert list of files recursively
@@ -2287,8 +2287,8 @@ directories with "*" org-mode headers
 (defun ram/change-mime-emacs ()
   (interactive)
   (message "The old default app was %s\n" (shell-command-to-string
-                                         (format "xdg-mime query filetype %s | xargs xdg-mime query default"
-                                                 (shell-quote-argument (dired-get-file-for-visit)))))
+                                           (format "xdg-mime query filetype %s | xargs xdg-mime query default"
+                                                   (shell-quote-argument (dired-get-file-for-visit)))))
 
   (shell-command (format "xdg-mime query filetype %s | xargs xdg-mime default emacs.desktop"
                          (shell-quote-argument (dired-get-file-for-visit))))
@@ -2327,8 +2327,8 @@ directories with "*" org-mode headers
   "Insert semicolon end of line"
   (interactive)
   (save-excursion
-  (end-of-line)
-  (insert ";")))
+    (end-of-line)
+    (insert ";")))
 #+end_src
 
 *** realign existing contents of buffer on column-width
@@ -2344,8 +2344,8 @@ directories with "*" org-mode headers
 *** Cycle in the kill-ring reverse direction
 #+begin_src emacs-lisp
 (defun ram/yank-pop-forwards (arg)
-      (interactive "p")
-      (yank-pop (- arg)))
+  (interactive "p")
+  (yank-pop (- arg)))
 #+end_src
 
 *** Projectile functions
@@ -2507,7 +2507,7 @@ window configurations are applied."
                                                  ns
                                                  (if (= 1 ns) "" "s")
                                                  (format-time-string "%c" (frameset-timestamp fs))))
-                                  #'jump-to-register))
+                                       #'jump-to-register))
 
                                 ;; Keyboard Macros
                                 ((pred kmacro-register-p)
@@ -2683,8 +2683,8 @@ window configurations are applied."
         (push-mark (point) t)
         ;; Manually edit history to remove line numbers.
         (setcar selectrum-outline-history (substring chosen-heading
-                                                    ;; Want after line-prefix followed by ": ".
-                                                    (+ (length line-number-prefix) 2)))
+                                                     ;; Want after line-prefix followed by ": ".
+                                                     (+ (length line-number-prefix) 2)))
         ;; Using `goto-line' isn't recommended for non-interactive use.
         (forward-line (- chosen-line-number current-line-number))
         (beginning-of-line-text 1)))))
@@ -3431,18 +3431,17 @@ it will take the key value of the base layer.
 *** Other aliases
 #+begin_src lisp
 (defalias ct  C-t)
-
-(defalias ls-def (layer-switch default))
-(defalias ls-sym (layer-switch symbols))
 #+end_src
 
 *** Layout aliases
 #+begin_src lisp
+(defalias nav (tap-next lctl (layer-toggle navegation)))
+
 (defalias
-  lip (layer-switch lisp)
   def (layer-switch default)
   hl (layer-switch handler)
   win (layer-switch window)
+  qem (layer-switch quick-emacs)
   ema (layer-switch emacs)
   sym (layer-switch symbols))
 #+end_src
@@ -3450,34 +3449,31 @@ it will take the key value of the base layer.
 #+begin_src lisp
 ;; Window manager
 (defalias
-  ctt #(@ct @ct @ls-def)
-  ct1 #(@ct P20 1 @ls-def)
-  ct2 #(@ct P20 2 @ls-def)
-  ct3 #(@ct P20 3 @ls-def)
-  pro #(@ct P50 p @ls-def)
+  ctt #(@ct P20 @ct @def)
+  ct1 #(@ct P20 1 @def)
+  ct2 #(@ct P20 2 @def)
+  ct3 #(@ct P20 3 @def)
+  pro #(@ct P50 p @def)
   )
 #+end_src
 
 *** Emacs aliases
 #+begin_src lisp
-;; emacs
 (defalias
   ;; other-window
-  cxo #(C-x o @ls-def)
+  cxo #(C-x o @def)
   ;; toggle vterm
-  ccv #(C-c r v @ls-def)
+  ccv #(C-c r v @def)
   ;; tab-next
-  cxto #(C-x t o @ls-def)
-  ;; evil-scroll-down
-  cd #(C-d @ls-def)
-  ;; evil-scroll-up
-  ccru #(C-c r u @ls-def)
+  cxto #(C-x t o @def)
   ;; delete-window
-  cx0 #(C-x 0 @ls-def)
+  cx0 #(C-x 0 @def)
   ;; delete-other-window
-  cx1 #(C-x 1 @ls-def)
+  cx1 #(C-x 1 @def)
   ;; tab-new
-  cxt2 #(C-x t 2 @ls-def)
+  cxt2 #(C-x t 2 @def)
+  ;; save-buffer
+  cxcs #(C-x C-s)
   )
 #+end_src
 
@@ -3485,30 +3481,66 @@ it will take the key value of the base layer.
 #+begin_src lisp
 ;; symbols
 (defalias
-  [ #([ @ls-def)
-  ] #(] @ls-def)
-  op #(\( @ls-def)
-  cp #(\) @ls-def)
-  { #({ @ls-def)
-  } #(} @ls-def)
-  & #(& @ls-def)
-  ,* #(* @ls-def)
-  / #(/ @ls-def)
-  r/ #(\\ @ls-def)
-  ex #(^ @ls-def)
-  = #(= @ls-def)
-  ` #(` @ls-def)
-  ~ #(~ @ls-def)
-  at #(@ @ls-def)
-  us #(\_ @ls-def)
-  - #(- @ls-def)
-  | #(| @ls-def)
-  ; #(; @ls-def)
-  + #(+ @ls-def)
-  ? #(? @ls-def)
-  % #(% @ls-def)
-  ! #(! @ls-def)
-  # #(# @ls-def))
+  [ #([ @def)
+  ] #(] @def)
+  op #(\( @def)
+  cp #(\) @def)
+  { #({ @def)
+  } #(} @def)
+  & #(& @def)
+  ,* #(* @def)
+  / #(/ @def)
+  r/ #(\\ @def)
+  ex #(^ @def)
+  = #(= @def)
+  ` #(` @def)
+  ~ #(~ @def)
+  at #(@ @def)
+  us #(\_ @def)
+  - #(- @def)
+  | #(| @def)
+  ; #(; @def)
+  + #(+ @def)
+  ? #(? @def)
+  % #(% @def)
+  ! #(! @def)
+  # #(# @def)
+  < #(< @def)
+  > #(> @def)
+  : #(: @def)
+  , #(, @def)
+)
+#+end_src
+
+*** Navegation access aliases
+#+begin_src lisp
+(defalias
+  ;; move forward
+  ccrf #(C-c r f)
+  ;; move backward
+  ccrb #(C-c r b)
+  ;; move up
+  ccrp #(C-c r p)
+  ;; move down
+  ccrn #(C-c r n)
+  ;; scroll half page up
+  ccru #(C-c r u)
+  ;; scroll half page down
+  ccrd #(C-c r d)
+  ;; go beginning line
+  ccra #(C-c r a)
+  ;; go end line
+  ccrs #(C-c r s)
+  ;; org-toggle-narrow-to-subtree
+  ccrm #(C-c r m)
+  )
+#+end_src
+
+*** Quick emacs aliases
+#+begin_src lisp
+(defalias
+  ;; previous buffer
+  ccr, #(C-c r , @def))
 #+end_src
 
 ** Source layer
@@ -3530,13 +3562,14 @@ be used in the actual layout.
 ** Layers
 *** Default layer
 Since this is the first layer, it's the layout KMonad starts in.
+
 #+begin_src lisp
 (deflayer default
   esc         f1    f2   f3   f4   f5   f6   f7   f8   f9   f10  f11   f12    pause  prnt  ins  del
-  `           1     2    3    4    5    6    7    8    9    0    -     =      caps              home
+  `           1     2    3    4    5    6    7    8    9    0    -     =      bspc              home
   tab         q     w    e    r    t    y    u    i    o    p    [     ]      ret               pgup
-  bspc        a     s    d    f    g    h    j    k    l    @hl  '     \                        pgdn
-  lsft  @ct   z     x    c    v    b    n    m    ,    .    /    rsft         up                end
+  @nav        a     s    d    f    g    h    j    k    l    @hl  '     \                        pgdn
+  lsft  @ct   z     x    c    v    b    n    m    @qem .    /    rsft         up                end
   lctl        lmet  lalt      spc       ralt cmps rctl                 left   down   rght
   )
 #+end_src
@@ -3547,7 +3580,7 @@ Since this is the first layer, it's the layout KMonad starts in.
   _         _    _    _    _    _    _    _    _    _    _     _   _   _   _     _    _
   _         _    _    _    _    _    _    _    _    _    _     _   _   _              _
   _         _    _    @ema _    _    _    _    _    _    _     _   _   _              _
-  _         _    _    _    @sym _    _    _    _    @lip @ctt  _   _                  _
+  _         _    _    _    @sym _    _    _    _    _    @ctt  _   _                  _
   _    _    _    _    _    _    _    _    _    _    _    _     _       _              _
   _         _    _         @win      @def _    _                   _   _   _
   )
@@ -3558,9 +3591,9 @@ Since this is the first layer, it's the layout KMonad starts in.
 (deflayer symbols
   _         _    _    _    _    _    _    _    _    _    _   _   _   _   _     _    _
   _         _    _    _    _    _    _    _    _    _    _   _   _   _              _
-  _         @~   @at  @ex  @`   _    _    @us  @=   @-   _   _   _   _              _
-  _         @&   @*   @op  @cp  @/   @r/  @[   @]   @|   @;  _   _                  _
-  _    _    _    @#   @%   @!   _    @{   @}   @+   @?   _   _       _              _
+  _         @~   @at  @ex  @`   @us  @|   @<   @>   @-   @+  _   _   _              _
+  _         @&   @*   @op  @cp  @/   @r/  @[   @]   @=   @;  @:  _                  _
+  _    _    _    @#   @%   @!   _    @{   @}   @,   @?   _   _       _              _
   _         _    _         _         @def _    _                 _   _   _
   )
 #+end_src
@@ -3580,24 +3613,37 @@ Since this is the first layer, it's the layout KMonad starts in.
 *** Emacs layer
 #+begin_src lisp
 (deflayer emacs
-  _         _    _    _    _    _     _    _    _     _    _     _   _   _   _     _    _
-  _         _    _    _    _    _     _    _    _     _    _     _   _   _              _
-  @cxto     _    _    _    _    @cxt2 _    _    _     @cx0 _     _   _   _              _
-  _         _    _    _    _    _     _    @cd  @ccru _    _     _   _                  _
-  _    _    _    _    _    @ccv _     _    @cx1 _     _    _     _       _              _
-  _         _    _         @cxo       @def _    _                    _   _   _
+  _         _    _     _    _    _     _    _    _     _    _     _   _   _   _     _    _
+  _         _    _     _    _    _     _    _    _     _    _     _   _   _              _
+  _         _    @cxcs _    _    @cxt2 _    _    _     _    _     _   _   _              _
+  _         _    _     _    _    _     _    _    _     _    _     _   _                  _
+  _    _    _    _     _    _    _     _    _    _     _    _     _       _              _
+  _         _    _          _          @def _    _                    _   _   _
   )
 #+end_src
 
-*** Lisp layer
+*** Quick emacs layer
 #+begin_src lisp
-(deflayer lisp
-  esc         f1    f2   f3   f4   f5   f6   f7   f8   f9   f10  f11   f12    pause  prnt  ins  del
-  `           1     2    3    4    5    6    7    8    9    0    -     =      caps              home
-  tab         q     w    e    r    t    y    u    i    o    p    [     ]      ret               pgup
-  bspc        a     s    d    f    g    h    [    k    l    ;    '     \                        pgdn
-  lsft  @ct   z     x    c    v    b    n    m    ,    .    /    rsft         up                end
-  lctl        lmet  lalt      spc       @def cmps rctl                 left   down   rght
+(deflayer quick-emacs
+  _         _    _     _    _    _     _    _    _     _    _     _   _   _   _     _    _
+  _         _    _     _    _    _     _    _    _     _    _     _   _   _              _
+  _         _    _     _    _    _     _    _    _     _    _     _   _   _              _
+  _         _    _     _    _    _     _    _    _     _    _     _   _                  _
+  _    _    _    _     _    @ccv _     _    _    @ccr, _    _     _       _              _
+  _         _    _          _          @def _    _                    _   _   _
   )
 #+end_src
+
+*** Navegation access layer
+#+begin_src lisp
+(deflayer navegation
+  _         _    _    _     _    _    _     _     _     _     _     _   _   _   _     _    _
+  _         _    _    _     _    _    _     _     _     _     _     _   _   _              _
+  _         _    _    _     _    _    _     @ccru @ccrd @cxo  @cxto _   _   _              _
+  _         _    _    _     _    _    @ccrb @ccrn @ccrp @ccrf _     _   _                  _
+  _    _    _    _    _     _    @cx1 @ccra @ccrs @ccrm @cx0  _     _       _              _
+  _         _    _          _         @def  _     _                     _   _   _
+  )
+#+end_src
+
 
