@@ -3602,9 +3602,9 @@ Since this is the first layer, it's the layout KMonad starts in.
 (deflayer symbols
   _         _    _    _    _    _    _    _    _    _    _   _   _   _   _     _    _
   _         _    _    _    _    _    _    _    _    _    _   _   _   _              _
-  _         @?   @at  @ex  @`   @us  @|   @<   @>   @-   @+  _   _   _              _
-  _         @&   @*   _    _    @/   @r/  _    _    @=   _   @:  _                  _
-  _    _    _    @#   @%   @!   _    _    _    _    @~   _   _       _              _
+  _         @?   @at  @ex  @`   _    _    @us  @-   @+   _   _   _   _              _
+  _         @&   @*   @%   @!   @#   @~   @=   _    @|   @:  _   _                  _
+  _    _    _    _    _    _    _    _    @/   @r/  _    _   _       _              _
   _         _    _         _         @def _    _                 _   _   _
   )
 #+end_src
