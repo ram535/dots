@@ -474,18 +474,18 @@ Highlight the the matching (){}[]
   (evil-set-initial-state 'pdf-outline-buffer-mode 'emacs)
   :general
   (:states '(emacs normal motion insert visual)
-           "C-c r k" 'ram/backward-kill-line
-           "C-c r u" 'evil-scroll-up
-           "C-c r d" 'evil-scroll-down
-           "C-c r f" 'forward-char
-           "C-c r b" 'backward-char
-           "C-c r p" 'previous-line
-           "C-c r n" 'next-line
-           "C-c r a" 'evil-first-non-blank
-           "C-c r s" 'evil-last-non-blank
-           "C-c r ," 'mode-line-other-buffer
-           "C-c r m" 'org-toggle-narrow-to-subtree
-           "C-c r e" '(lambda() (interactive) (dired default-directory))
+           "C-c c r k" 'ram/backward-kill-line
+           "C-c c v u" 'evil-scroll-up
+           "C-c c v d" 'evil-scroll-down
+           "C-c c e f" 'forward-char
+           "C-c c e b" 'backward-char
+           "C-c c e p" 'previous-line
+           "C-c c e n" 'next-line
+           "C-c c v n" 'evil-first-non-blank
+           "C-c c v m" 'evil-last-non-blank
+           "C-c c e ," 'mode-line-other-buffer
+           "C-c c o n" 'org-toggle-narrow-to-subtree
+           "C-c c d d" '(lambda() (interactive) (dired default-directory))
            )
   (:states '(normal motion)
            "j" 'evil-next-visual-line
@@ -739,11 +739,10 @@ Highlight the the matching (){}[]
 *** embark
 #+begin_src emacs-lisp
 (use-package embark
-  ;; :keymaps 'minibuffer-local-map
   :general
   (:states '(normal insert)
-           "C-;" 'embark-dwim
-           "C-c e" 'embark-act))
+           "C-c c k d" 'embark-dwim
+           "C-c c k a" 'embark-act))
 #+end_src
 
 *** consult-projectile
@@ -774,7 +773,7 @@ Install cmake to be able to install vterm
   :init
   :general
   (:states '(emacs normal insert visual)
-           "C-c r v" 'vterm-toggle-cd))
+           "C-c c v v" 'vterm-toggle-cd))
 #+end_src
 
 *** company
@@ -1346,7 +1345,7 @@ Search for character
 (use-package avy
   :general
   (:states '(normal emacs insert motion)
-           "C-c r t" 'avy-goto-char-2))
+           "C-c c a f" 'avy-goto-char-2))
 #+end_src
 
 *** smartparens
@@ -1596,9 +1595,9 @@ sudo apt install gawk
   :config
   (org-roam-setup)
   :general
-  (:prefix "C-c n"
+  (:prefix "C-c c"
            :states '(normal motion insert emacs)
-           "f" 'org-roam-node-find
+           "o n" 'org-roam-node-find
            "l" 'org-roam-buffer-toggle
            "i" 'org-roam-node-insert
            "d" 'org-id-get-create
@@ -3466,27 +3465,20 @@ it will take the key value of the base layer.
 *** Emacs aliases
 #+begin_src lisp
 (defalias
-  ;; other-window
-  cxo #(C-x o @def)
   ;; toggle vterm
-  ccv #(C-c r v @def)
-  ;; tab-next
-  cxto #(C-x t o @def)
-  ;; delete-window
-  cx0 #(C-x 0 @def)
-  ;; delete-other-window
-  cx1 #(C-x 1 @def)
+  cccvv #(C-c c v v @def)
   ;; tab-new
   cxt2 #(C-x t 2 @def)
   ;; save-buffer
   cxcs #(C-x C-s @def)
   ;; cancel
   cg #(C-g @def)
+  ;; confirm
   cccc #(C-c C-c @def)
   ;; open file
   cxcf #(C-x C-f @def)
   ;; open roam
-  ccnf #(C-c n f @def)
+  cccon #(C-c c o n @def)
   ;; tangle
   cccvt #(C-c C-v t @def)
   ;; magit-status
@@ -3533,21 +3525,29 @@ it will take the key value of the base layer.
 #+begin_src lisp
 (defalias
   ;; move forward
-  ccrf #(C-c r f)
+  cccef #(C-c c e f)
   ;; move backward
-  ccrb #(C-c r b)
+  ccceb #(C-c c e b)
   ;; move up
-  ccrp #(C-c r p)
+  cccep #(C-c c e p)
   ;; move down
-  ccrn #(C-c r n)
+  cccen #(C-c c e n)
   ;; scroll half page up
-  ccru #(C-c r u)
+  cccvu #(C-c c v u)
   ;; scroll half page down
-  ccrd #(C-c r d)
+  cccvd #(C-c c v d)
   ;; go beginning line
-  ccra #(C-c r a)
+  cccvn #(C-c c v n)
   ;; go end line
-  ccrs #(C-c r s)
+  cccvm #(C-c c v m)
+  ;; tab-next
+  cxto #(C-x t o @def)
+  ;; delete-window
+  cx0 #(C-x 0 @def)
+  ;; delete-other-window
+  cx1 #(C-x 1 @def)
+  ;; other-window
+  cxo #(C-x o @def)
   )
 #+end_src
 
@@ -3555,18 +3555,20 @@ it will take the key value of the base layer.
 #+begin_src lisp
 (defalias
   ;; org-toggle-narrow-to-subtree
-  ccrm #(C-c r m @def)
+  cccon #(C-c c o n @def)
   ;; search
   cs #(C-s @def)
   ;; open dired
-  ccre #(C-c r e @def)
+  cccdd #(C-c r d d @def)
   escp #(esc @def)
   ;; previous buffer
-  ccr, #(C-c r , @def)
-  ;; two letters to search
-  ccrt #(C-c r t @def)
+  ccce, #(C-c c e , @def)
+  ;; two letters search
+  cccaf #(C-c c a f @def)
   ;; eval sexp
   cxce #(C-x C-e @def)
+  ;; embark-act
+  cccka #(C-c c k a @def)
 )
 #+end_src
 
@@ -3660,40 +3662,38 @@ Since this is the first layer, it's the layout KMonad starts in.
 *** Emacs layer
 #+begin_src lisp
 (deflayer emacs
-  _         _    _     _     _     _     _     _    _     _      _     _   _   _   _     _    _
-  _         _    _     _     _     _     _     _    _     _      _     _   _   _              _
-  _         _    @cxcs _     _     @cxt2 _     _    _     _      _     _   _   _              _
-  _         _    _     _     @cxcf @cg   _     _    _     @cccvt _     _   _                  _
-  _    _    _    _     @cccc _     _     @ccnf @cxg _     _      _     _       _              _
-  _         _    _           _           @def  _    _                      _   _   _
+  _         _    _     _     _     _     _      _    _     _      _     _   _   _   _     _    _
+  _         _    _     _     _     _     _      _    _     _      _     _   _   _              _
+  _         _    @cxcs _     _     @cxt2 _      _    _     _      _     _   _   _              _
+  _         _    _     _     @cxcf @cg   _      _    _     @cccvt _     _   _                  _
+  _    _    _    _     @cccc _     _     @cccon @cxg _     _      _     _       _              _
+  _         _    _           _           @def   _    _                      _   _   _
   )
 #+end_src
 
 *** Quick emacs layer
 #+begin_src lisp
 (deflayer quick-emacs
-  _         _    _     _     _     _     _     _    _     _    _     _   _   _   _     _    _
-  _         _    _     _     _     _     _     _    _     _    _     _   _   _              _
-  _         _    _     @cxce _     _     _     _    _     _    _     _   _   _              _
-  _         _    @cs   @ccre @ccrt _     _     _    _     _    _     _   _                  _
-  _    _    _    _     _     @ccv  _     @ccrm _    @ccr, _    _     _       _              _
-  _         _    _           @escp       @def  _    _                    _   _   _
+  _         _      _     _      _      _     _      _    _      _    _     _   _   _   _     _    _
+  _         _      _     _      _      _     _      _    _      _    _     _   _   _              _
+  _         _      _     @cxce  _      _     _      _    _      _    _     _   _   _              _
+  _         @cccka @cs   @cccdd @cccaf _     _      _    _      _    _     _   _                  _
+  _    _    _      _     _      @cccvv _     @cccon _    @ccce, _    _     _       _              _
+  _         _      _            @escp        @def   _    _                     _   _   _
   )
 #+end_src
 
 *** Navegation access layer
 #+begin_src lisp
 (deflayer navegation
-  _         _    _    _     _    _    _     _     _     _     _     _   _   _   _     _    _
-  _         _    _    _     _    _    _     _     _     _     _     _   _   _              _
-  _         _    _    _     _    _    _     @ccrd @ccru @cxo  @cxto _   _   _              _
-  _         _    _    _     _    _    @ccrb @ccrn @ccrp @ccrf _     _   _                  _
-  _    _    _    _    _     _    @cx1 @ccra @ccrs _     @cx0  _     _       _              _
-  _         _    _          _         @def  _     _                     _   _   _
+  _         _    _    _     _    _    _      _      _      _      _     _   _   _   _     _    _
+  _         _    _    _     _    _    _      _      _      _      _     _   _   _              _
+  _         _    _    _     _    _    _      @cccvd @cccvu @cxo   @cxto _   _   _              _
+  _         _    _    _     _    _    @ccceb @cccen @cccep @cccef _     _   _                  _
+  _    _    _    _    _     _    @cx1 @cccvn @cccvm _      @cx0   _     _       _              _
+  _         _    _          _         @def   _      _                       _   _   _
   )
 #+end_src
-
-
 
 *** Org-mode
 #+begin_src lisp
