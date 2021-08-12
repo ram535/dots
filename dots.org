@@ -485,7 +485,8 @@ Highlight the the matching (){}[]
            "C-c r s" 'evil-last-non-blank
            "C-c r ," 'mode-line-other-buffer
            "C-c r m" 'org-toggle-narrow-to-subtree
-           "C-c r e" (lambda() (interactive) (dired default-directory)))
+           "C-c r e" '(lambda() (interactive) (dired default-directory))
+           )
   (:states '(normal motion)
            "j" 'evil-next-visual-line
            "k" 'evil-previous-visual-line
@@ -701,7 +702,7 @@ Highlight the the matching (){}[]
   (:states '(normal insert emacs)
            "M-y" 'consult-yank-pop
            "C-x b" 'consult-buffer
-           "C-c o" 'consult-outline))
+           "C-c n o" 'consult-outline))
 #+end_src
 
 *** marginalia
@@ -1344,8 +1345,8 @@ Search for character
 #+begin_src emacs-lisp
 (use-package avy
   :general
-  (:states '(normal motion)
-           "f" 'avy-goto-char-2))
+  (:states '(normal emacs insert motion)
+           "C-c r t" 'avy-goto-char-2))
 #+end_src
 
 *** smartparens
@@ -3431,17 +3432,23 @@ it will take the key value of the base layer.
 
 *** Layout aliases
 #+begin_src lisp
-;; (defalias nav (tap-next lctl (layer-toggle navegation)))
-
-(defalias nav_a (tap-hold-next-release 200 a (layer-toggle navegation)))
-(defalias qsy_f (tap-hold-next-release 200 f (layer-toggle quick-symbols)))
 (defalias
   def (layer-switch default)
   hl (layer-switch handler)
   win (layer-switch window)
   qem (layer-switch quick-emacs)
   ema (layer-switch emacs)
-  sym (layer-switch symbols))
+  sym (layer-switch symbol)
+  org (layer-switch org-mode))
+
+;; Returns to the default layer after realizing the hold button
+(defalias qs_df (around (layer-toggle quick-symbol) @def))
+
+(defalias nv_df (around (layer-toggle navegation) @def))
+
+;; tap -> symbols layer
+;; hold -> quick-symbol layer
+(defalias sy_qs (tap-hold-next-release 200 @sym @qs_df))
 #+end_src
 
 *** Window manager aliases
@@ -3482,6 +3489,8 @@ it will take the key value of the base layer.
   ccnf #(C-c n f @def)
   ;; tangle
   cccvt #(C-c C-v t @def)
+  ;; magit-status
+  cxg #(C-x g @def)
   )
 #+end_src
 
@@ -3547,11 +3556,26 @@ it will take the key value of the base layer.
 (defalias
   ;; org-toggle-narrow-to-subtree
   ccrm #(C-c r m @def)
+  ;; search
+  cs #(C-s @def)
   ;; open dired
   ccre #(C-c r e @def)
   escp #(esc @def)
   ;; previous buffer
-  ccr, #(C-c r , @def))
+  ccr, #(C-c r , @def)
+  ;; two letters to search
+  ccrt #(C-c r t @def)
+  ;; eval sexp
+  cxce #(C-x C-e @def)
+)
+#+end_src
+
+*** Org-mode aliases
+#+begin_src lisp
+(defalias
+  ;; consult-outline
+  ccno #(C-c n o @def)
+)
 #+end_src
 
 ** Source layer
@@ -3579,7 +3603,7 @@ Since this is the first layer, it's the layout KMonad starts in.
   esc         f1     f2   f3   f4     f5   f6   f7   f8   f9   f10  f11   f12    pause  prnt  ins  del
   `           1      2    3    4      5    6    7    8    9    0    -     =      bspc              home
   tab         q      w    e    r      t    y    u    i    o    p    [     ]      ret               pgup
-  bspc        @nav_a s    d    @qsy_f g    h    j    k    l    @hl  '     \                        pgdn
+  bspc        a      s    d    f      g    h    j    k    l    @hl  '     \                        pgdn
   lsft  @ct   z      x    c    v      b    n    m    @qem .    /    rsft         up                end
   lctl        lmet   lalt      spc         ralt cmps rctl                 left   down   rght
   )
@@ -3588,18 +3612,18 @@ Since this is the first layer, it's the layout KMonad starts in.
 *** Intermediate layer
 #+begin_src lisp
 (deflayer handler
-  _         _    _    _    _    _    _    _    _    _    _     _   _   _   _     _    _
-  _         _    _    _    _    _    _    _    _    _    _     _   _   _              _
-  _         _    _    @ema _    _    _    _    _    _    _     _   _   _              _
-  _         _    _    _    @sym _    _    _    _    _    @ctt  _   _                  _
-  _    _    _    _    _    _    _    _    _    _    _    _     _       _              _
-  _         _    _         @win      @def _    _                   _   _   _
+  _         _      _    _    _      _    _    _    _    _    _     _   _   _   _     _    _
+  _         _      _    _    _      _    _    _    _    _    _     _   _   _              _
+  _         _      _    @ema _      _    _    _    _    @org _     _   _   _              _
+  _         @nv_df _    _    @sy_qs _    _    _    _    _    @ctt  _   _                  _
+  _    _    _      _    _    _      _    _    _    _    _    _     _       _              _
+  _         _      _         @win        @def _    _                   _   _   _
   )
 #+end_src
 
 *** Symbols layer
 #+begin_src lisp
-(deflayer symbols
+(deflayer symbol
   _         _    _    _    _    _    _    _    _    _    _   _   _   _   _     _    _
   _         _    _    _    _    _    _    _    _    _    _   _   _   _              _
   _         @?   @at  @ex  @`   _    _    @us  @-   @+   _   _   _   _              _
@@ -3611,7 +3635,7 @@ Since this is the first layer, it's the layout KMonad starts in.
 
 *** Quick symbols layer
 #+begin_src lisp
-(deflayer quick-symbols
+(deflayer quick-symbol
   _         _    _    _    _    _    _    _    _    _    _   _   _   _   _     _    _
   _         _    _    _    _    _    _    _    _    _    _   _   _   _              _
   _         _    _    _    _    _    _    {    }    <    >   _   _   _              _
@@ -3640,7 +3664,7 @@ Since this is the first layer, it's the layout KMonad starts in.
   _         _    _     _     _     _     _     _    _     _      _     _   _   _              _
   _         _    @cxcs _     _     @cxt2 _     _    _     _      _     _   _   _              _
   _         _    _     _     @cxcf @cg   _     _    _     @cccvt _     _   _                  _
-  _    _    _    _     @cccc _     _     @ccnf _    _     _      _     _       _              _
+  _    _    _    _     @cccc _     _     @ccnf @cxg _     _      _     _       _              _
   _         _    _           _           @def  _    _                      _   _   _
   )
 #+end_src
@@ -3650,8 +3674,8 @@ Since this is the first layer, it's the layout KMonad starts in.
 (deflayer quick-emacs
   _         _    _     _     _     _     _     _    _     _    _     _   _   _   _     _    _
   _         _    _     _     _     _     _     _    _     _    _     _   _   _              _
-  _         _    _     _     _     _     _     _    _     _    _     _   _   _              _
-  _         _    _     @ccre _     _     _     _    _     _    _     _   _                  _
+  _         _    _     @cxce _     _     _     _    _     _    _     _   _   _              _
+  _         _    @cs   @ccre @ccrt _     _     _    _     _    _     _   _                  _
   _    _    _    _     _     @ccv  _     @ccrm _    @ccr, _    _     _       _              _
   _         _    _           @escp       @def  _    _                    _   _   _
   )
@@ -3662,7 +3686,7 @@ Since this is the first layer, it's the layout KMonad starts in.
 (deflayer navegation
   _         _    _    _     _    _    _     _     _     _     _     _   _   _   _     _    _
   _         _    _    _     _    _    _     _     _     _     _     _   _   _              _
-  _         _    _    _     _    _    _     @ccru @ccrd @cxo  @cxto _   _   _              _
+  _         _    _    _     _    _    _     @ccrd @ccru @cxo  @cxto _   _   _              _
   _         _    _    _     _    _    @ccrb @ccrn @ccrp @ccrf _     _   _                  _
   _    _    _    _    _     _    @cx1 @ccra @ccrs _     @cx0  _     _       _              _
   _         _    _          _         @def  _     _                     _   _   _
@@ -3670,3 +3694,15 @@ Since this is the first layer, it's the layout KMonad starts in.
 #+end_src
 
 
+
+*** Org-mode
+#+begin_src lisp
+(deflayer org-mode
+  _         _    _    _    _    _    _    _    _    _     _     _   _   _   _     _    _
+  _         _    _    _    _    _    _    _    _    _     _     _   _   _              _
+  _         _    _    _    _    _    _    _    _    @ccno _     _   _   _              _
+  _         _    _    _    _    _    _    _    _    _     _     _   _                  _
+  _    _    _    _    _    _    _    _    _    _    _     _     _       _              _
+  _         _    _         _         @def _    _                    _   _   _
+  )
+#+end_src
