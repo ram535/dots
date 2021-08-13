@@ -1651,7 +1651,7 @@ sudo apt install gawk
            :prefix ","
            "y" 'yas-insert-snippet)
   (:states 'insert
-           "C-<return>" 'yas-expand)
+           "C-c c y i" 'yas-expand)
   (:states 'insert
            :keymaps 'yas-minor-mode-map
            "M-l" 'yas-next-field
@@ -3476,6 +3476,8 @@ it will take the key value of the base layer.
   cccvt #(C-c C-v t @def)
   ;; magit-status
   cxg #(C-x g @def)
+  ;; eval-expression
+  as: #(A-S-: @def)
   )
 #+end_src
 
@@ -3547,6 +3549,8 @@ it will take the key value of the base layer.
 *** Quick access aliases
 #+begin_src lisp
 (defalias
+  ;; yas-expand
+  cccyi #(C-c c y i @def)
   ;; search and replace
   as% #(A-S-% @def)
   ;; org-toggle-narrow-to-subtree
@@ -3555,6 +3559,7 @@ it will take the key value of the base layer.
   cs #(C-s @def)
   ;; open dired
   cccdd #(C-c c d d @def)
+  ;; escape
   escp #(esc @def)
   ;; previous buffer
   ccce, #(C-c c e , @def)
@@ -3618,6 +3623,18 @@ Since this is the first layer, it's the layout KMonad starts in.
   )
 #+end_src
 
+*** Quick access layer
+#+begin_src lisp
+(deflayer quick-access
+  _         _      _     _      _      _      _      _      _      _    _     _   _   _   _     _    _
+  _         _      _     _      _      _      _      _      _      _    _     _   _   _              _
+  _         _      _     @cxce  @as%   @cccvv _      @cccyi _      _    _     _   _   _              _
+  _         @ead   @cs   @cccdd @cccaf _      _      _      _      _    _     _   _                  _
+  _    _    _      _     _      @vv    _      @cccon _      @ccce, _    _     _       _              _
+  _         _      _            @escp         @def   _      _                     _   _   _
+  )
+#+end_src
+
 *** Intermediate layer
 #+begin_src lisp
 (deflayer handler
@@ -3672,21 +3689,9 @@ Since this is the first layer, it's the layout KMonad starts in.
   _         _    _     _     _     _     _      _    _     _      _     _   _   _   _     _    _
   _         _    _     _     _     _     _      _    _     _      _     _   _   _              _
   _         _    @cxcs @mx   _     @cxt2 _      _    _     _      _     _   _   _              _
-  _         _    _     _     @cxcf @cg   _      _    _     @cccvt _     _   _                  _
+  _         _    _     _     @cxcf @cg   _      _    _     @cccvt @as:  _   _                  _
   _    _    _    _     @cccc _     _     @cccrn @cxg _     _      _     _       _              _
   _         _    _           _           @def   _    _                      _   _   _
-  )
-#+end_src
-
-*** Quick access layer
-#+begin_src lisp
-(deflayer quick-access
-  _         _      _     _      _      _      _      _    _      _    _     _   _   _   _     _    _
-  _         _      _     _      _      _      _      _    _      _    _     _   _   _              _
-  _         _      _     @cxce  @as%   @cccvv _      _    _      _    _     _   _   _              _
-  _         @ead   @cs   @cccdd @cccaf _      _      _    _      _    _     _   _                  _
-  _    _    _      _     _      @vv    _      @cccon _    @ccce, _    _     _       _              _
-  _         _      _            @escp         @def   _    _                     _   _   _
   )
 #+end_src
 
