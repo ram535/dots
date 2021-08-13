@@ -951,6 +951,7 @@ difficult to read.
 *** magit
 #+begin_src emacs-lisp
 (use-package magit
+  :commands magit-status
   :custom
   ;; When maintaining a number of projects, it sometimes is necessary
   ;; to produce a full list of them with their corresponding Magit
@@ -1593,11 +1594,11 @@ sudo apt install gawk
   (:prefix "C-c c"
            :states '(normal motion insert emacs)
            "r n" 'org-roam-node-find
-           "l" 'org-roam-buffer-toggle
-           "i" 'org-roam-node-insert
-           "d" 'org-id-get-create
-           "t" 'org-roam-tag-add
-           "a" 'org-roam-alias-add))
+           "r l" 'org-roam-buffer-toggle
+           "r i" 'org-roam-node-insert
+           "r d" 'org-id-get-create
+           "r t" 'org-roam-tag-add
+           "r a" 'org-roam-alias-add))
 #+end_src
 
 *** rg
@@ -3419,18 +3420,13 @@ it will take the key value of the base layer.
 #+end_src
 
 ** Aliases
-*** Other aliases
-#+begin_src lisp
-(defalias ct  C-t)
-#+end_src
-
 *** Layout aliases
 #+begin_src lisp
 (defalias
   def (layer-switch default)
   hl (layer-switch handler)
   win (layer-switch window)
-  qem (layer-switch quick-emacs)
+  qem (layer-switch quick-access)
   ema (layer-switch emacs)
   sym (layer-switch symbol)
   org (layer-switch org-mode))
@@ -3449,17 +3445,19 @@ it will take the key value of the base layer.
 #+begin_src lisp
 ;; Window manager
 (defalias
-  ctt #(@ct P20 @ct @def)
-  ct1 #(@ct P20 1 @def)
-  ct2 #(@ct P20 2 @def)
-  ct3 #(@ct P20 3 @def)
-  pro #(@ct P50 p @def)
+  ctt #(C-t P20 C-t @def)
+  ct1 #(C-t P20 1 @def)
+  ct2 #(C-t P20 2 @def)
+  ct3 #(C-t P20 3 @def)
+  pro #(C-t P50 p @def)
   )
 #+end_src
 
 *** Emacs aliases
 #+begin_src lisp
 (defalias
+  ;; M-x
+  mx #(A-x @def)
   ;; toggle vterm
   cccvv #(C-c c v v @def)
   ;; tab-new
@@ -3516,7 +3514,7 @@ it will take the key value of the base layer.
 )
 #+end_src
 
-*** Navegation access aliases
+*** Navegation aliases
 #+begin_src lisp
 (defalias
   ;; move forward
@@ -3546,9 +3544,11 @@ it will take the key value of the base layer.
   )
 #+end_src
 
-*** Quick emacs aliases
+*** Quick access aliases
 #+begin_src lisp
 (defalias
+  ;; search and replace
+  as% #(A-S-% @def)
   ;; org-toggle-narrow-to-subtree
   cccon #(C-c c o n @def)
   ;; search
@@ -3564,6 +3564,18 @@ it will take the key value of the base layer.
   cxce #(C-x C-e @def)
   ;; embark-act
   cccka #(C-c c k a @def)
+  ;; embark-dwim
+  ccckd #(C-c c k d @def)
+  ;; one tap -> embark-act
+  ;; two taps -> embark-dwim
+  ead (multi-tap 300 @cccka @ccckd)
+  ;; V
+  V #(V @def)
+  ;; C-v
+  cv #(C-v @def)
+  ;; one tap -> V
+  ;; two taps -> C-v
+  vv (multi-tap 300 @V @cv)
 )
 #+end_src
 
@@ -3601,7 +3613,7 @@ Since this is the first layer, it's the layout KMonad starts in.
   `           1      2    3    4      5    6    7    8    9    0    -     =      bspc              home
   tab         q      w    e    r      t    y    u    i    o    p    [     ]      ret               pgup
   bspc        a      s    d    f      g    h    j    k    l    @hl  '     \                        pgdn
-  lsft  @ct   z      x    c    v      b    n    m    @qem .    /    rsft         up                end
+  lsft  C-t   z      x    c    v      b    n    m    @qem .    /    rsft         up                end
   lctl        lmet   lalt      spc         ralt cmps rctl                 left   down   rght
   )
 #+end_src
@@ -3659,26 +3671,26 @@ Since this is the first layer, it's the layout KMonad starts in.
 (deflayer emacs
   _         _    _     _     _     _     _      _    _     _      _     _   _   _   _     _    _
   _         _    _     _     _     _     _      _    _     _      _     _   _   _              _
-  _         _    @cxcs _     _     @cxt2 _      _    _     _      _     _   _   _              _
+  _         _    @cxcs @mx   _     @cxt2 _      _    _     _      _     _   _   _              _
   _         _    _     _     @cxcf @cg   _      _    _     @cccvt _     _   _                  _
   _    _    _    _     @cccc _     _     @cccrn @cxg _     _      _     _       _              _
   _         _    _           _           @def   _    _                      _   _   _
   )
 #+end_src
 
-*** Quick emacs layer
+*** Quick access layer
 #+begin_src lisp
-(deflayer quick-emacs
-  _         _      _     _      _      _     _      _    _      _    _     _   _   _   _     _    _
-  _         _      _     _      _      _     _      _    _      _    _     _   _   _              _
-  _         _      _     @cxce  _      _     _      _    _      _    _     _   _   _              _
-  _         @cccka @cs   @cccdd @cccaf _     _      _    _      _    _     _   _                  _
-  _    _    _      _     _      @cccvv _     @cccon _    @ccce, _    _     _       _              _
-  _         _      _            @escp        @def   _    _                     _   _   _
+(deflayer quick-access
+  _         _      _     _      _      _      _      _    _      _    _     _   _   _   _     _    _
+  _         _      _     _      _      _      _      _    _      _    _     _   _   _              _
+  _         _      _     @cxce  @as%   @cccvv _      _    _      _    _     _   _   _              _
+  _         @ead   @cs   @cccdd @cccaf _      _      _    _      _    _     _   _                  _
+  _    _    _      _     _      @vv    _      @cccon _    @ccce, _    _     _       _              _
+  _         _      _            @escp         @def   _    _                     _   _   _
   )
 #+end_src
 
-*** Navegation access layer
+*** Navegation layer
 #+begin_src lisp
 (deflayer navegation
   _         _    _    _     _    _    _      _      _      _      _     _   _   _   _     _    _
