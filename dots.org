@@ -951,18 +951,13 @@ difficult to read.
 *** magit
 #+begin_src emacs-lisp
 (use-package magit
-  :commands magit-status
   :custom
   ;; When maintaining a number of projects, it sometimes is necessary
   ;; to produce a full list of them with their corresponding Magit
   ;; status. That way you can determine very quickly which repositories
   ;; need to be examined further. (magit-list-repositories)
   (magit-repository-directories
-   '(("~/Projects" . 1)))
-  :general
-  (:states 'normal
-           :prefix ","
-           "s" 'magit-status))
+   '(("~/Projects" . 1))))
 #+end_src
 
 *** evil-magit
@@ -1597,7 +1592,7 @@ sudo apt install gawk
   :general
   (:prefix "C-c c"
            :states '(normal motion insert emacs)
-           "o n" 'org-roam-node-find
+           "r n" 'org-roam-node-find
            "l" 'org-roam-buffer-toggle
            "i" 'org-roam-node-insert
            "d" 'org-id-get-create
@@ -3478,7 +3473,7 @@ it will take the key value of the base layer.
   ;; open file
   cxcf #(C-x C-f @def)
   ;; open roam
-  cccon #(C-c c o n @def)
+  cccrn #(C-c c r n @def)
   ;; tangle
   cccvt #(C-c C-v t @def)
   ;; magit-status
@@ -3559,7 +3554,7 @@ it will take the key value of the base layer.
   ;; search
   cs #(C-s @def)
   ;; open dired
-  cccdd #(C-c r d d @def)
+  cccdd #(C-c c d d @def)
   escp #(esc @def)
   ;; previous buffer
   ccce, #(C-c c e , @def)
@@ -3666,7 +3661,7 @@ Since this is the first layer, it's the layout KMonad starts in.
   _         _    _     _     _     _     _      _    _     _      _     _   _   _              _
   _         _    @cxcs _     _     @cxt2 _      _    _     _      _     _   _   _              _
   _         _    _     _     @cxcf @cg   _      _    _     @cccvt _     _   _                  _
-  _    _    _    _     @cccc _     _     @cccon @cxg _     _      _     _       _              _
+  _    _    _    _     @cccc _     _     @cccrn @cxg _     _      _     _       _              _
   _         _    _           _           @def   _    _                      _   _   _
   )
 #+end_src
