@@ -429,6 +429,7 @@ Highlight the the matching (){}[]
   :general
   (:states '(normal)
            :keymaps 'org-mode-map
+           "h" 'left-char
            "<tab>" 'org-cycle)
   (:prefix ","
            :states 'normal
