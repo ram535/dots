@@ -776,7 +776,12 @@ Install cmake to be able to install vterm
   :init
   :general
   (:states '(emacs normal insert visual)
-           "C-c c v v" 'vterm-toggle-cd))
+           "C-c c v v" '(lambda () (interactive)
+                          (if (string-equal (buffer-name) "*vterm*")
+                              (vterm-toggle-cd)
+                            ;; open vterm in full-screen
+                            ;; 4 -> C-u
+                            (vterm-toggle-cd 4)))))
 #+end_src
 
 *** Undo Fu
@@ -3474,12 +3479,15 @@ it will take the key value of the base layer.
 (defalias
   def (layer-switch default)
   d+e #((layer-switch default) P20 esc)
+  d+s #((layer-switch default) P20 spc)
   ev (layer-switch edit-nav)
   hl (layer-switch handler)
   win (layer-switch window)
   qk (layer-switch quick-access)
   ema (layer-switch emacs)
   sym (layer-switch symbol)
+  caps (layer-switch caps)
+  num (layer-switch num)
   org (layer-switch org-mode))
 #+end_src
 
@@ -3560,6 +3568,10 @@ it will take the key value of the base layer.
   > #(> @def)
   : #(: @def)
   , #(, @def)
+  . #(. @def)
+  $ #($ @def)
+  ^ #(^ @def)
+  qu #(" @def)
 )
 #+end_src
 
@@ -3616,6 +3628,8 @@ it will take the key value of the base layer.
   ;; one tap -> V
   ;; two taps -> C-v
   vv (multi-tap 300 @V @cv)
+  ;; C-y
+  cy #(C-y @def)
 )
 #+end_src
 
@@ -3669,11 +3683,11 @@ Since this is the first layer, it's the layout KMonad starts in.
 *** Intermediate layer
 #+begin_src lisp
 (deflayer handler
-  _         _      _    _       _      _    _    _    _    _    _     _   _   _   _     _    _
+  @d+e      _      _    _       _      _    _    _    _    _    _     _   _   _   _     _    _
   _         _      _    _       _      _    _    _    _    _    _     _   _   _              _
   _         _      _    @ema    _      _    _    _    _    @org _     _   _   _              _
-  _         _      _    _       _      _    _    _    _    _    @ctt  _   _                  _
-  _    _    _      _    _       _      _    _    _    _    _    _     _       _              _
+  _         @caps  _    _       _      _    _    _    _    _    @ctt  _   _                  _
+  _    _    _      _    @caps   _      _    @num _    _    _    _     _       _              _
   _         _      _            @win        @def _    _                   _   _   _
   )
 #+end_src
@@ -3681,9 +3695,9 @@ Since this is the first layer, it's the layout KMonad starts in.
 *** Quick access layer
 #+begin_src lisp
 (deflayer quick-access
-  _         _      _     _      _      _      _      _      _      _    _     _   _   _   _     _    _
+  @d+e      _      _     _      _      _      _      _      _      _    _     _   _   _   _     _    _
   _         _      _     _      _      _      _      _      _      _    _     _   _   _              _
-  _         _      _     @cxce  @as%   @cccvv _      _      @cccyi _    _     _   _   _              _
+  _         _      _     @cxce  @as%   @cccvv _      _      @cccyi _    @cy   _   _   _              _
   _         @ead   @cs   @cccdd @cccaf _      _      _      _      _    _     _   _                  _
   _    _    _      _     _      @vv    _      @cccon _      @ccce, _    _     _       _              _
   _         _      _            @escp         @def   _      _                     _   _   _
@@ -3693,31 +3707,31 @@ Since this is the first layer, it's the layout KMonad starts in.
 *** Edit-navegation layer
 #+begin_src lisp
 (deflayer edit-nav
-  _         _    _    _      _    _    _      _       _      _    _      _   _   _   _     _    _
+  @d+e      _    _    _      _    _    _      _       _      _    _      _   _   _   _     _    _
   _         _    _    _      _    _    _      _       _      _    _      _   _   _              _
   _         _    _    A-del  A-d  _    _      @cccvd  @cccvu @cxo @cxto  _   _   _              _
   _         _    _    bspc   C-d  _    C-b    C-n     C-p    C-f  _      _   _                  _
   _    _    _    _    @cccrk C-k  _    C-a    C-e     @cx1   @cx0 _      _       _              _
-  _         _    _           @d+e      @def   _       _                      _   _   _
+  _         _    _           @def      @def   _       _                      _   _   _
   )
 #+end_src
 
 *** Symbols layer
 #+begin_src lisp
 (deflayer symbol
-  _         _    _    _    _    _    _    _    _    _    _   _   _   _   _     _    _
-  _         _    _    _    _    _    _    _    _    _    _   _   _   _              _
-  _         ?    @    ^    `    ~    -    \_   =    <    >   _   _   _              _
-  _         &    *    /    [    ]    {    }    :    |    ;   "   _                  _
-  _    _    _    %    #    \    !    \(   \)   ,    .    _   _       _              _
-  _         _    _         @d+e      @def _    _                 _   _   _
+  @d+e      _    _    _    _    _    _    _    _    _    _   _   _   _   _     _    _
+  _         _    _    _    _    _    _    _    _    _    _   _   _   bspc           _
+  _         @?   @at  @^   @`   @~   @|   @us  @=   @<   @>  _   _   _              _
+  _         @&   @*   /    [    ]    {    }    @:   @-   @;  @qu _                  _
+  _    _    @$   @%   @#   @r/  @!   \(   \)   @,   @.   _   _       _              _
+  _         _    _         @def      @def _    _                 _   _   _
   )
 #+end_src
 
 *** Window manager layer
 #+begin_src lisp
 (deflayer window
-  _         _    _    _    _    _    _    _    _     _    _     _   _   _   _     _    _
+  @d+e      _    _    _    _    _    _    _    _     _    _     _   _   _   _     _    _
   _         _    _    _    _    _    _    _    _     _    _     _   _   _              _
   _         _    _    _    _    _    _    _    _     _    _     _   _   _              _
   _         @ct1 @ct2 @ct3 _    _    _    _    @kill _    _     _   _                  _
@@ -3729,7 +3743,7 @@ Since this is the first layer, it's the layout KMonad starts in.
 *** Emacs layer
 #+begin_src lisp
 (deflayer emacs
-  _         _    _     _     _      _     _      _    _     _      _     _   _   _   _     _    _
+  @d+e      _    _     _     _      _     _      _    _     _      _     _   _   _   _     _    _
   _         _    _     _     _      _     _      _    _     _      _     _   _   _              _
   _         _    @cxcs @mx   @ccccr @cxt2 _      _    _     _      _     _   _   _              _
   _         _    _     _     @cxcf  @cg   C-h    _    _     @cccvt @as:  _   _                  _
@@ -3741,11 +3755,36 @@ Since this is the first layer, it's the layout KMonad starts in.
 *** Org-mode
 #+begin_src lisp
 (deflayer org-mode
-  _         _    _    _    _    _    _    _    _    _     _     _   _   _   _     _    _
+  @d+e      _    _    _    _    _    _    _    _    _     _     _   _   _   _     _    _
   _         _    _    _    _    _    _    _    _    _     _     _   _   _              _
   _         _    _    _    _    _    _    _    _    @ccno _     _   _   _              _
   _         _    _    _    _    _    _    _    _    _     _     _   _                  _
   _    _    _    _    _    _    _    _    _    _    _     _     _       _              _
   _         _    _         _         @def _    _                    _   _   _
   )
+#+end_src
+
+*** Caps layer
+#+begin_src lisp
+(deflayer caps
+  @d+e      _      _    _       _      _    _    _    _    _    _     _   _   _   _     _    _
+  _         _      _    _       _      _    _    _    _    _    _     _   _   bspc           _
+  _         Q      W    E       R      T    Y    U    I    O    P     _   _   _              _
+  _         A      S    D       F      G    H    J    K    L    @hl   _   _                  _
+  _    _    Z      X    C       V      B    N    M    @qk  @sym _     _       _              _
+  _         _      _            @def        @def _    _                   _   _   _
+  )
+#+end_src
+
+*** Number layer
+#+begin_src lisp
+(deflayer num
+  @d+e      _    _    _    _    _    _    _    _    _    _   _   _   _   _     _    _
+  _         _    _    _    _    _    _    _    _    _    _   _   _   bspc           _
+  _         _    _    _    _    _    _    _    _    _    _   _   _   _              _
+  _         1    2    3    4    5    6    7    8    9    @hl _   _                  _
+  _    _    _    _    _    _    _    0    _    @qk  @sym _   _       _              _
+  _         _    _         @def      @def _    _                 _   _   _
+  )
+
 #+end_src
