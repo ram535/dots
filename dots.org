@@ -355,7 +355,6 @@ Highlight the the matching (){}[]
 *** org-mode
 #+begin_src emacs-lisp
 (use-package org
-  :defer 3
   :custom
   (org-startup-folded t)
   ;; (org-hide-emphasis-markers t)
@@ -429,8 +428,7 @@ Highlight the the matching (){}[]
   :general
   (:states '(normal)
            :keymaps 'org-mode-map
-           "h" 'left-char
-           "<tab>" 'org-cycle)
+           "h" 'left-char)
   (:prefix ","
            :states 'normal
            :keymaps 'org-mode-map
@@ -516,6 +514,16 @@ Highlight the the matching (){}[]
                           (?q . ("@" . "@")))
                         evil-surround-pairs-alist))
   (global-evil-surround-mode 1))
+#+end_src
+
+*** org-evil
+#+begin_src emacs-lisp
+(use-package evil-org
+  :after org
+  :hook (org-mode . (lambda () evil-org-mode))
+  :config
+  (evil-org-set-key-theme '(navigation insert textobjects additional calendar))
+  )
 #+end_src
 
 *** dired
@@ -835,7 +843,7 @@ Install cmake to be able to install vterm
   (setq fancy-dabbrev-indent-command 'tab-to-tab-stop)
   :general
   (:states '(emacs insert)
-           "<tab>" 'fancy-dabbrev-expand-or-indent))
+           "C-c c f d" 'fancy-dabbrev-expand-or-indent))
 #+end_src
 
 *** corfu
@@ -3573,12 +3581,40 @@ it will take the key value of the base layer.
   $ #($ @def)
   ^ #(^ @def)
   qu #(" @def)
+  ;; one tap -> ;
+  ;; two taps -> :
+  ;: (multi-tap 200 @; @:)
+  ;; one tap -> ?
+  ;; two taps -> !
+  ?! (multi-tap 200 @? @!)
+  ;; one tap -> /
+  ;; two taps -> \
+  // (multi-tap 200 @/ @r/)
+  ;; one tap -> {
+  ;; two taps -> }
+  {} (multi-tap 200 @{ @})
+  ;; one tap -> -
+  ;; two taps -> _
+  -u (multi-tap 200 @- @us)
+  ;; one tap -> <
+  ;; two taps -> >
+  <> (multi-tap 200 @< @>)
+  ;; one tap -> `
+  ;; two taps -> ~
+  `~ (multi-tap 200 @` @~)
+  ;; one tap -> '
+  ;; two taps -> "
+  qq (multi-tap 200 ' ")
 )
 #+end_src
 
 *** Navegation aliases
 #+begin_src lisp
 (defalias
+  ;; beggining of line
+  ca #(C-a @def)
+  ;; end of line
+  ce #(C-e @def)
   ;; scroll half page up
   cccvu #(C-c c v u)
   ;; scroll half page down
@@ -3597,6 +3633,8 @@ it will take the key value of the base layer.
 *** Quick access aliases
 #+begin_src lisp
 (defalias
+  ;; fancy-dabbrev-expand-or-indent
+  cccfd #(C-c c f d @def)
   ;; yas-expand
   cccyi #(C-c c y i @def)
   ;; search and replace
@@ -3646,7 +3684,8 @@ it will take the key value of the base layer.
 #+begin_src lisp
 (defalias
   ;;M-k kills to the left
-  cccrk #(C-c c r k)
+  cccrk #(C-c c r k @def)
+  ck #(C-k @def)
 )
 #+end_src
 
@@ -3675,7 +3714,7 @@ Since this is the first layer, it's the layout KMonad starts in.
   esc         f1     f2   f3   f4     f5   f6   f7   f8   f9   f10  f11   f12    pause  prnt  ins  del
   `           1      2    3    4      5    6    7    8    9    0    -     =      bspc              home
   tab         q      w    e    r      t    y    u    i    o    p    [     ]      ret               pgup
-  @ev         a      s    d    f      g    h    j    k    l    @hl  '     \                        pgdn
+  @ev         a      s    d    f      g    h    j    k    l    @hl  @qq   \                        pgdn
   lsft  C-t   z      x    c    v      b    n    m    @qk  @sym /    rsft         up                end
   lctl        lmet   lalt      spc         ralt cmps rctl                 left   down   rght
   )
@@ -3700,7 +3739,7 @@ Since this is the first layer, it's the layout KMonad starts in.
   _         _      _     _      _      _      _      _      _      _    _     _   _   _              _
   _         _      _     @cxce  @as%   @cccvv _      _      @cccyi _    @cy   _   _   _              _
   _         @ead   @cs   @cccdd @cccaf _      _      _      _      _    _     _   _                  _
-  _    _    _      _     _      @vv    _      @cccon _      @ccce, _    _     _       _              _
+  _    _    _      _     _      @vv    _      @cccon @cccfd @ccce, _    _     _       _              _
   _         _      _            @escp         @def   _      _                     _   _   _
   )
 #+end_src
@@ -3711,8 +3750,8 @@ Since this is the first layer, it's the layout KMonad starts in.
   @d+e      _    _    _      _    _    _      _       _      _    _      _   _   _   _     _    _
   _         _    _    _      _    _    _      _       _      _    _      _   _   _              _
   _         _    _    A-del  A-d  _    _      @cccvd  @cccvu @cxo @cxto  _   _   _              _
-  _         _    _    bspc   C-d  _    C-b    C-n     C-p    C-f  _      _   _                  _
-  _    _    _    _    @cccrk C-k  _    C-a    C-e     @cx1   @cx0 _      _       _              _
+  @def      _    _    bspc   C-d  _    C-b    C-n     C-p    C-f  _      _   _                  _
+  _    _    _    _    @cccrk @ck  _    @ca    @ce     @cx1   @cx0 _      _       _              _
   _         _    _           @def      @def   _       _                      _   _   _
   )
 #+end_src
@@ -3722,9 +3761,9 @@ Since this is the first layer, it's the layout KMonad starts in.
 (deflayer symbol
   @d+e      _    _    _    _    _    _    _    _    _    _   _   _   _   _     _    _
   _         _    _    _    _    _    _    _    _    _    _   _   _   bspc           _
-  _         @?   @at  @^   @`   @~   @|   @us  @=   @<   @>  _   _   _              _
-  _         @&   @*   /    [    ]    {    }    @:   @-   @;  @qu _                  _
-  _    _    @$   @%   @#   @r/  @!   \(   \)   @,   @.   _   _       _              _
+  _         @?!  @at  @^   @`~  _    _    @#   @=   @|   @+  _   _   _              _
+  _         @&   @*   @//  @[   @]   @$   @{}  @-u  @<>  @;: _   _                  _
+  _    _    _    _    _    @%   _    @op  @cp  @,   @.   _   _       _              _
   _         _    _         @def      @def _    _                 _   _   _
   )
 #+end_src
