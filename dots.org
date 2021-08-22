@@ -428,12 +428,14 @@ Highlight the the matching (){}[]
   :general
   (:states '(normal)
            :keymaps 'org-mode-map
+           "<tab>" 'org-cycle
+           "C-c c o n" 'org-toggle-narrow-to-subtree
+           "C-c c o t" 'ram/org-set-tags
            "h" 'left-char)
-  (:prefix ","
-           :states 'normal
+  (:states 'insert
            :keymaps 'org-mode-map
-           "t" 'ram/org-set-tags
-           "n" 'org-toggle-narrow-to-subtree))
+           "<tab>" 'indent-relative
+           ))
 #+end_src
 
 *** evil
@@ -478,7 +480,6 @@ Highlight the the matching (){}[]
            "C-c c v u" 'evil-scroll-up
            "C-c c v d" 'evil-scroll-down
            "C-c c e ," 'mode-line-other-buffer
-           "C-c c o n" 'org-toggle-narrow-to-subtree
            "C-c c d d" '(lambda() (interactive) (dired default-directory))
            )
   (:states '(normal motion)
@@ -514,16 +515,6 @@ Highlight the the matching (){}[]
                           (?q . ("@" . "@")))
                         evil-surround-pairs-alist))
   (global-evil-surround-mode 1))
-#+end_src
-
-*** org-evil
-#+begin_src emacs-lisp
-(use-package evil-org
-  :after org
-  :hook (org-mode . (lambda () evil-org-mode))
-  :config
-  (evil-org-set-key-theme '(navigation insert textobjects additional calendar))
-  )
 #+end_src
 
 *** dired
@@ -1121,7 +1112,7 @@ straight.el.
   :defer 5
   :init
   (add-to-list 'exec-path "~/bin/pyenv/shims")
-  (setq pyenv-installation-dir "~/bin/pyenv")
+  (setq pyenv-installation-dir "~/bin/pyenv/bin")
   :config
   (pyenv-mode))
 #+end_src
@@ -1970,13 +1961,38 @@ Build-in package. Think htop but for emacs.
 
 *** pocket-reader
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (use-package pocket-reader)
 #+end_src
 
 *** emacs-test-simple
 #+begin_src emacs-lisp :tangle no
 (use-package test-simple)
+#+end_src
+
+*** prodigy
+#+begin_src emacs-lisp
+(use-package prodigy
+  :config
+  (prodigy-define-service
+    :name "Kmonad"
+    :command "kmonad"
+    :args '("/home/last/.config/kmonad/config.kbd")
+    :stop-signal 'sigkill
+    :tags '(hobby)
+    :kill-process-buffer-on-stop t)
+  :general
+  (:states 'normal
+           :keymaps 'prodigy-mode-map
+           "j" 'prodigy-next
+           "k" 'prodigy-prev
+           "gg" 'prodigy-start
+           "G" 'prodigy-last
+           "s" 'prodigy-stop
+           "r" 'prodigy-restart
+           "u" 'prodigy-refresh
+           "q" 'quit-window
+           ))
 #+end_src
 
 *** buttercup (tdd)
@@ -2904,6 +2920,8 @@ WantedBy=default.target
 :END:
 ** Variables
 #+begin_src sh
+# locations where the .desktop files are searched
+export XDG_DATA_DIRS="/var/lib/flatpak/exports/share/applications:$XDG_DATA_DIRS"
 export _JAVA_AWT_WM_NONREPARENTING=1            # makes java application work correctly
 export ANDROID_HOME="$HOME/bin/android"
 export PYENV_ROOT="$HOME/bin/pyenv"
@@ -3120,6 +3138,15 @@ systemctl start --user emacs.service
 kmonad $HOME/.config/kmonad/config.kbd &
 systemctl start --user emacs.service
 #+end_src
+* .xsession
+:PROPERTIES:
+:header-args: :tangle ~/.xsession
+:END:
+This solves Mouse scroll not working in GTK+ applications
+#+begin_src sh
+export GDK_CORE_DEVICE_EVENTS=1
+#+end_src
+
 * Bashrc
 :PROPERTIES:
 :header-args: :tangle ~/.bashrc
@@ -3495,6 +3522,7 @@ it will take the key value of the base layer.
   qk (layer-switch quick-access)
   ema (layer-switch emacs)
   sym (layer-switch symbol)
+  sy+ (layer-switch symbol+)
   caps (layer-switch caps)
   num (layer-switch num)
   org (layer-switch org-mode))
@@ -3714,7 +3742,7 @@ Since this is the first layer, it's the layout KMonad starts in.
   esc         f1     f2   f3   f4     f5   f6   f7   f8   f9   f10  f11   f12    pause  prnt  ins  del
   `           1      2    3    4      5    6    7    8    9    0    -     =      bspc              home
   tab         q      w    e    r      t    y    u    i    o    p    [     ]      ret               pgup
-  @ev         a      s    d    f      g    h    j    k    l    @hl  @qq   \                        pgdn
+  @ev         a      s    d    f      g    h    j    k    l    @hl  '     \                        pgdn
   lsft  C-t   z      x    c    v      b    n    m    @qk  @sym /    rsft         up                end
   lctl        lmet   lalt      spc         ralt cmps rctl                 left   down   rght
   )
@@ -3761,9 +3789,21 @@ Since this is the first layer, it's the layout KMonad starts in.
 (deflayer symbol
   @d+e      _    _    _    _    _    _    _    _    _    _   _   _   _   _     _    _
   _         _    _    _    _    _    _    _    _    _    _   _   _   bspc           _
-  _         @?!  @at  @^   @`~  _    _    @#   @=   @|   @+  _   _   _              _
-  _         @&   @*   @//  @[   @]   @$   @{}  @-u  @<>  @;: _   _                  _
+  _         @?   @at  @^   @`   _    _    _    @=   _    _   _   _   _              _
+  _         @qu  @*   @/   @[   @]   @$   @{   @-   @<   @;  _   _                  _
   _    _    _    _    _    @%   _    @op  @cp  @,   @.   _   _       _              _
+  _         _    _         @sy+      @def _    _                 _   _   _
+  )
+#+end_src
+
+*** Symbols+ layer
+#+begin_src lisp
+(deflayer symbol+
+  @d+e      _    _    _    _    _    _    _    _    _    _   _   _   _   _     _    _
+  _         _    _    _    _    _    _    _    _    _    _   _   _   bspc           _
+  _         @!   _    _    @~   _    _    _    _    _    _   _   _   _              _
+  _         @&   @|   @r/  @+   @#   _   @}   @us  @>    @:  _   _                  _
+  _    _    _    _    _    _    _    _   _    _    _     _   _       _              _
   _         _    _         @def      @def _    _                 _   _   _
   )
 #+end_src
