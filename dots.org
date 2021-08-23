@@ -3129,20 +3129,12 @@ export PATH=$HOME/bin/sbcl/bin:$PATH
 export PATH=$HOME/bin/ripgrep:$PATH
 #+end_src
 
-** Daemons
-#+begin_src sh
-systemctl start --user emacs.service
-#+end_src
-
-#+begin_src sh :tangle no
-kmonad $HOME/.config/kmonad/config.kbd &
-systemctl start --user emacs.service
-#+end_src
 * .xsession
 :PROPERTIES:
 :header-args: :tangle ~/.xsession
 :END:
 This solves Mouse scroll not working in GTK+ applications
+in stumpwm
 #+begin_src sh
 export GDK_CORE_DEVICE_EVENTS=1
 #+end_src
@@ -3472,6 +3464,10 @@ Stumpwm has only one workspace by default.
     ;; frame raise lock (lock AND raise == jumpto)
     (0 t   t :class "Emacs"))
 #+end_src
+** Start up programs
+#+begin_src lisp
+(run-shell-command "systemctl start --user emacs.service")
+#+end_src
 * Kmonad
 :PROPERTIES:
 :header-args: :tangle ~/.config/kmonad/config.kbd
@@ -3765,8 +3761,8 @@ Since this is the first layer, it's the layout KMonad starts in.
 (deflayer quick-access
   @d+e      _      _     _      _      _      _      _      _      _    _     _   _   _   _     _    _
   _         _      _     _      _      _      _      _      _      _    _     _   _   _              _
-  _         _      _     @cxce  @as%   @cccvv _      _      @cccyi _    @cy   _   _   _              _
-  _         @ead   @cs   @cccdd @cccaf _      _      _      _      _    _     _   _                  _
+  _         _      _     @cxce  @as%   _      _      _      @cccyi _    @cy   _   _   _              _
+  _         @cccvv @cs   @cccdd @cccaf _      @ead   _      _      _    _     _   _                  _
   _    _    _      _     _      @vv    _      @cccon @cccfd @ccce, _    _     _       _              _
   _         _      _            @escp         @def   _      _                     _   _   _
   )
