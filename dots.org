@@ -61,6 +61,11 @@ redirect the writing to =/dev/null=.
 #+begin_src emacs-lisp
 (add-to-list 'default-frame-alist
              '(font . "IBM Plex Mono 12"))
+;; (set-frame-font "IBM Plex Mono-12" nil t)
+;; (set-frame-font "SF Mono-12" nil t)
+;; (set-frame-font "Go Mono-12" nil t)
+;; (set-frame-font "Noto Sans Mono SemiCondensed-12" nil t)
+;; (set-frame-font "Cascadia Mono-12" nil t)
 ;; (set-face-attribute 'default nil
 ;;                     :family "IBM Plex Mono"
 ;;                     :height 130
@@ -381,6 +386,20 @@ Highlight the the matching (){}[]
   (org-export-backends '(ascii beamer html latex md))
   ;; (org-image-actual-width '(300))
   :config
+  ;; To Github Flavored Markdown
+  (eval-after-load "org"
+  '(require 'ox-gfm nil t))
+
+  ;; The defaults use an old MathJax version
+  (setf org-html-mathjax-options
+      '((path "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML")
+        (scale "100")
+        (align "center")
+        (indent "2em")
+        (mathml nil)))
+  (setf org-html-mathjax-template
+      "<script type=\"text/javascript\" src=\"%PATH\"></script>")
+
   ;; Font size control of LateX previews in Org files
   (setq org-format-latex-options (plist-put org-format-latex-options :scale 1.5))
 
@@ -434,8 +453,80 @@ Highlight the the matching (){}[]
            "h" 'left-char)
   (:states 'insert
            :keymaps 'org-mode-map
-           "<tab>" 'indent-relative
+           "C-c c o i" 'indent-relative
+           "<tab>" 'org-cycle
            ))
+#+end_src
+
+*** org-appear
+#+begin_src emacs-lisp
+(use-package org-appear
+  :custom
+  (org-appear-autolinks t)
+  (org-appear-submarkers t)
+  :hook (org-mode . org-appear-mode))
+#+end_src
+
+*** ox-publish
+#+begin_src emacs-lisp
+(use-package ox-publish
+  :straight (:type built-in)
+  :config
+  (setq org-publish-use-timestamps-flag nil)
+  (setq org-export-with-broken-links t)
+  (setq org-publish-project-alist
+        '(("blog"
+           :base-directory "/home/last/Documents/org"
+           :base-extension "org"
+           :publishing-directory "/home/last/Documents/org/public"
+           :recursive nil
+           :publishing-function org-org-publish-to-org
+           :htmlized-source t
+           ;; HTML5
+           :html-doctype
+           "html5"
+           :html-html5-fancy t
+           ;; Disable some Org's HTML defaults
+           :html-head-include-scripts nil
+           :html-head-include-default-style nil
+           :auto-sitemap t
+           :sitemap-title "Ram's Blog"
+	         :sitemap-filename "index.org"
+	         :sitemap-style list)
+          ("all" :components ("blog"))
+          )))
+#+end_src
+
+*** org-html-themify
+#+begin_src emacs-lisp :tangle no
+(use-package org-html-themify
+  :straight
+  (org-html-themify
+   :type git
+   :host github
+   :repo "DogLooksGood/org-html-themify"
+   :files ("*.el" "*.js" "*.css"))
+  :hook (org-mode . org-html-themify-mode)
+  :custom
+  (org-html-themify-themes
+   '((dark . doom-one)
+     (light . doom-one))))
+#+end_src
+
+*** htmlize
+#+begin_src emacs-lisp
+(use-package htmlize)
+#+end_src
+
+*** spell checking
+From [[https://emacs.stackexchange.com/questions/450/intelligent-spell-checking-in-org-mode/2103#2103][stackexchange]], ispell can be configured to skip over regions that match
+regexes. For example, to skip over :PROPERTIES: and :LOGBOOK: drawers as well as
+SRC AND EXAMPLE blocks:
+
+#+begin_src emacs-lisp
+(add-to-list 'ispell-skip-region-alist '(":\\(PROPERTIES\\|LOGBOOK\\):" . ":END:"))
+(add-to-list 'ispell-skip-region-alist '("#\\+BEGIN_SRC" . "#\\+END_SRC"))
+(add-to-list 'ispell-skip-region-alist '("#\\+BEGIN_EXAMPLE" . "#\\+END_EXAMPLE"))
 #+end_src
 
 *** evil
@@ -493,7 +584,10 @@ Highlight the the matching (){}[]
            "k" 'evil-previous-visual-line
            "m" 'point-to-register
            "'" 'jump-to-register
-           "gp" 'ram/evil-select-pasted))
+           "gp" 'ram/evil-select-pasted)
+  (:states 'normal
+           :keymaps 'messages-buffer-mode-map
+           "q" 'quit-window))
            #+end_src
 
 *** evil-commentary
@@ -783,6 +877,8 @@ Install cmake to be able to install vterm
                             ;; 4 -> C-u
                             (vterm-toggle-cd 4)))))
 #+end_src
+
+#+RESULTS:
 
 *** Undo Fu
 #+begin_src emacs-lisp
@@ -1201,7 +1297,14 @@ straight.el.
 #+begin_src emacs-lisp
 (use-package geiser
   :straight (geiser :type git :host gitlab :repo "emacs-geiser/geiser")
-  :commands geiser)
+  :commands geiser
+  :general
+  (:states '(normal insert)
+           :keymaps 'geiser-repl-mode-map
+           "C-l" 'geiser-repl-clear-buffer)
+  (:states 'normal
+           :keymaps 'geiser-debug-mode-map
+           "q" 'View-quit))
 
 (use-package geiser-guile
   :straight (geiser-guile :type git :host gitlab :repo "emacs-geiser/guile")
@@ -1351,6 +1454,7 @@ straight.el.
   ((web-mode . aggressive-indent-mode)
    (json-mode . aggressive-indent-mode)
    (lisp-mode . aggressive-indent-mode)
+   (scheme-mode . aggressive-indent-mode)
    (emacs-lisp-mode . aggressive-indent-mode)))
 #+end_src
 
@@ -1382,6 +1486,7 @@ Search for character
   (sp-local-pair '(sly-mrepl-mode) "'" "'" :actions nil)
   (add-hook 'js-mode-hook #'smartparens-mode)
   (add-hook 'c++-mode-hook #'smartparens-mode)
+  (add-hook 'dart-mode-hook #'smartparens-mode)
   (add-hook 'go-mode-hook #'smartparens-mode)
   ;; Activate smartparens in minibuffer
   (add-hook 'eval-expression-minibuffer-setup-hook #'smartparens-mode)
@@ -1993,6 +2098,11 @@ Build-in package. Think htop but for emacs.
            "u" 'prodigy-refresh
            "q" 'quit-window
            ))
+#+end_src
+
+*** clang-include-fixer
+#+begin_src emacs-lisp
+(straight-use-package '(clang-include-fixer :local-repo "~/.emacs.d/lisp/clang-include-fixer"))
 #+end_src
 
 *** buttercup (tdd)
@@ -3359,6 +3469,11 @@ Remove the welcome message
 #+begin_src lisp
 (in-package :stumpwm)
 #+end_src
+** Fix scrolling problem
+#+begin_src lisp
+;; bugfix for scrolling doesn't work with an external mouse in GTK+3 apps.
+(setf (getenv "GDK_CORE_DEVICE_EVENTS") "1")
+#+end_src
 ** Connect sly to stumpwm
 Going back to the .stumpwmrc, notice how the port is set to 4004? I do that so
 that when you start SLY in Emacs, there are no errors because the default port
@@ -3466,6 +3581,7 @@ Stumpwm has only one workspace by default.
 #+end_src
 ** Start up programs
 #+begin_src lisp
+(run-shell-command "kmonad /home/last/.config/kmonad/config.kbd")
 (run-shell-command "systemctl start --user emacs.service")
 #+end_src
 * Kmonad
@@ -3521,7 +3637,22 @@ it will take the key value of the base layer.
   sy+ (layer-switch symbol+)
   caps (layer-switch caps)
   num (layer-switch num)
-  org (layer-switch org-mode))
+  org (layer-switch org-mode)
+  aw #(A-w @def)
+  cy #(C-y @def)
+)
+#+end_src
+*** Handler aliases
+#+begin_src lisp
+(defalias
+;; toggle vterm
+cccvv #(C-c c v v @def)
+;; relative indent
+cccoi #(C-c c o i @def)
+;; jump bookmark
+cxrb #(C-x r b @def)
+;; fancy-dabbrev-expand-or-indent
+cccfd #(C-c c f d @def))
 #+end_src
 
 *** Window manager aliases
@@ -3536,16 +3667,19 @@ it will take the key value of the base layer.
   nxt #(C-t P20 A-n @def)
   pvs #(C-t P20 A-p @def)
   pro #(C-t P50 p @def)
+  ctqu #(C-t P50 " @def)
+  ctq #(C-t P50 q @def)
+  ct: #(C-t P50 : @def)
+  cta #(C-t P50 a @def)
   )
 #+end_src
 
 *** Emacs aliases
 #+begin_src lisp
 (defalias
+  ch #(C-h @def)
   ;; M-x
   mx #(A-x @def)
-  ;; toggle vterm
-  cccvv #(C-c c v v @def)
   ;; tab-new
   cxt2 #(C-x t 2 @def)
   ;; save-buffer
@@ -3657,8 +3791,6 @@ it will take the key value of the base layer.
 *** Quick access aliases
 #+begin_src lisp
 (defalias
-  ;; fancy-dabbrev-expand-or-indent
-  cccfd #(C-c c f d @def)
   ;; yas-expand
   cccyi #(C-c c y i @def)
   ;; search and replace
@@ -3677,6 +3809,8 @@ it will take the key value of the base layer.
   cccaf #(C-c c a f @def)
   ;; eval sexp
   cxce #(C-x C-e @def)
+  ;; eval definition
+  cmx #(A-C-x @def)
   ;; embark-act
   cccka #(C-c c k a @def)
   ;; embark-dwim
@@ -3691,8 +3825,6 @@ it will take the key value of the base layer.
   ;; one tap -> V
   ;; two taps -> C-v
   vv (multi-tap 300 @V @cv)
-  ;; C-y
-  cy #(C-y @def)
 )
 #+end_src
 
@@ -3744,14 +3876,14 @@ Since this is the first layer, it's the layout KMonad starts in.
   )
 #+end_src
 
-*** Intermediate layer
+*** Handler layer
 #+begin_src lisp
 (deflayer handler
-  @d+e      _      _    _       _      _    _    _    _    _    _     _   _   _   _     _    _
-  _         _      _    _       _      _    _    _    _    _    _     _   _   _              _
-  _         _      _    @ema    _      _    _    _    _    @org _     _   _   _              _
-  _         @caps  _    _       _      _    _    _    _    _    @ctt  _   _                  _
-  _    _    _      _    @caps   _      _    @num _    _    _    _     _       _              _
+  @d+e      _      _      _       _      _    _    _    _    _    _     _   _   _   _     _    _
+  _         _      _      _       _      _    _    _    _    _    _     _   _   _              _
+  _         @caps  @aw    @ema    _      _    @cy  _    _    @org _     _   _   _              _
+  _         @cccfd @cccoi @cccvv  @escp  @[   @]   @op  @cp  _    @ctt  _   _                  _
+  _    _    _      _      @caps   @cxrb  _    @num _    _    _    _     _       _              _
   _         _      _            @win        @def _    _                   _   _   _
   )
 #+end_src
@@ -3761,10 +3893,10 @@ Since this is the first layer, it's the layout KMonad starts in.
 (deflayer quick-access
   @d+e      _      _     _      _      _      _      _      _      _    _     _   _   _   _     _    _
   _         _      _     _      _      _      _      _      _      _    _     _   _   _              _
-  _         _      _     @cxce  @as%   _      _      _      @cccyi _    @cy   _   _   _              _
-  _         @cccvv @cs   @cccdd @cccaf _      @ead   _      _      _    _     _   _                  _
-  _    _    _      _     _      @vv    _      @cccon @cccfd @ccce, _    _     _       _              _
-  _         _      _            @escp         @def   _      _                     _   _   _
+  _         _      _     @cxce  @as%   _      _      _      @cccyi _    _     _   _   _              _
+  _         _      @cs   @cccdd @cccaf _      @ead   _      _      _    _     _   _                  _
+  _    _    _      @cmx  _      @vv    _      @cccon _      @ccce, _    _     _       _              _
+  _         _      _            @cxo          @def   _      _                     _   _   _
   )
 #+end_src
 
@@ -3774,7 +3906,7 @@ Since this is the first layer, it's the layout KMonad starts in.
   @d+e      _    _    _      _    _    _      _       _      _    _      _   _   _   _     _    _
   _         _    _    _      _    _    _      _       _      _    _      _   _   _              _
   _         _    _    A-del  A-d  _    _      @cccvd  @cccvu @cxo @cxto  _   _   _              _
-  @def      _    _    bspc   C-d  _    C-b    C-n     C-p    C-f  _      _   _                  _
+  @def      _    _    bspc   C-d  _    C-b    C-n     C-p    C-f  @ctt   _   _                  _
   _    _    _    _    @cccrk @ck  _    @ca    @ce     @cx1   @cx0 _      _       _              _
   _         _    _           @def      @def   _       _                      _   _   _
   )
@@ -3786,8 +3918,8 @@ Since this is the first layer, it's the layout KMonad starts in.
   @d+e      _    _    _    _    _    _    _    _    _    _   _   _   _   _     _    _
   _         _    _    _    _    _    _    _    _    _    _   _   _   bspc           _
   _         @?   @at  @^   @`   _    _    _    @=   _    _   _   _   _              _
-  _         @qu  @*   @/   @[   @]   @$   @{   @-   @<   @;  _   _                  _
-  _    _    _    _    _    @%   _    @op  @cp  @,   @.   _   _       _              _
+  _         @qu  @*   @/   @:   @#   @$   @-   @us  @<   @;  _   _                  _
+  _    _    _    _    _    @%   _    @{   @}   @,   @.   _   _       _              _
   _         _    _         @sy+      @def _    _                 _   _   _
   )
 #+end_src
@@ -3797,9 +3929,9 @@ Since this is the first layer, it's the layout KMonad starts in.
 (deflayer symbol+
   @d+e      _    _    _    _    _    _    _    _    _    _   _   _   _   _     _    _
   _         _    _    _    _    _    _    _    _    _    _   _   _   bspc           _
-  _         @!   _    _    @~   _    _    _    _    _    _   _   _   _              _
-  _         @&   @|   @r/  @+   @#   _   @}   @us  @>    @:  _   _                  _
-  _    _    _    _    _    _    _    _   _    _    _     _   _       _              _
+  _         _    _    _    _    _    _    _    _    _    _   _   _   _              _
+  _         @&   @|   @r/  @+   _    _    @~   @!   @>   _   _   _                  _
+  _    _    _    _    _    _    _    _    _    _    _    _   _       _              _
   _         _    _         @def      @def _    _                 _   _   _
   )
 #+end_src
@@ -3807,24 +3939,24 @@ Since this is the first layer, it's the layout KMonad starts in.
 *** Window manager layer
 #+begin_src lisp
 (deflayer window
-  @d+e      _    _    _    _    _    _    _    _     _    _     _   _   _   _     _    _
-  _         _    _    _    _    _    _    _    _     _    _     _   _   _              _
-  _         _    _    _    _    _    _    _    _     _    _     _   _   _              _
-  _         @ct1 @ct2 @ct3 _    _    _    _    @kill _    _     _   _                  _
-  _    _    _    _    _    _    _    @pvs @nxt _     _    _     _       _              _
-  _         _    _         @pro      @def _    _                    _   _   _
+  @d+e      _    _    _    _     _    _    _    _     _    _     _   _   _   _     _    _
+  _         _    _    _    _     _    _    _    _     _    _     _   _   _              _
+  _         @ctq _    _    _     @cta _    _    _     _    _     _   _   _              _
+  _         @ct1 @ct2 @ct3 @ctqu _    _    _    @kill _    @ct:  _   _                  _
+  _    _    _    _    _    _     _    @pvs @nxt _     _    _     _       _              _
+  _         _    _         @pro       @def _    _                    _   _   _
   )
 #+end_src
 
 *** Emacs layer
 #+begin_src lisp
 (deflayer emacs
-  @d+e      _    _     _     _      _     _      _    _     _      _     _   _   _   _     _    _
-  _         _    _     _     _      _     _      _    _     _      _     _   _   _              _
-  _         _    @cxcs @mx   @ccccr @cxt2 _      _    _     _      _     _   _   _              _
-  _         _    _     _     @cxcf  @cg   C-h    _    _     @cccvt @as:  _   _                  _
-  _    _    _    _     @cccc _      _     @cccrn @cxg _     _      _     _       _              _
-  _         _    _           _            @def   _    _                      _   _   _
+  @d+e      _      _     _      _      _     _      _    _     _      _     _   _   _   _     _    _
+  _         _      _     _      _      _     _      _    _     _      _     _   _   _              _
+  _         @cxcf  @cxcs @mx    @ccccr @cxt2 _      _    _     _      _     _   _   _              _
+  _         _      _     _      _      @cg   @ch    _    _     @cccvt @as:  _   _                  _
+  _    _    _      _     @cccc  _      _     @cccrn @cxg _     _      _     _       _              _
+  _         _      _            _            @def   _    _                      _   _   _
   )
 #+end_src
 
