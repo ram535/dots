@@ -571,6 +571,7 @@ SRC AND EXAMPLE blocks:
            "C-c c v u" 'evil-scroll-up
            "C-c c v d" 'evil-scroll-down
            "C-c c e ," 'mode-line-other-buffer
+           "C-c c e t" 'ram/switch-recent-tab
            "C-c c d d" '(lambda() (interactive) (dired default-directory))
            )
   (:states '(normal motion)
@@ -2157,6 +2158,14 @@ The missing hash table library for Emacs
     ;; start-process quote the arguments so you do not need the sell-quote-argument function
     (start-process "ram-dired-open" nil "xdg-open" (dired-get-file-for-visit)))))
 #+end_src
+*** switch-recent-tab
+#+begin_src emacs-lisp
+(defun ram/switch-recent-tab ()
+  (interactive)
+  (when (tab-bar-switch-to-recent-tab)
+    (tab-new)))
+#+end_src
+
 *** vterm functions
 **** Find file
 #+begin_src emacs-lisp
@@ -3638,8 +3647,6 @@ it will take the key value of the base layer.
   caps (layer-switch caps)
   num (layer-switch num)
   org (layer-switch org-mode)
-  aw #(A-w @def)
-  cy #(C-y @def)
 )
 #+end_src
 *** Handler aliases
@@ -3651,6 +3658,12 @@ cccvv #(C-c c v v @def)
 cccoi #(C-c c o i @def)
 ;; jump bookmark
 cxrb #(C-x r b @def)
+;; copy
+aw #(A-w @def)
+;; paste
+cy #(C-y @def)
+;; undo
+c/ #(C-/ @def)
 ;; fancy-dabbrev-expand-or-indent
 cccfd #(C-c c f d @def))
 #+end_src
@@ -3700,6 +3713,8 @@ cccfd #(C-c c f d @def))
   as: #(A-S-: @def)
   ;; consult-ripgrep
   ccccr #(C-c c c r @def)
+  ;; consult-yank-pop
+  ay #(A-y @def)
   )
 #+end_src
 
@@ -3805,6 +3820,8 @@ cccfd #(C-c c f d @def))
   escp #(esc @def)
   ;; previous buffer
   ccce, #(C-c c e , @def)
+  ;; previous tab
+  cccet #(C-c c e t @def)
   ;; two letters search
   cccaf #(C-c c a f @def)
   ;; eval sexp
@@ -3879,12 +3896,12 @@ Since this is the first layer, it's the layout KMonad starts in.
 *** Handler layer
 #+begin_src lisp
 (deflayer handler
-  @d+e      _      _      _       _      _    _    _    _    _    _     _   _   _   _     _    _
-  _         _      _      _       _      _    _    _    _    _    _     _   _   _              _
-  _         @caps  @aw    @ema    _      _    @cy  _    _    @org _     _   _   _              _
-  _         @cccfd @cccoi @cccvv  @escp  @[   @]   @op  @cp  _    @ctt  _   _                  _
-  _    _    _      _      @caps   @cxrb  _    @num _    _    _    _     _       _              _
-  _         _      _            @win        @def _    _                   _   _   _
+  @d+e      _      _      _       _      _     _    _    _    _    _     _   _   _   _     _    _
+  _         _      _      _       _      _     _    _    _    _    _     _   _   _              _
+  _         @caps  _      @ema    _      _     _    @c/  _    @org _     _   _   _              _
+  _         @cccfd @cccoi @cccvv  @escp  @[    @]   @op  @cp  _    @ctt  _   _                  _
+  _    _    _      _      @aw     @cy    @cxrb @num _    _    _    _     _       _              _
+  _         _      _            @win           @def _    _                   _   _   _
   )
 #+end_src
 
@@ -3893,7 +3910,7 @@ Since this is the first layer, it's the layout KMonad starts in.
 (deflayer quick-access
   @d+e      _      _     _      _      _      _      _      _      _    _     _   _   _   _     _    _
   _         _      _     _      _      _      _      _      _      _    _     _   _   _              _
-  _         _      _     @cxce  @as%   _      _      _      @cccyi _    _     _   _   _              _
+  _         @cccet _     @cxce  @as%   _      _      _      @cccyi _    _     _   _   _              _
   _         _      @cs   @cccdd @cccaf _      @ead   _      _      _    _     _   _                  _
   _    _    _      @cmx  _      @vv    _      @cccon _      @ccce, _    _     _       _              _
   _         _      _            @cxo          @def   _      _                     _   _   _
@@ -3955,7 +3972,7 @@ Since this is the first layer, it's the layout KMonad starts in.
   _         _      _     _      _      _     _      _    _     _      _     _   _   _              _
   _         @cxcf  @cxcs @mx    @ccccr @cxt2 _      _    _     _      _     _   _   _              _
   _         _      _     _      _      @cg   @ch    _    _     @cccvt @as:  _   _                  _
-  _    _    _      _     @cccc  _      _     @cccrn @cxg _     _      _     _       _              _
+  _    _    _      _     @cccc  @ay    _     @cccrn @cxg _     _      _     _       _              _
   _         _      _            _            @def   _    _                      _   _   _
   )
 #+end_src
