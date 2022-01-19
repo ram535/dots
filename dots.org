@@ -1318,7 +1318,7 @@ straight.el.
            :keymaps 'geiser-debug-mode-map
            "q" 'View-quit)
   :init
-  ;; (setq geiser-active-implementations '(guile))
+  (setq geiser-active-implementations '(guile))
   (setq geiser-guile-binary (executable-find "guile"))
   (setq geiser-racket-binary (executable-find "racket"))
   ;; the value matches comments starting with three semicolons and opening parens on the first column
@@ -1347,8 +1347,12 @@ straight.el.
   :config
   (add-hook 'ob-racket-pre-runtime-library-load-hook
 	          #'ob-racket-raco-make-runtime-library)
-  (append '((racket . t) (scribble . t)) org-babel-load-languages)
-  (add-to-list 'org-src-lang-modes '("racket" . geiser)))
+  (append '((racket . t) (scribble . t)) org-babel-load-languages))
+#+end_src
+
+*** racket-mode
+#+begin_src emacs-lisp
+(use-package racket-mode)
 #+end_src
 
 *** lsp-mode
