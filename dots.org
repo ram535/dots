@@ -2,7 +2,6 @@
 :PROPERTIES:
 :header-args: :tangle ~/.emacs.d/init.el
 :END:
-
 ** Better defaults
 *** Set better default for a better emacs start up
 #+begin_src emacs-lisp
@@ -182,7 +181,7 @@ Highlight the the matching (){}[]
 *** Highlight current line
 #+begin_src emacs-lisp
 ;; (global-hl-line-mode t)
-(add-hook 'prog-mode-hook #'hl-line-mode)
+;; (add-hook 'prog-mode-hook #'hl-line-mode)
 (add-hook 'org-mode-hook #'hl-line-mode)
 #+end_src
 
@@ -242,7 +241,7 @@ Highlight the the matching (){}[]
 *** straight.el
 #+begin_src emacs-lisp
 (defvar bootstrap-version)
-;;(setq straight-repository-branch "develop")
+(setq straight-repository-branch "develop")
 (let ((bootstrap-file
        (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
       (bootstrap-version 5))
@@ -267,10 +266,9 @@ Highlight the the matching (){}[]
 *** exec-path-from-shell
 #+begin_src emacs-lisp
 (use-package exec-path-from-shell
-  :defer 5
   :config
-  (exec-path-from-shell-copy-env "LD_LIBRARY_PATH")
   (when (daemonp)
+  (exec-path-from-shell-copy-env "LD_LIBRARY_PATH")
   (exec-path-from-shell-initialize)))
 #+end_src
 
@@ -357,7 +355,7 @@ Highlight the the matching (){}[]
            "s-m" 'winner-redo))
 #+end_src
 
-*** org-mode
+*** org
 #+begin_src emacs-lisp
 (use-package org
   :custom
@@ -388,17 +386,17 @@ Highlight the the matching (){}[]
   :config
   ;; To Github Flavored Markdown
   (eval-after-load "org"
-  '(require 'ox-gfm nil t))
+    '(require 'ox-gfm nil t))
 
   ;; The defaults use an old MathJax version
   (setf org-html-mathjax-options
-      '((path "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML")
-        (scale "100")
-        (align "center")
-        (indent "2em")
-        (mathml nil)))
+        '((path "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML")
+          (scale "100")
+          (align "center")
+          (indent "2em")
+          (mathml nil)))
   (setf org-html-mathjax-template
-      "<script type=\"text/javascript\" src=\"%PATH\"></script>")
+        "<script type=\"text/javascript\" src=\"%PATH\"></script>")
 
   ;; Font size control of LateX previews in Org files
   (setq org-format-latex-options (plist-put org-format-latex-options :scale 1.5))
@@ -439,6 +437,7 @@ Highlight the the matching (){}[]
      (latex . t)
      (calc . t)
      (shell . t)
+     (scheme . t)
      (sql . t)
      (lisp . t)
      (C . t)
@@ -456,10 +455,22 @@ Highlight the the matching (){}[]
            "C-c c o i" 'indent-relative
            "<tab>" 'org-cycle
            ))
+
+;; (straight-use-package '(org :source gnu-elpa-mirror))
+#+end_src
+
+*** org-contrib
+https://git.sr.ht/~bzg/org-contrib
+https://orgmode.org/Changes.html
+https://elpa.nongnu.org/nongnu/
+https://github.com/raxod502/straight.el/issues/762
+#+begin_src emacs-lisp :tangle no
+(use-package org-contrib)
+(straight-use-package '(setup :type git :host nil :repo "https://git.sr.ht/~pkal/setup"))
 #+end_src
 
 *** org-appear
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (use-package org-appear
   :custom
   (org-appear-autolinks t)
@@ -491,8 +502,8 @@ Highlight the the matching (){}[]
            :html-head-include-default-style nil
            :auto-sitemap t
            :sitemap-title "Ram's Blog"
-	         :sitemap-filename "index.org"
-	         :sitemap-style list)
+           :sitemap-filename "index.org"
+           :sitemap-style list)
           ("all" :components ("blog"))
           )))
 #+end_src
@@ -1294,7 +1305,7 @@ straight.el.
            "g d" 'sly-edit-definition))
 #+end_src
 
-*** geiser (guile)
+*** geiser (guile, racket)
 #+begin_src emacs-lisp
 (use-package geiser
   :straight (geiser :type git :host gitlab :repo "emacs-geiser/geiser")
@@ -1305,15 +1316,47 @@ straight.el.
            "C-l" 'geiser-repl-clear-buffer)
   (:states 'normal
            :keymaps 'geiser-debug-mode-map
-           "q" 'View-quit))
+           "q" 'View-quit)
+  :init
+  ;; (setq geiser-active-implementations '(guile))
+  (setq geiser-guile-binary (executable-find "guile"))
+  (setq geiser-racket-binary (executable-find "racket"))
+  ;; the value matches comments starting with three semicolons and opening parens on the first column
+  (add-hook 'scheme-mode-hook
+            (lambda ()
+              (outline-minor-mode 1)
+              (set (make-local-variable 'outline-regexp) ";;\\(?:;[^#]\\|\\*+\\)\\|(define")
+              (outline-hide-body))))
 
 (use-package geiser-guile
   :straight (geiser-guile :type git :host gitlab :repo "emacs-geiser/guile")
   :after geiser)
+
+(use-package geiser-racket
+  :straight (geiser-racket :type git :host gitlab :repo "emacs-geiser/racket")
+  :after geiser)
+#+end_src
+
+*** ob-racket
+#+begin_src emacs-lisp
+(use-package ob-racket
+  :after org
+  :straight (ob-racket
+	           :type git :host github :repo "hasu/emacs-ob-racket"
+	           :files ("*.el" "*.rkt"))
+  :config
+  (add-hook 'ob-racket-pre-runtime-library-load-hook
+	          #'ob-racket-raco-make-runtime-library)
+  (append '((racket . t) (scribble . t)) org-babel-load-languages)
+  (add-to-list 'org-src-lang-modes '("racket" . geiser)))
 #+end_src
 
 *** lsp-mode
-#+begin_src emacs-lisp
+Before installing lsp-mode, set LSP_USE_PLISTS=true enviroment variable.
+Otherwise =clangd= will complain. If you install lsp-mode without setting
+LSP_USE_PLISTS, you need to remove lsp-mode repo and install it again.
+
+#+begin_src emacs-lisp :tangle no
 (use-package lsp-mode
   :straight (lsp-mode :type git :host github :repo "emacs-lsp/lsp-mode")
   :hook
@@ -1325,6 +1368,25 @@ straight.el.
    (before-save . lsp-format-buffer)
    (before-save . lsp-organize-imports))
   :custom
+  (lsp-clients-clangd-executable (concat (getenv "HOME") "/bin/clang13/bin/clangd"))
+  (lsp-clients-clangd-args '("--header-insertion-decorators=0" "-j=4" "--suggest-missing-includes" "-background-index" "-log=error" "--clang-tidy"))
+  :init
+  (setq lsp-use-plists t))
+#+end_src
+#+begin_src emacs-lisp
+(use-package lsp-mode
+  :straight (lsp-mode :type git :host github :repo "emacs-lsp/lsp-mode")
+  :hook
+  ((lsp-completion-mode . ram/lsp-mode-setup-completion)
+   (go-mode . lsp-deferred)
+   (python-mode . lsp-deferred)
+   (js-mode . lsp-deferred)
+   (c++-mode . lsp-deferred)
+   (c-mode . lsp-deferred)
+   (before-save . lsp-format-buffer)
+   (before-save . lsp-organize-imports))
+  :custom
+  (lsp-completion-provider :none) ;; we use Corfu!
   (lsp-auto-guess-root t)                ;; auto guess root
   ;; disable showing documentation in the minibuffer
   ;; (lsp-eldoc-hook t)
@@ -1338,11 +1400,14 @@ straight.el.
   (lsp-ui-doc-enable nil)
   (lsp-semantic-highlighting 'immediate)
   (lsp-headerline-breadcrumb-enable nil)
-  (lsp-clients-clangd-executable (concat (getenv "HOME") "/bin/clang/bin/clangd"))
-  (lsp-clients-clangd-args '("--header-insertion-decorators=0" "-j=4" "--suggest-missing-includes" "-background-index" "-log=error" "--clang-tidy"))
+  (lsp-clients-clangd-executable (concat (getenv "HOME") "/bin/clang13/bin/clangd"))
+  ;; (lsp-clients-clangd-args '("--header-insertion-decorators=0" "-j=4" "-background-index" "-log=error" "--clang-tidy"))
   :init
   ;; https://twitter.com/yonchovski/status/1384899744670093315
   (setq lsp-use-plists t)
+  (defun ram/lsp-mode-setup-completion ()
+    (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
+          '(orderless))) ;; Configure orderless
   :general
   (:states 'normal
            :keymaps 'lsp-mode-map
@@ -1465,12 +1530,21 @@ Search for character
 (use-package avy
   :general
   (:states '(normal emacs insert motion)
-           "C-c c a f" 'avy-goto-char-2))
+           "C-c c a f" 'avy-goto-char-timer
+           ;; goto "("
+           "C-c c a p" (lambda() (interactive) (avy-goto-char 40))))
 #+end_src
 
 *** smartparens
 #+begin_src emacs-lisp
 (use-package smartparens
+  :hook
+  ((js-mode . smartparens-mode)
+   (c++-mode . smartparens-mode)
+   (dart-mode . smartparens-mode)
+   (go-mode . smartparens-mode)
+   (sly-mrepl-mode . smartparens-mode)
+   (geiser-repl-mode . smartparens-mode))
   :config
   (require 'smartparens-config)
 
@@ -1485,10 +1559,10 @@ Search for character
       (sp-local-pair "(" nil :post-handlers '(:add ("||\n[i]" "RET")))))
 
   (sp-local-pair '(sly-mrepl-mode) "'" "'" :actions nil)
-  (add-hook 'js-mode-hook #'smartparens-mode)
-  (add-hook 'c++-mode-hook #'smartparens-mode)
-  (add-hook 'dart-mode-hook #'smartparens-mode)
-  (add-hook 'go-mode-hook #'smartparens-mode)
+  ;; (add-hook 'js-mode-hook #'smartparens-mode)
+  ;; (add-hook 'c++-mode-hook #'smartparens-mode)
+  ;; (add-hook 'dart-mode-hook #'smartparens-mode)
+  ;; (add-hook 'go-mode-hook #'smartparens-mode)
   ;; Activate smartparens in minibuffer
   (add-hook 'eval-expression-minibuffer-setup-hook #'smartparens-mode)
 
@@ -1547,7 +1621,11 @@ Search for character
   :general
   (:states '(emacs insert)
            :keymaps 'lispy-mode-map
-           "M-a" 'lispy-wrap-round))
+           "C-c p w" 'lispy-wrap-round
+           "C-c p k" 'lispy-delete
+           "C-c p m" 'lispy-multiline
+           "C-c p o" 'lispy-oneline
+           ))
 #+end_src
 
 *** lispyville
@@ -1576,7 +1654,7 @@ Search for character
 
 *** org-fc
 sudo apt install gawk
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (use-package org-fc
   :defer 5
   :straight
@@ -1737,10 +1815,10 @@ MimeType=x-scheme-handler/org-protocol;
   :straight (org-roam
              :type git
              :host github
-             :repo "org-roam/org-roam"
-             :branch "v2")
-  :custom
-  (org-roam-directory "~/org/roams")
+             :repo "org-roam/org-roam")
+  :init
+  (setq org-roam-v2-ack t)
+  (setq org-roam-directory "~/org/roams")
   :config
   (org-roam-setup)
   :general
@@ -1860,10 +1938,12 @@ MimeType=x-scheme-handler/org-protocol;
 #+end_src
 
 *** cmake-mode
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 ;; (straight-use-package '(cmake-mode :local-repo "/home/last/.emacs.d/local-packages/cmake-mode.el" :type nil))
 ;;(straight-use-package '(cmake-mode :local-repo "/home/last/.emacs.d/local-packages/cmake-mode/cmake-mode.el"))
 (use-package cmake-mode
+  ;; :type nil disable all git operations. For example straight-pull-all will not throw an error.
+  :straight (cmake-mode :local-repo "~/.emacs.d/lisp/cmake-mode" :type nil)
   :mode "\\CMakeLists.txt\\'")
 ;;(straight-use-package '(cmake-mode :local-repo "~/.emacs.d/local-packages/cmake-mode" :source nil))
 #+end_src
@@ -2038,15 +2118,15 @@ Build-in package. Think htop but for emacs.
 (use-package languagetool
   :defer t
   :commands (languagetool-check
-	           languagetool-clear-buffer
-	           languagetool-correct-at-point
-	           languagetool-correct-buffer
-	           languagetool-set-language)
+             languagetool-clear-buffer
+             languagetool-correct-at-point
+             languagetool-correct-buffer
+             languagetool-set-language)
   :config
   (setq languagetool-language-tool-jar "~/bin/languagetool/languagetool-commandline.jar"
-	      languagetool-server-language-tool-jar "~/bin/languagetool/languagetool-server.jar"
-	      languagetool-java-arguments '("-Dfile.encoding=UTF-8")
-	      languagetool-default-language "en-GB"))
+        languagetool-server-language-tool-jar "~/bin/languagetool/languagetool-server.jar"
+        languagetool-java-arguments '("-Dfile.encoding=UTF-8")
+        languagetool-default-language "en-GB"))
 #+end_src
 
 *** ace-window
@@ -2102,13 +2182,37 @@ Build-in package. Think htop but for emacs.
 #+end_src
 
 *** clang-include-fixer
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (straight-use-package '(clang-include-fixer :local-repo "~/.emacs.d/lisp/clang-include-fixer"))
 #+end_src
 
 *** buttercup (tdd)
 #+begin_src emacs-lisp
 (use-package buttercup)
+#+end_src
+
+*** rainbow-delimiters
+#+begin_src emacs-lisp
+(use-package rainbow-delimiters
+  :config
+  (add-hook 'emacs-lisp-mode-hook 'rainbow-delimiters-mode)
+  (add-hook 'scheme-mode-hook 'rainbow-delimiters-mode)
+  (add-hook 'lisp-interaction-mode-hook 'rainbow-delimiters-mode)
+  (add-hook 'lisp-mode-hook 'rainbow-delimiters-mode)
+  (add-hook 'geiser-repl-mode-hook 'rainbow-delimiters-mode)
+  (add-hook 'sly-mrepl-mode-hook 'rainbow-delimiters-mode)
+
+  (custom-set-faces
+   '(rainbow-delimiters-depth-1-face ((t (:foreground "white"))))
+   '(rainbow-delimiters-depth-2-face ((t (:foreground "cyan"))))
+   '(rainbow-delimiters-depth-3-face ((t (:foreground "yellow"))))
+   '(rainbow-delimiters-depth-4-face ((t (:foreground "green"))))
+   '(rainbow-delimiters-depth-5-face ((t (:foreground "orange"))))
+   '(rainbow-delimiters-depth-6-face ((t (:foreground "purple"))))
+   '(rainbow-delimiters-depth-7-face ((t (:foreground "white"))))
+   '(rainbow-delimiters-depth-8-face ((t (:foreground "cyan"))))
+   '(rainbow-delimiters-depth-9-face ((t (:foreground "yellow"))))
+   '(rainbow-delimiters-unmatched-face ((t (:foreground "red"))))))
 #+end_src
 
 *** s.el
@@ -2140,7 +2244,7 @@ The missing hash table library for Emacs
 #+end_src
 
 ** Functions
-*** Make ~l~ to behave as expected in dired
+*** make ~l~ to behave as expected in dired
 #+begin_src emacs-lisp
 (defun ram/dired-open()
   (interactive)
@@ -2158,6 +2262,41 @@ The missing hash table library for Emacs
     ;; start-process quote the arguments so you do not need the sell-quote-argument function
     (start-process "ram-dired-open" nil "xdg-open" (dired-get-file-for-visit)))))
 #+end_src
+*** clean book name
+#+begin_src emacs-lisp
+(defun ram/remove-everything-until-period (str)
+  "Removes everything in a string until the first period. Period included."
+  (replace-regexp-in-string "^[^.]*."
+                            ""
+                            str))
+
+(defun ram/remove-everything-after-last-period (str)
+  "Removes everything in a string after the last period. Period included."
+  (replace-regexp-in-string "\.[^.]*$"
+                            ""
+                            str))
+
+(defun ram/replace-periods-for-whitespaces (str)
+  ;; \x20 is the exadecimal value of whitespace
+  (subst-char-in-string ?. ?\x20 str))
+
+(defun ram/clean-book-name ()
+  (interactive)
+  (let ((str  (substring-no-properties (x-get-clipboard))))
+    (kill-new
+     (ram/replace-periods-for-whitespaces
+      (ram/remove-everything-until-period
+       (ram/remove-everything-after-last-period str))))))
+
+(defun ram/clean-book-name2 ()
+  (interactive)
+  (let ((str  (substring-no-properties (x-get-clipboard))))
+    (kill-new
+     (ram/replace-periods-for-whitespaces
+      (ram/remove-everything-after-last-period
+       (ram/remove-everything-after-last-period str))))))
+#+end_src
+
 *** switch-recent-tab
 #+begin_src emacs-lisp
 (defun ram/switch-recent-tab ()
@@ -2256,6 +2395,7 @@ not appropriate in some cases like terminals."
 #+end_src
 
 **** Update the CWD
+I use this function in =ram/vterm-complreion=
 #+begin_src emacs-lisp
 (defun vterm-directory-sync ()
   "Synchronize current working directory."
@@ -3042,6 +3182,7 @@ WantedBy=default.target
 # locations where the .desktop files are searched
 export XDG_DATA_DIRS="/var/lib/flatpak/exports/share/applications:$XDG_DATA_DIRS"
 export _JAVA_AWT_WM_NONREPARENTING=1            # makes java application work correctly
+export LSP_USE_PLISTS=true
 export ANDROID_HOME="$HOME/bin/android"
 export PYENV_ROOT="$HOME/bin/pyenv"
 export GOPATH="$HOME/bin/go"
@@ -3053,10 +3194,13 @@ export MANPAGER=cat
 export CXX="g++"
 export CC="gcc"
 export PATH="$HOME/bin/cpp-libraries/bin:$HOME/bin/graphviz/bin:$PATH"
+# for the linker
 export LIBRARY_PATH="$HOME/bin/cpp-libraries/lib:$HOME/bin/c-libraries/lib:$LIBRARY_PATH"
+# looks for include path both C and C++
 export C_INCLUDE_PATH="$HOME/bin/c-libraries/include:$CPLUS_INCLUDE_PATH"
+# looks for include path only C++
 export CPLUS_INCLUDE_PATH="$HOME/bin/cpp-libraries/include:$CPLUS_INCLUDE_PATH"
-export LD_LIBRARY_PATH="$HOME/bin/c-libraries/lib:$HOME/bin/gcc-trunk/lib64:$HOME/bin/gcc-trunk/lib:$HOME/bin/clang/lib:$HOME/Projects/cpp/lazy cpp/cpp-for-lazy-programmers/external/SSDL/unix:$HOME/bin/cpp-libraries/lib:$HOME/bin/graphviz/lib:$LD_LIBRARY_PATH"
+export LD_LIBRARY_PATH="$HOME/bin/c-libraries/lib:$HOME/bin/gcc-trunk/lib64:$HOME/bin/gcc-trunk/lib:$HOME/bin/clang13/lib:$HOME/bin/cpp-libraries/lib:$HOME/bin/graphviz/lib:$LD_LIBRARY_PATH"
 export HISTSIZE=10000
 export HISTFILESIZE=10000
 # export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"$HOME/bin/pyenv/versions/3.5.0/lib"
@@ -3095,7 +3239,7 @@ export "PATH=$HOME/bin/build2/bin:$PATH"
 
 *** Clang
 #+begin_src sh
-export PATH="$HOME/bin/clang/bin:$PATH"
+export PATH="$HOME/bin/clang13/bin:$PATH"
 # For some reason this only works in .bashrc
 # export LD_LIBRARY_PATH="$HOME/bin/clang/lib:$LD_LIBRARY_PATH"
 # export LIBRARY_PATH="$HOME/bin/clang/lib:$LD_LIBRARY_PATH"
@@ -3243,6 +3387,11 @@ export PATH=$HOME/bin/guile/bin:$PATH
 export PATH=$HOME/bin/sbcl/bin:$PATH
 #+end_src
 
+*** Racket
+#+begin_src sh
+export PATH=$HOME/bin/racket/bin:$PATH
+#+end_src
+
 *** Ripgrep
 #+begin_src sh
 export PATH=$HOME/bin/ripgrep:$PATH
@@ -3277,6 +3426,8 @@ export CXX="g++"
 export CC="gcc"
 export PATH="$HOME/bin/gcc-trunk/bin:$HOME/bin/build2/bin:$HOME/bin/cpp-libraries/bin:$HOME/bin/graphviz/bin:$PATH"
 
+export LSP_USE_PLISTS=true
+
 #export LD_LIBRARY_PATH="$HOME/bin/gcc-10.2.0/lib:$HOME/bin/gcc-10.2.0/lib64:$LD_LIBRARY_PATH"
 #export LIBRARY_PATH="$HOME/bin/gcc-10.2.0/lib:$HOME/bin/gcc-10.2.0/lib64:$LIBRARY_PATH"
 export MANPATH="$HOME/bin/gcc-10.2.0/share/man:$MANPATH"
@@ -3286,7 +3437,7 @@ export INFOPATH="$HOME/bin/gcc-10.2.0/share/info:$INFOPATH"
 # Also seems that one stdlib can be active (clang or gcc)
 # export LD_LIBRARY_PATH="$HOME/bin/clang/lib:/usr/local/lib:$HOME/bin/gcc-10.2.0/lib64:$HOME/Projects/cpp/lazy cpp/cpp-for-lazy-programmers/external/SSDL/unix:$HOME/bin/cpp-libraries/lib:$HOME/bin/graphviz/lib:$LD_LIBRARY_PATH"
 
-export LD_LIBRARY_PATH="$HOME/bin/gcc-trunk/lib64:$HOME/bin/gcc-trunk/lib:$HOME/bin/clang/lib:$HOME/Projects/cpp/lazy cpp/cpp-for-lazy-programmers/external/SSDL/unix:$HOME/bin/cpp-libraries/lib:$HOME/bin/graphviz/lib:$LD_LIBRARY_PATH"
+export LD_LIBRARY_PATH="$HOME/bin/gcc-trunk/lib64:$HOME/bin/gcc-trunk/lib:$HOME/bin/clang/lib:$HOME/bin/cpp-libraries/lib:$HOME/bin/graphviz/lib:$LD_LIBRARY_PATH"
 #export LD_LIBRARY_PATH="$HOME/bin/clang/lib:$LD_LIBRARY_PATH"
 #+end_src
 ** alias
@@ -3518,7 +3669,7 @@ Stumpwm has only one workspace by default.
 ** Key bindings
 *** Programs
 #+begin_src lisp
-(define-key *root-map* (kbd "p") "exec dmenu_core")
+(define-key *root-map* (kbd "p") (concat "exec " (getenv "HOME") "/.dcli/bin/dmenu_core"))
 (define-key *root-map* (kbd "c") "exec alacritty")
 #+end_src
 
@@ -3627,7 +3778,8 @@ it will take the key value of the base layer.
 #+begin_src lisp
 (defcfg
   input  (device-file "/dev/input/by-path/platform-i8042-serio-0-event-kbd")
-  output (uinput-sink "KMonad kbd"))
+  output (uinput-sink "KMonad kbd")
+  allow-cmd true)
 #+end_src
 
 ** Aliases
@@ -3647,6 +3799,7 @@ it will take the key value of the base layer.
   caps (layer-switch caps)
   num (layer-switch num)
   org (layer-switch org-mode)
+  fight (layer-switch fight)
 )
 #+end_src
 *** Handler aliases
@@ -3693,6 +3846,8 @@ cccfd #(C-c c f d @def))
   ch #(C-h @def)
   ;; M-x
   mx #(A-x @def)
+  ;; search and replace
+  as5 #(A-S-5 @def)
   ;; tab-new
   cxt2 #(C-x t 2 @def)
   ;; save-buffer
@@ -3822,8 +3977,10 @@ cccfd #(C-c c f d @def))
   ccce, #(C-c c e , @def)
   ;; previous tab
   cccet #(C-c c e t @def)
-  ;; two letters search
+  ;; avy-goto-char-timer
   cccaf #(C-c c a f @def)
+  ;; jump to "("
+  cccap #(C-c c a p @def)
   ;; eval sexp
   cxce #(C-x C-e @def)
   ;; eval definition
@@ -3862,6 +4019,20 @@ cccfd #(C-c c f d @def))
 )
 #+end_src
 
+*** Fight aliases
+#+begin_src lisp
+(defalias
+  haf  (layer-toggle handlerfight)
+  fr  (layer-toggle fordwardright)
+  df (cmd-button "xdotool keydown Down; xdotool keydown Right; xdotool keyup Down; xdotool keyup Right; sleep 0.01; xdotool key b")
+  fdf (cmd-button "xdotool key Right; xdotool keydown Down; sleep 0.01; xdotool keydown Right; sleep 0.01; xdotool keyup Down; xdotool keyup Right; sleep 0.01; xdotool key b; xdotool key m")
+
+  nhaf (around-next @haf)
+  nfr (around-next @fr)
+  lp b
+)
+#+end_src
+
 ** Source layer
 First up is the source (base) layer; this is used to set the default
 keys that will be overwritten later.  It is `not' a layer that will
@@ -3889,7 +4060,7 @@ Since this is the first layer, it's the layout KMonad starts in.
   tab         q      w    e    r      t    y    u    i    o    p    [     ]      ret               pgup
   @ev         a      s    d    f      g    h    j    k    l    @hl  '     \                        pgdn
   lsft  C-t   z      x    c    v      b    n    m    @qk  @sym /    rsft         up                end
-  lctl        lmet   lalt      spc         ralt cmps rctl                 left   down   rght
+  lctl        lmet   lalt      spc         ralt cmps @fight               left   down   rght
   )
 #+end_src
 
@@ -3911,7 +4082,7 @@ Since this is the first layer, it's the layout KMonad starts in.
   @d+e      _      _     _      _      _      _      _      _      _    _     _   _   _   _     _    _
   _         _      _     _      _      _      _      _      _      _    _     _   _   _              _
   _         @cccet _     @cxce  @as%   _      _      _      @cccyi _    _     _   _   _              _
-  _         _      @cs   @cccdd @cccaf _      @ead   _      _      _    _     _   _                  _
+  _         _      @cs   @cccdd @cccaf _      @ead   @cccap _      _    _     _   _                  _
   _    _    _      @cmx  _      @vv    _      @cccon _      @ccce, _    _     _       _              _
   _         _      _            @cxo          @def   _      _                     _   _   _
   )
@@ -3920,11 +4091,11 @@ Since this is the first layer, it's the layout KMonad starts in.
 *** Edit-navegation layer
 #+begin_src lisp
 (deflayer edit-nav
-  @d+e      _    _    _      _    _    _      _       _      _    _      _   _   _   _     _    _
-  _         _    _    _      _    _    _      _       _      _    _      _   _   _              _
-  _         _    _    A-del  A-d  _    _      @cccvd  @cccvu @cxo @cxto  _   _   _              _
-  @def      _    _    bspc   C-d  _    C-b    C-n     C-p    C-f  @ctt   _   _                  _
-  _    _    _    _    @cccrk @ck  _    @ca    @ce     @cx1   @cx0 _      _       _              _
+  @d+e      _    _    _      _    _    _      _       _      _      _      _   _   _   _     _    _
+  _         _    _    _      _    _    _      _       _      _      _      _   _   _              _
+  _         _    _    A-del  A-d  _    _      @cccvd  @cccvu @cxo   @cxto  _   _   _              _
+  @def      _    _    bspc   C-d  _    left   down    up     rght   @ctt   _   _                  _
+  _    _    _    _    @cccrk @ck  _    @ca    @ce     @cx1   @cx0   _      _       _              _
   _         _    _           @def      @def   _       _                      _   _   _
   )
 #+end_src
@@ -3938,6 +4109,36 @@ Since this is the first layer, it's the layout KMonad starts in.
   _         @qu  @*   @/   @:   @#   @$   @-   @us  @<   @;  _   _                  _
   _    _    _    _    _    @%   _    @{   @}   @,   @.   _   _       _              _
   _         _    _         @sy+      @def _    _                 _   _   _
+  )
+#+end_src
+
+*** Fight layer
+#+begin_src lisp
+(deflayer fight
+  _         _    _    f3   _    _    _     _    _    _    f10 f11 f12 _   _     _    _
+  _         1    2    3    4    5    _     _    _    _    0   _   _   _              _
+  _         _    up   _    _    _    _     _    _    _    _   _   _   _              _
+  _         left down rght _    _    h     j    k    _    _   _   _                  _
+  _    _    _    _    _    _    b    n     m    _    _    _   _       _              _
+  _         _    _         @nhaf     @def  _    _                 _   _   _
+  )
+
+(deflayer handlerfight
+  _         _    _    _    _    _    _     _    _    _    _   _   _   _   _     _    _
+  _         _    _    _    _    _    _     _    _    _    _   _   _   _              _
+  _         _    up   _    _    _    _     _    _    _    _   _   _   _              _
+  _         left down @nfr _    _    _     _    _    _    _   _   _                  _
+  _    _    _    _    _    _    _    n     _    _    _    _   _       _              _
+  _         _    _         _         @def  _    _                 _   _   _
+  )
+
+(deflayer fordwardright
+  _         _    _    _    _    _    _     _    _    _    _   _   _   _   _     _    _
+  _         _    _    _    _    _    _     _    _    _    _   _   _   _              _
+  _         _    up   _    _    _    _     _    _    _    _   _   _   _              _
+  _         left down rght _    _    _     _    _    _    _   _   _                  _
+  _    _    _    _    _    _    @df  n     _    _    _    _   _       _              _
+  _         _    _         _         @def  _    _                 _   _   _
   )
 #+end_src
 
@@ -3971,7 +4172,7 @@ Since this is the first layer, it's the layout KMonad starts in.
   @d+e      _      _     _      _      _     _      _    _     _      _     _   _   _   _     _    _
   _         _      _     _      _      _     _      _    _     _      _     _   _   _              _
   _         @cxcf  @cxcs @mx    @ccccr @cxt2 _      _    _     _      _     _   _   _              _
-  _         _      _     _      _      @cg   @ch    _    _     @cccvt @as:  _   _                  _
+  _         _      _     _      @as5   @cg   @ch    _    _     @cccvt @as:  _   _                  _
   _    _    _      _     @cccc  @ay    _     @cccrn @cxg _     _      _     _       _              _
   _         _      _            _            @def   _    _                      _   _   _
   )
