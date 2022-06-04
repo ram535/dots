@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: import dart:io
-# key: imio
-# --
-import 'dart:io';$0

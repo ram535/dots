@@ -900,7 +900,7 @@ Install cmake to be able to install vterm
            :keymaps 'vterm-mode-map
            "C-c c r k" 'vterm-send-C-u
            "M-y" 'ram/vterm-consult-yank-pop
-           "<tab>" 'ram/vterm-completion))
+           "<tab> f" 'ram/vterm-completion-file-dir))
 #+end_src
 
 *** vterm-toggle
@@ -1345,6 +1345,8 @@ straight.el.
            :keymaps 'geiser-debug-mode-map
            "q" 'View-quit)
   :init
+  (add-hook 'scheme-mode-hook 'geiser-mode)
+  (setq geiser-default-implementation 'guile)
   (setq geiser-active-implementations '(guile))
   (setq geiser-guile-binary (executable-find "guile"))
   (setq geiser-racket-binary (executable-find "racket"))
@@ -1400,11 +1402,12 @@ LSP_USE_PLISTS, you need to remove lsp-mode repo and install it again.
    (before-save . lsp-format-buffer)
    (before-save . lsp-organize-imports))
   :custom
-  (lsp-clients-clangd-executable (concat (getenv "HOME") "/bin/clang13/bin/clangd"))
+  (lsp-clients-clangd-executable (concat (getenv "HOME") "/bin/clang/bin/clangd"))
   (lsp-clients-clangd-args '("--header-insertion-decorators=0" "-j=4" "--suggest-missing-includes" "-background-index" "-log=error" "--clang-tidy"))
   :init
   (setq lsp-use-plists t))
 #+end_src
+
 #+begin_src emacs-lisp
 (use-package lsp-mode
   :straight (lsp-mode :type git :host github :repo "emacs-lsp/lsp-mode")
@@ -1432,7 +1435,7 @@ LSP_USE_PLISTS, you need to remove lsp-mode repo and install it again.
   (lsp-ui-doc-enable nil)
   (lsp-semantic-highlighting 'immediate)
   (lsp-headerline-breadcrumb-enable nil)
-  (lsp-clients-clangd-executable (concat (getenv "HOME") "/bin/clang13/bin/clangd"))
+  (lsp-clients-clangd-executable (concat (getenv "HOME") "/bin/clang/bin/clangd"))
   ;; (lsp-clients-clangd-args '("--header-insertion-decorators=0" "-j=4" "-background-index" "-log=error" "--clang-tidy"))
   :init
   ;; https://twitter.com/yonchovski/status/1384899744670093315
@@ -2250,6 +2253,18 @@ Build-in package. Think htop but for emacs.
    '(rainbow-delimiters-unmatched-face ((t (:foreground "red"))))))
 #+end_src
 
+*** vundo
+#+begin_src emacs-lisp
+(use-package vundo
+  :commands (vundo)
+  :straight (vundo :type git :host github :repo "casouri/vundo")
+  :config
+  (setq vundo-compact-display t)
+  (custom-set-faces
+   '(vundo-node ((t (:foreground "#808080"))))
+   '(vundo-stem ((t (:foreground "#808080"))))
+   '(vundo-highlight ((t (:foreground "#FFFF00"))))))
+#+end_src
 
 *** s.el
 String manipulation library
@@ -2367,7 +2382,7 @@ not appropriate in some cases like terminals."
 #+end_src
 
 **** Vterm completion for files, directories, history and programs
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle no
 (with-eval-after-load 'vterm
   (defun ram/get-full-list ()
     (let ((program-list (split-string (shell-command-to-string "compgen -c") "\n" t ))
@@ -2388,6 +2403,21 @@ not appropriate in some cases like terminals."
       (when (thing-at-point 'word)
         (vterm-send-meta-backspace))
       (vterm-send-string ram/vterm-chosen-item))))
+#+end_src
+
+**** Vterm completion for files and directories
+#+begin_src emacs-lisp
+(defun ram/get-file-dir-list ()
+  (let ((file-dir-list (split-string (shell-command-to-string "compgen -f") "\n" t )))
+    file-dir-list))
+
+(defun ram/vterm-completion-file-dir ()
+  (interactive)
+  (vterm-directory-sync)
+  (let* ((word (s-chop-prefix "./" (thing-at-point 'filename 'no-properties)))
+         (chosen (completing-read "Choose: " (ram/get-file-dir-list) nil nil word)))
+    (vterm-send-meta-backspace)
+    (vterm-send-string chosen)))
 #+end_src
 
 **** Consult-yank for vterm
@@ -3227,7 +3257,7 @@ export ALTERNATE_EDITOR=""
 export EDITOR="emacsclient -c"                  # $EDITOR opens in GUI mode
 export VISUAL="emacsclient -c -a emacs"         # $VISUAL opens in GUI mode
 export MANPAGER=cat
-export CXX="g++"
+export CXX="clang++"
 export CC="gcc"
 export PATH="$HOME/bin/cpp-libraries/bin:$HOME/bin/graphviz/bin:$PATH"
 # for the linker
