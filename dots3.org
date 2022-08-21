@@ -233,6 +233,9 @@ Highlight the the matching (){}[]
         (?m . ,(with-current-buffer "*Messages*" (point-marker)))
         (?c . ,'consult-dir)
         (?b . ,'consult-buffer)
+        (?q . ,'mode-line-other-buffer)
+        (?d . ,'dired-jump)
+        (?n . ,'org-roam-node-find)
         (?r file . "~/.emacs.d/notes")
         (100 file . "~/Projects/dots/dots.org")))
 #+end_src
@@ -381,12 +384,23 @@ Highlight the the matching (){}[]
          "C-c c e ," 'mode-line-other-buffer
          "C-c c e t" 'ram/switch-recent-tab
          "C-c c d d" '(lambda() (interactive) (dired default-directory))
+         "C-c c e d" 'kill-whole-line
+         "C-c c e o" 'ram/insert-line-below
+         "C-c c x p" 'ram/insert-line-above
+         )
+(:states '(insert)
+        "C-e" 'end-of-line
+        "C-a" 'beginning-of-line-text
+        "C-k" 'kill-line
+        "C-c c u r" 'undo-fu-only-redo
+        "C-c c e p" 'ram/paste
+        "C-c c e y" 'evil-yank
          )
 (:states '(normal motion)
-         "C-p" 'previous-line
-         "C-n" 'next-line
          "C-a" 'evil-first-non-blank
          "C-e" 'evil-last-non-blank
+         "C-p" 'previous-line
+         "C-n" 'next-line
          "C-f" 'forward-char
          "C-b" 'backward-char
          "j" 'evil-next-visual-line
@@ -425,7 +439,7 @@ Highlight the the matching (){}[]
   ;; Load the theme (doom-one, doom-molokai, etc); keep in mind that each theme
   ;; may have their own settings.
   (load-theme 'doom-one t)
-  ;; (load-theme 'doom-solarized-dark t)
+  ;; (load-theme 'doom-old-hope t)
 
   ;; Enable flashing mode-line on errors
   (doom-themes-visual-bell-config)
@@ -436,6 +450,7 @@ Highlight the the matching (){}[]
   ;; Corrects (and improves) org-mode's native fontification.
   (doom-themes-org-config))
 #+end_src
+
 *** windmove
 #+begin_src emacs-lisp
 (use-package windmove
@@ -465,9 +480,10 @@ Highlight the the matching (){}[]
   (after-init . winner-mode)
   :general
   (:states '(normal insert motion emacs)
-           "s-n" 'winner-undo
-           "s-m" 'winner-redo))
+           "C-c c w u" 'winner-undo
+           "C-c c w r" 'winner-redo))
 #+end_src
+
 *** org
 #+begin_src emacs-lisp
   (use-package org
@@ -626,6 +642,7 @@ https://github.com/org-roam/org-roam#configuration
 (dired-dwim-target t) ;;use to copy to the next buffer visible
 ;; Auto refresh Dired, but be quiet about it
 (global-auto-revert-non-file-buffers t)
+(dired-free-space nil)
 (auto-revert-verbose nil)
 (image-dired-external-viewer (executable-find "sxiv"))
 #+end_src
@@ -832,11 +849,44 @@ Persist history over Emacs restarts. Vertico sorts by history position.
   :straight (consult :type git
                      :host github
                      :repo "minad/consult")
+  :config
+  ;; PATCH: a temporary workarund for `consult-org-heading' with new `org-fold'.
+  (defun consult--invisible-open-permanently () 
+    "Open overlays which hide the current line. 
+ See `isearch-open-necessary-overlays' and `isearch-open-overlay-temporary'." 
+    (dolist (ov (let ((inhibit-field-text-motion t)) 
+                  (overlays-in (line-beginning-position) (line-end-position)))) 
+      (when-let (fun (overlay-get ov 'isearch-open-invisible)) 
+        (when (invisible-p (overlay-get ov 'invisible)) 
+          (funcall fun ov))))
+    (if (featurep 'org-fold) (org-fold-show-set-visibility 'local)))
+
+  (defun consult--invisible-open-temporarily () 
+    "Temporarily open overlays which hide the current line. 
+ See `isearch-open-necessary-overlays' and `isearch-open-overlay-temporary'." 
+    (let (restore) 
+      (dolist (ov (let ((inhibit-field-text-motion t)) 
+                    (overlays-in (line-beginning-position) (line-end-position)))) 
+        (let ((inv (overlay-get ov 'invisible))) 
+          (when (and (invisible-p inv) (overlay-get ov 'isearch-open-invisible)) 
+            (push (if-let (fun (overlay-get ov 'isearch-open-invisible-temporary)) 
+                      (progn 
+                        (funcall fun ov nil) 
+                        (lambda () (funcall fun ov t))) 
+                    (overlay-put ov 'invisible nil) 
+                    (lambda () (overlay-put ov 'invisible inv))) 
+                  restore)))) 
+      restore)
+    (if (featurep 'org-fold)
+        (save-excursion
+          (org-fold-save-outline-visibility nil
+            (org-fold-show-set-visibility 'local)))))
   :general
   (:states '(normal insert emacs)
            "M-y" 'consult-yank-pop
            "C-x b" 'consult-buffer
            "C-c c c r" 'consult-ripgrep
+           "C-c c c l" 'consult-line
            "C-c c n o" 'consult-outline))
 #+end_src
 
@@ -855,13 +905,41 @@ Persist history over Emacs restarts. Vertico sorts by history position.
            "C-." 'completion-at-point))
 #+end_src
 
+*** cape
+#+begin_src emacs-lisp
+(use-package cape
+:init
+  ;; Add `completion-at-point-functions', used by `completion-at-point'.
+  (add-to-list 'completion-at-point-functions #'cape-abbrev)
+  (add-to-list 'completion-at-point-functions #'cape-symbol)
+  (add-to-list 'completion-at-point-functions #'cape-file)
+  ;;(add-to-list 'completion-at-point-functions #'cape-history)
+  ;;(add-to-list 'completion-at-point-functions #'cape-keyword)
+  ;;(add-to-list 'completion-at-point-functions #'cape-tex)
+  ;;(add-to-list 'completion-at-point-functions #'cape-sgml)
+  ;;(add-to-list 'completion-at-point-functions #'cape-rfc1345)
+  ;;(add-to-list 'completion-at-point-functions #'cape-abbrev)
+  ;;(add-to-list 'completion-at-point-functions #'cape-ispell)
+  ;;(add-to-list 'completion-at-point-functions #'cape-dict)
+  ;;(add-to-list 'completion-at-point-functions #'cape-symbol)
+  ;;(add-to-list 'completion-at-point-functions #'cape-line)
+)
+#+end_src
+
+#+RESULTS:
+
 *** embark
 #+begin_src emacs-lisp
 (use-package embark
   :general
   (:states '(normal insert)
            "C-c c k d" 'embark-dwim
-           "C-c c k a" 'embark-act))
+           )
+ (:keymaps 'vertico-map
+   "<escape>" 'minibuffer-keyboard-quit
+   "C-c c k d" 'embark-dwim
+   "C-c c k a" 'embark-act)
+)
 #+end_src
 
 *** marginalia
@@ -898,8 +976,15 @@ Persist history over Emacs restarts. Vertico sorts by history position.
 *** consult-dir
 #+begin_src emacs-lisp
 (use-package consult-dir
+  :general
+  (:states '(normal insert emacs)
+           "C-c c c d" 'consult-dir)
   :config
-  (setq consult-dir-default-command 'dired-jump))
+  (setq consult-dir-sources '(consult-dir--source-default
+                              consult-dir--source-recentf
+                              consult-dir--source-project
+                              consult-dir--source-tramp-local
+                              consult-dir--source-bookmark)))
 #+end_src
 
 *** Undo Fu
@@ -1104,7 +1189,6 @@ js.el, thus you should pass js to use-package.  This is independent of
 straight.el.
 #+begin_src emacs-lisp
 (use-package js
-  :defer 3
   :config
   (add-hook 'js-mode-hook (lambda () (setq js-indent-level 2
                                            tab-width 2)))
@@ -1546,6 +1630,11 @@ Search for character
   (add-to-list 'auto-mode-alist '("\\.css?\\'" . web-mode)))
 #+end_src
 
+*** lorem-ipsum
+#+begin_src emacs-lisp :tangle no
+(use-package lorem-ipsum)
+#+end_src
+
 *** org-cliplink
 #+begin_src emacs-lisp
 (use-package org-cliplink
@@ -1702,6 +1791,34 @@ Search for character
 (use-package buttercup)
 #+end_src
 
+*** vterm
+#+begin_src emacs-lisp
+(use-package vterm
+:general
+(:states '(insert)
+         :keymaps 'vterm-mode-map
+        "C-c c e p" 'vterm-yank
+         )
+(:states '(normal motion)
+         :keymaps 'vterm-mode-map
+         "p" 'vterm-yank)
+)
+#+end_src
+
+*** vterm-toggle
+#+begin_src emacs-lisp
+(use-package vterm-toggle
+  :init
+  :general
+  (:states '(emacs normal insert visual)
+           "C-c c v v" '(lambda () (interactive)
+                          (if (string-equal (buffer-name) "*vterm*")
+                              (vterm-toggle-cd)
+                            ;; open vterm in full-screen
+                            ;; 4 -> C-u
+                            (vterm-toggle-cd 4)))))
+#+end_src
+
 *** rainbow-delimiters
 #+begin_src emacs-lisp
 (use-package rainbow-delimiters
@@ -1801,6 +1918,35 @@ The missing hash table library for Emacs
     (call-process "xdg-open" nil nil nil chosen-book-path)))
 #+end_src
 
+*** switch-recent-tab
+#+begin_src emacs-lisp
+(defun ram/switch-recent-tab ()
+  (interactive)
+  (when (tab-bar-switch-to-recent-tab)
+    (tab-new)))
+#+end_src
+
+*** ram/paste
+#+begin_src emacs-lisp
+(defun ram/paste ()
+  (interactive)
+  (save-excursion (evil-paste-before 1)))
+#+end_src
+
+*** ram/insert-line
+#+begin_src emacs-lisp
+(defun ram/insert-line-below ()
+  (interactive)
+  (end-of-line)
+  (newline-and-indent))
+
+(defun ram/insert-line-above ()
+  (interactive)
+  (beginning-of-line)
+  (newline-and-indent)
+  (previous-line))
+#+end_src
+
 * Emacs daemon
 :PROPERTIES:
 :header-args: :tangle ~/.config/systemd/user/emacs.service :mkdirp yes
@@ -1868,237 +2014,137 @@ it will take the key value of the base layer.
 #+begin_src lisp
 (defalias
   def (layer-switch default)
-  d+e #((layer-switch default) P20 esc)
-  d+s #((layer-switch default) P20 spc)
-  ev (layer-switch edit-nav)
-  hl (layer-switch handler)
-  win (layer-switch window)
-  qk (layer-switch quick-access)
-  ema (layer-switch emacs)
-  sym (layer-switch symbol)
-  sy+ (layer-switch symbol+)
-  caps (layer-switch caps)
-  num (layer-switch num)
-  org (layer-switch org-mode)
+  han (layer-next handler)
+  qsy (layer-toggle qsy)
+  edt (layer-toggle editing)
+  sym (layer-next sym)
+  sym2 (layer-next sym2)
+  sym3 (layer-next sym3)
+  nav (layer-next nav)
+  eWin (layer-toggle eWin)
+  emcs (layer-next emacs)
 )
 #+end_src
 *** Handler aliases
-#+begin_src lisp
+#+begin_src emacs-lisp
 (defalias
-;; toggle vterm
-cccvv #(C-c c v v @def)
-;; relative indent
-cccoi #(C-c c o i @def)
-;; jump bookmark
-cxrb #(C-x r b @def)
-;; copy
-aw #(A-w @def)
-;; paste
-cy #(C-y @def)
-;; undo
-c/ #(C-/ @def)
-;; fancy-dabbrev-expand-or-indent
-cccfd #(C-c c f d @def))
+  ;; completion-at-point
+  c. #(C-.)
+  ;; beggining of line
+  ca #(C-a)
+  ;; end of line
+  ce #(C-e)
+  ;; scroll half page up
+  cccvu #(C-c c v u)
+  ;; scroll half page down
+  cccvd #(C-c c v d)
+  ;; paste
+  cccep #(C-c c e p)
+  ;; yank
+  cccey #(C-c c e y)
+  ;; embark
+  cccka #(C-c c k a)
+  ;; embark dwim
+  ccckd #(C-c c k d)
+)
 #+end_src
 
-*** Window manager aliases
+
+*** Nav aliases
 #+begin_src lisp
-;; Window manager
 (defalias
-  ctt #(C-t P20 C-t @def)
-  ct1 #(C-t P20 1 @def)
-  ct2 #(C-t P20 2 @def)
-  ct3 #(C-t P20 3 @def)
-  kill #(C-t P20 C-k @def)
-  nxt #(C-t P20 A-n @def)
-  pvs #(C-t P20 A-p @def)
-  pro #(C-t P50 p @def)
-  ctqu #(C-t P50 " @def)
-  ctq #(C-t P50 q @def)
-  ct: #(C-t P50 : @def)
-  cta #(C-t P50 a @def)
+  ;; other-window
+  cxo #(C-x o)
+  ;; previous buffer
+  ccce, #(C-c c e ,)
+  ;; previous tab
+  cccet #(C-c c e t)
+  ;; avy-goto-char-timer
+  cccaf #(C-c c a f)
+  ;; consult-line
+  ccccl #(C-c c c l)
+  ;; open dired
+  cccdd #(C-c c d d)
+  ;; open roam
+  cccrn #(C-c c r n)
+  ;; consult-dir
+  ccccd #(C-c c c d)
+  ;; buffer
+  cxb #(C-x b)
+  ;; outline
+  cccno #(C-c c n o)
+  )
+#+end_src
+
+*** Emacs windows aliases
+#+begin_src lisp
+(defalias
+  ;; winner undo
+  cccwu #(C-c c w u)
+  ;; winner redo
+  cccwr #(C-c c w r)
+  ;; delete-window
+  cx0 #(C-x 0)
+  ;; delete-other-window
+  cx1 #(C-x 1)
+  ;; split window horizontal
+  cxh #(C-x 2)
+  ;; split window vertical
+  cxv #(C-x 3)
   )
 #+end_src
 
 *** Emacs aliases
 #+begin_src lisp
 (defalias
-  ch #(C-h @def)
   ;; M-x
-  mx #(A-x @def)
-  ;; search and replace
-  as5 #(A-S-5 @def)
-  ;; tab-new
-  cxt2 #(C-x t 2 @def)
-  ;; save-buffer
-  cxcs #(C-x C-s @def)
-  ;; cancel
-  cg #(C-g @def)
-  ;; confirm
-  cccc #(C-c C-c @def)
-  ;; open file
-  cxcf #(C-x C-f @def)
-  ;; open roam
-  cccrn #(C-c c r n @def)
-  ;; tangle
-  cccvt #(C-c C-v t @def)
-  ;; magit-status
-  cxg #(C-x g @def)
+  mx #(A-x)
   ;; eval-expression
-  as: #(A-S-: @def)
-  ;; consult-ripgrep
-  ccccr #(C-c c c r @def)
-  ;; consult-yank-pop
-  ay #(A-y @def)
+  as: #(A-S-:)
+  ;; save
+  cxcs #(C-x C-s)
+  ;; cancel
+  cg #(C-g)
+  ;; magit-status
+  cxg #(C-x g)
+  ;; tangle
+  cccvt #(C-c C-v t)
+  ;; yas-expand
+  cccyi #(C-c c y i)
+  ;; vterm
+  cccvv #(C-c c v v)
+  )
+#+end_src
+
+*** Editing aliases
+#+begin_src lisp
+(defalias
+  ;; redo
+  cccur #(C-c c u r)
+  ;; delete until begining line
+  c0ck #(C-0 C-k)
+  ;; delete line
+  ccced #(C-c c e d)
+  ;; insert line under cursor
+  ccceo #(C-c c e o)
+  ;; insert line above cursor
+  cccxp #(C-c c x p)
+  )
+#+end_src
+*** Quick symbols
+#+begin_src lisp
+(defalias
+  op #(\()
+  cp #(\))
   )
 #+end_src
 
 *** Symbols aliases
 #+begin_src lisp
-;; symbols
 (defalias
-  [ #([ @def)
-  ] #(] @def)
-  op #(\( @def)
-  cp #(\) @def)
-  { #({ @def)
-  } #(} @def)
-  & #(& @def)
-  ,* #(* @def)
-  / #(/ @def)
-  r/ #(\\ @def)
-  ex #(^ @def)
-  = #(= @def)
-  ` #(` @def)
-  ~ #(~ @def)
-  at #(@ @def)
-  us #(\_ @def)
-  - #(- @def)
-  | #(| @def)
-  ; #(; @def)
-  + #(+ @def)
-  ? #(? @def)
-  % #(% @def)
-  ! #(! @def)
-  # #(# @def)
-  < #(< @def)
-  > #(> @def)
-  : #(: @def)
-  , #(, @def)
-  . #(. @def)
-  $ #($ @def)
-  ^ #(^ @def)
-  qu #(" @def)
-  ;; one tap -> ;
-  ;; two taps -> :
-  ;: (multi-tap 200 @; @:)
-  ;; one tap -> ?
-  ;; two taps -> !
-  ?! (multi-tap 200 @? @!)
-  ;; one tap -> /
-  ;; two taps -> \
-  // (multi-tap 200 @/ @r/)
-  ;; one tap -> {
-  ;; two taps -> }
-  {} (multi-tap 200 @{ @})
-  ;; one tap -> -
-  ;; two taps -> _
-  -u (multi-tap 200 @- @us)
-  ;; one tap -> <
-  ;; two taps -> >
-  <> (multi-tap 200 @< @>)
-  ;; one tap -> `
-  ;; two taps -> ~
-  `~ (multi-tap 200 @` @~)
-  ;; one tap -> '
-  ;; two taps -> "
-  qq (multi-tap 200 ' ")
-)
-#+end_src
-
-*** Navegation aliases
-#+begin_src lisp
-(defalias
-  ;; beggining of line
-  ca #(C-a @def)
-  ;; end of line
-  ce #(C-e @def)
-  ;; scroll half page up
-  cccvu #(C-c c v u)
-  ;; scroll half page down
-  cccvd #(C-c c v d)
-  ;; tab-next
-  cxto #(C-x t o @def)
-  ;; delete-window
-  cx0 #(C-x 0 @def)
-  ;; delete-other-window
-  cx1 #(C-x 1 @def)
-  ;; other-window
-  cxo #(C-x o @def)
-  ;; return and then go to def layer
-  rdef #(ret @def)
+  at #(@)
+  us #(\_)
   )
-#+end_src
-
-*** Quick access aliases
-#+begin_src lisp
-(defalias
-  ;; yas-expand
-  cccyi #(C-c c y i @def)
-  ;; search and replace
-  as% #(A-S-% @def)
-  ;; org-toggle-narrow-to-subtree
-  cccon #(C-c c o n @def)
-  ;; search
-  cs #(C-s @def)
-  ;; open dired
-  cccdd #(C-c c d d @def)
-  ;; escape
-  escp #(esc @def)
-  ;; previous buffer
-  ccce, #(C-c c e , @def)
-  ;; previous tab
-  cccet #(C-c c e t @def)
-  ;; avy-goto-char-timer
-  cccaf #(C-c c a f @def)
-  ;; jump to "("
-  cccap #(C-c c a p @def)
-  ;; eval sexp
-  cxce #(C-x C-e @def)
-  ;; eval definition
-  cmx #(A-C-x @def)
-  ;; embark-act
-  cccka #(C-c c k a @def)
-  ;; embark-dwim
-  ccckd #(C-c c k d @def)
-  ;; one tap -> embark-act
-  ;; two taps -> embark-dwim
-  ead (multi-tap 300 @cccka @ccckd)
-  ;; V
-  V #(V @def)
-  ;; C-v
-  cv #(C-v @def)
-  ;; one tap -> V
-  ;; two taps -> C-v
-  vv (multi-tap 300 @V @cv)
-)
-#+end_src
-
-*** Org-mode aliases
-#+begin_src lisp
-(defalias
-  ;; consult-outline
-  ccno #(C-c c n o @def)
-)
-#+end_src
-
-*** Edit aliases
-#+begin_src lisp
-(defalias
-  ;;M-k kills to the left
-  cccrk #(C-c c r k @def)
-  ck #(C-k @def)
-)
 #+end_src
 
 ** Source layer
@@ -2123,132 +2169,119 @@ Since this is the first layer, it's the layout KMonad starts in.
 
 #+begin_src lisp
 (deflayer default
-  esc         f1     f2   f3   f4     f5   f6   f7   f8   f9   f10  f11   f12    pause  prnt  ins  del
-  `           1      2    3    4      5    6    7    8    9    0    -     =      bspc              home
-  tab         q      w    e    r      t    y    u    i    o    p    [     ]      ret               pgup
-  @ev         a      s    d    f      g    h    j    k    l    @hl  '     \                        pgdn
-  lsft  C-t   z      x    c    v      b    n    m    ,    .    /    rsft         up                end
-  lctl        lmet   lalt      spc         ralt cmps rctl                 left   down   rght
+  esc         f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11   f12    pause  prnt  ins  del
+  `           1    2    3    4    5    6    7    8    9    0    -     =      bspc              home
+  tab         q    w    e    r    t    y    u    i    o    p    [     ]      ret               pgup
+  caps        a    s    d    f    g    h    j    k    l    @han '     \                        pgdn
+  lsft   102d z    x    c    v    b    n    m    @nav @sym /    rsft         up                end
+  lctl        lmet lalt      spc       ralt cmps rctl                 left   down   rght
   )
 #+end_src
 
-*** Handler layer
+*** Nav layer
 #+begin_src lisp
-(deflayer handler
-  @d+e      _      _      _       _      _     _    _    _    _    _     _   _   _   _     _    _
-  _         _      _      _       _      _     _    _    _    _    _     _   _   _              _
-  _         @caps  _      @ema    _      _     _    @c/  _    @org _     _   _   _              _
-  _         @cccfd @cccoi @cccvv  @qk    @[    @]   @op  @cp  _    @ctt  _   _                  _
-  _    _    _      _      @aw     @ev    @cxrb @num _    _    @sym _     _       _              _
-  _         _      _            @ev            @def _    _                   _   _   _
+(deflayer nav
+  _         _      _      _       _      _     _       _       _       _       _       _   _   _   _     _    _
+  _         _      _      _       _      _     _       _       _       _       _       _   _   _              _
+  _         @cccet @eWin  _       _      _     _       _       _       @cccno  _       _   _   _              _
+  _         @cxb   @cccaf @cccdd  @ccccl _     _       _       _       _       _       _   _                  _
+  _    _    _      _      _       _      _     @cccrn  @ccccd  @ccce,  @cxo    _       _       _              _
+  _         _      _              _            _       _       _                           _   _   _
   )
 #+end_src
 
-*** Quick access layer
+*** Editing layer
 #+begin_src lisp
-(deflayer quick-access
-  @d+e      _      _     _      _      _      _      _      _      _    _     _   _   _   _     _    _
-  _         _      _     _      _      _      _      _      _      _    _     _   _   _              _
-  _         @cccet _     @cxce  @as%   _      _      _      @cccyi _    _     _   _   _              _
-  _         _      @cs   @cccdd @cccaf _      @ead   @cccap _      _    _     _   _                  _
-  _    _    _      @cmx  _      @vv    _      @cccon _      @ccce, _    _     _       _              _
-  _         _      _            @cxo          @def   _      _                     _   _   _
+(deflayer editing
+  _         _      _      _       _      _     _       _       _       _      _       _   _   _   _     _    _
+  _         _      _      _       _      _     _       _       _       _      _       _   _   _              _
+  _         _      _      _       _      _     _       C-/     @cccur  @ccceo @cccxp  _   _   _              _
+  _         _      _      _       _      _     A-del   bspc    del     A-d    @ccced  _   _                  _
+  _    _    _      _      _       _      _     @c0ck   C-k     _       _      _       _       _              _
+  _         _      _              _            _       _       _                          _   _   _
   )
 #+end_src
 
-*** Edit-navegation layer
+*** eWin layer
 #+begin_src lisp
-(deflayer edit-nav
-  @d+e      _    _    _      _    _    _      _       _      _      _      _   _   _   _     _    _
-  _         _    _    _      _    _    _      _       _      _      _      _   _   _              _
-  _         _    _    A-del  A-d  _    _      @cccvd  @cccvu @cxo   @cxto  _   _   @rdef          _
-  @def      _    _    bspc   C-d  _    left   down    up     rght   @ctt   _   _                  _
-  _    _    _    _    @cccrk @ck  _    @ca    @ce     @cx1   @cx0   _      _       _              _
-  _         _    _           @def      @def   _       _                        _   _   _
-  )
-#+end_src
-
-*** Symbols layer
-#+begin_src lisp
-(deflayer symbol
-  @d+e      _    _    _    _    _    _    _    _    _    _   _   _   _   _     _    _
-  _         _    _    _    _    _    _    _    _    _    _   _   _   bspc           _
-  _         @?   @at  @^   @`   _    _    _    @=   _    _   _   _   _              _
-  _         @qu  @*   @/   @:   @#   @$   @-   @us  @<   @;  _   _                  _
-  _    _    _    _    _    @%   _    @{   @}   @,   @.   _   _       _              _
-  _         _    _         @sy+      @def _    _                 _   _   _
-  )
-#+end_src
-
-*** Symbols+ layer
-#+begin_src lisp
-(deflayer symbol+
-  @d+e      _    _    _    _    _    _    _    _    _    _   _   _   _   _     _    _
-  _         _    _    _    _    _    _    _    _    _    _   _   _   bspc           _
-  _         _    _    _    _    _    _    _    _    _    _   _   _   _              _
-  _         @&   @|   @r/  @+   _    _    @~   @!   @>   _   _   _                  _
-  _    _    _    _    _    _    _    _    _    _    _    _   _       _              _
-  _         _    _         @def      @def _    _                 _   _   _
-  )
-#+end_src
-
-*** Window manager layer
-#+begin_src lisp
-(deflayer window
-  @d+e      _    _    _    _     _    _    _    _     _    _     _   _   _   _     _    _
-  _         _    _    _    _     _    _    _    _     _    _     _   _   _              _
-  _         @ctq _    _    _     @cta _    _    _     _    _     _   _   _              _
-  _         @ct1 @ct2 @ct3 @ctqu _    _    _    @kill _    @ct:  _   _                  _
-  _    _    _    _    _    _     _    @pvs @nxt _     _    _     _       _              _
-  _         _    _         @pro       @def _    _                    _   _   _
+(deflayer eWin
+  _         _      _      _       _      _     _       _       _       _     _       _   _   _   _     _    _
+  _         _      _      _       _      _     _       _       _       _     _       _   _   _              _
+  _         _      _      _       _      _     @cxh    @cxv    _       _     _       _   _   _              _
+  _         _      _      _       _      _     _       @cx0    @cx1    _     _       _   _                  _
+  _    _    _      _      _       _      _     @cccwu  @cccwr  _       _     _       _       _              _
+  _         _      _              _            _       _       _                         _   _   _
   )
 #+end_src
 
 *** Emacs layer
 #+begin_src lisp
 (deflayer emacs
-  @d+e      _      _     _      _      _     _      _    _     _      _     _   _   _   _     _    _
-  _         _      _     _      _      _     _      _    _     _      _     _   _   _              _
-  _         @cxcf  @cxcs @mx    @ccccr @cxt2 _      _    _     _      _     _   _   _              _
-  _         _      _     _      @as5   @cg   @ch    _    _     @cccvt @as:  _   _                  _
-  _    _    _      _     @cccc  @ay    _     @cccrn @cxg _     _      _     _       _              _
-  _         _      _            _            @def   _    _                      _   _   _
+  _         _      _      _       _      _       _       _       _       _       _       _   _   _   _     _    _
+  _         _      _      _       _      _       _       _       _       _       _       _   _   _              _
+  _         _      @cxcs  _       _      @cccvt  _       _       @cccyi  _       _       _   _   _              _
+  _         _      @mx    @cccdd  _      @cg     _       _       _       _       @as:    _   _                  _
+  _    _    _      _      _       _      @cxb    @cccrn  @cxg    _       _       _       _       _              _
+  _         _      _              _              _       _       _                           _   _   _
   )
 #+end_src
 
-*** Org-mode
+*** Handler layer
 #+begin_src lisp
-(deflayer org-mode
-  @d+e      _    _    _    _    _    _    _    _    _     _     _   _   _   _     _    _
-  _         _    _    _    _    _    _    _    _    _     _     _   _   _              _
-  _         _    _    _    _    _    _    _    _    @ccno _     _   _   _              _
-  _         _    _    _    _    _    _    _    _    _     _     _   _                  _
-  _    _    _    _    _    _    _    _    _    _    _     _     _       _              _
-  _         _    _         _         @def _    _                    _   _   _
+(deflayer handler
+  esc         f1     f2    f3     f4     f5   f6     f7     f8      f9   f10    f11   f12    pause  prnt  ins  del
+  `           1      2     3      4      5    6      7      8       9    0      -     =      bspc              home
+  tab         esc    w     @cccka @ccckd t    y      A->    A-<     o    @cccep [     ]      ret               pgup
+  caps        @c.    @emcs @cccvv @edt   C-g  left   down   up      rght ;      '     \                        pgdn
+  lsft  102d  z      x     @cccey v      b    @ca    @ce    ,       .    /      rsft         up                end
+  lctl        lmet   lalt         C-spc       ralt   cmps   rctl                      left   down   rght
   )
 #+end_src
 
-*** Caps layer
+*** qsy layer
 #+begin_src lisp
-(deflayer caps
-  @d+e      _      _    _       _      _    _    _    _    _    _     _   _   _   _     _    _
-  _         _      _    _       _      _    _    _    _    _    _     _   _   bspc           _
-  _         Q      W    E       R      T    Y    U    I    O    P     _   _   _              _
-  _         A      S    D       F      G    H    J    K    L    @hl   _   _                  _
-  _    _    Z      X    C       V      B    N    M    @qk  @sym _     _       _              _
-  _         _      _            @def        @def _    _                   _   _   _
+(deflayer qsy
+  _         _      _      _       _      _     _       _       _       _     _       _   _   _   _     _    _
+  _         _      _      _       _      _     _       _       _       _     _       _   _   _              _
+  _         _      _      _       _      _     _       <       >       _     _       _   _   _              _
+  _         _      _      _       _      _     _       @op     @cp     {     }       _   _                  _
+  _    _    _      _      _       _      _     [       ]       ,       .     _       _       _              _
+  _         _      _              _            _       _       _                         _   _   _
   )
 #+end_src
 
-*** Number layer
+*** sym layer
 #+begin_src lisp
-(deflayer num
-  @d+e      _    _    _    _    _    _    _    _    _    _   _   _   _   _     _    _
-  _         _    _    _    _    _    _    _    _    _    _   _   _   bspc           _
-  _         _    _    _    _    _    _    _    _    _    _   _   _   _              _
-  _         1    2    3    4    5    6    7    8    9    @hl _   _                  _
-  _    _    _    _    _    _    _    0    _    @qk  @sym _   _       _              _
-  _         _    _         @def      @def _    _                 _   _   _
+(deflayer sym
+  _         _      _      _       _      _     _       _       _       _     _       _   _   _   _     _    _
+  _         _      _      _       _      _     _       _       _       _     _       _   _   _              _
+  _         _      _      _       _      _     _       _       _       _     _       _   _   _              _
+  _         @sym2  @sym3  :       @qsy   _     _       =       +       "     ;       _   _                  _
+  _    _    _      _      _       _      _     @us     -       #       .     _       _       _              _
+  _         _      _              _            _       _       _                         _   _   _
   )
+#+end_src
 
+*** sym2 layer
+#+begin_src lisp
+(deflayer sym2
+  _         _      _      _       _      _     _       _       _       _     _       _   _   _   _     _    _
+  _         _      _      _       _      _     _       _       _       _     _       _   _   _              _
+  _         _      _      _       _      _     _       _       _       _     _       _   _   _              _
+  _         _      _      _       _      _     _       /       *       ^     ?       _   _                  _
+  _    _    _      _      _       _      _     @at     &       $       %     _       _       _              _
+  _         _      _              _            _       _       _                         _   _   _
+  )
+#+end_src
+
+*** sym3 layer
+#+begin_src lisp
+(deflayer sym3
+  _         _      _      _       _      _     _       _       _       _     _       _   _   _   _     _    _
+  _         _      _      _       _      _     _       _       _       _     _       _   _   _              _
+  _         _      _      _       _      _     _       _       _       _     _       _   _   _              _
+  _         _      _      _       _      _     _       \       ~       |     `       _   _                  _
+  _    _    _      _      _       _      _     _       _       _       _     _       _       _              _
+  _         _      _              _            _       _       _                         _   _   _
+  )
 #+end_src
